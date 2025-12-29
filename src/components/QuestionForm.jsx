@@ -16,20 +16,36 @@ export default function QuestionForm({ onAsk }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold mb-4">Ask a Legal Question</h2>
-      <input
-        type="text"
-        value={question}
-        onChange={e => setQuestion(e.target.value)}
-        placeholder="Ask a legal question"
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-      />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="relative">
+        <label htmlFor="question" className="block text-sm font-semibold text-stone-700 mb-3">
+          Your Legal Question
+        </label>
+        <div className="relative">
+          <input
+            id="question"
+            type="text"
+            value={question}
+            onChange={e => setQuestion(e.target.value)}
+            placeholder="e.g., What are the legal precedents for property disputes in Sri Lanka?"
+            className="w-full px-5 py-4 border-2 border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-stone-800 placeholder-gray-400 transition-all duration-200 pr-12"
+            required
+          />
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
       <button
         type="submit"
-        className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+        className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-stone-900 font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center group"
       >
-        Search
+        <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        Search Legal Cases
       </button>
     </form>
   );
