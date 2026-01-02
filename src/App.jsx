@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Upload from "./pages/Upload";
 import Search from "./pages/Search";
+import ComprehensiveAnalysis from "./pages/ComprehensiveAnalysis";
 import "./App.css";
 
 export default function App() {
@@ -13,6 +14,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/analysis" element={<ComprehensiveAnalysis />} />
         </Routes>
       </Router>
     </div>
