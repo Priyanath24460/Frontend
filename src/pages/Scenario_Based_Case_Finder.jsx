@@ -34,15 +34,17 @@ const Search = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Header */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full mb-6 shadow-xl animate-pulse">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full mb-6 shadow-xl">
               <svg className="w-10 h-10 text-stone-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <h1 className="text-4xl lg:text-5xl font-bold text-stone-800 mb-4">Legal Research Search</h1>
+            <h1 className="text-4xl lg:text-5xl font-bold text-stone-800 mb-4">Scenario-Based Case Finder</h1>
             <div className="w-32 h-1 bg-gradient-to-r from-amber-600 to-orange-500 mx-auto mb-4"></div>
             <p className="text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6">
-              Ask questions about legal cases and documents. Our AI-powered search will find relevant information and provide detailed answers.
+              Describe your legal issue in plain language and find relevant past cases from the New Law Reports database. 
+              Our AI understands your situation and matches it with similar precedent cases, helping you understand how 
+              courts have handled similar issues.
             </p>
             
             {/* Step-by-step guide */}
