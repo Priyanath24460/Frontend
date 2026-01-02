@@ -28,45 +28,51 @@ const Home = () => {
           
           {/* Content - Positioned on the Left */}
           <div className="relative max-w-7xl mx-auto px-8 h-full flex items-center min-h-[600px]">
-            <div className="w-full lg:w-3/5 xl:w-1/2 space-y-8">
-              <div className="flex items-start gap-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full flex items-center justify-center shadow-2xl flex-shrink-0">
-                  <svg className="w-9 h-9 text-stone-900" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight bg-gradient-to-r from-amber-300 to-orange-200 bg-clip-text text-transparent whitespace-nowrap">
-                    Sri Lankan Law AI
-                  </h1>
-                  <div className="flex items-center text-amber-200 mt-3">
-                    <div className="w-12 h-0.5 bg-amber-400 mr-3"></div>
-                    <span className="text-sm lg:text-base font-semibold tracking-widest">LEGAL RESEARCH PLATFORM</span>
-                  </div>
-                </div>
+            <div className="w-full lg:w-3/5 xl:w-1/2 space-y-10">
+              {/* Brand Name */}
+              <div className="text-left">
+                <h1 className="text-6xl lg:text-7xl xl:text-8xl font-extrabold leading-none tracking-tight mb-6">
+                  <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-amber-400 bg-clip-text text-transparent">
+                    Law
+                  </span>
+                  <span className="text-white">
+                    Know
+                  </span>
+                </h1>
+                <div className="w-24 h-1 bg-gradient-to-r from-amber-400 to-orange-400 mb-8"></div>
               </div>
+
+              {/* Tagline & Description */}
               <div className="space-y-6 max-w-2xl">
-                <h2 className="text-2xl lg:text-3xl font-light text-white/95 leading-relaxed">
+                <h2 className="text-2xl lg:text-3xl font-medium text-white leading-relaxed">
                   Empowering Legal Excellence with Artificial Intelligence
                 </h2>
-                <p className="text-base lg:text-lg text-white/85 leading-loose">
+                <p className="text-base lg:text-lg text-white/90 leading-relaxed font-light">
                   Navigate the Sri Lankan legal system with unprecedented precision. Our cutting-edge AI platform delivers 
                   comprehensive legal research, intelligent case analysis, and advanced document processing—specifically designed 
                   for legal professionals, students, and informed citizens.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-5 pt-4">
-                <Link to="/search" className="group bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 px-8 py-4 rounded-xl font-bold text-base lg:text-lg hover:from-amber-300 hover:to-orange-300 transition-all duration-300 shadow-2xl hover:shadow-amber-400/30 hover:-translate-y-1">
-                  <span className="flex items-center justify-center">
-                    <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                <Link 
+                  to="/search" 
+                  className="group relative bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 px-10 py-4 rounded-lg font-semibold text-lg hover:from-amber-300 hover:to-orange-300 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-amber-400/40 hover:scale-105 overflow-hidden"
+                >
+                  <span className="relative flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     Start Legal Research
                   </span>
                 </Link>
-                <Link to="/upload" className="group bg-transparent border-2 border-amber-400 text-amber-400 px-8 py-4 rounded-xl font-bold text-base lg:text-lg hover:bg-amber-400 hover:text-stone-900 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-400/30 hover:-translate-y-1">
-                  <span className="flex items-center justify-center">
-                    <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Link 
+                  to="/upload" 
+                  className="group relative bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white px-10 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-stone-900 hover:border-white transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105"
+                >
+                  <span className="relative flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5 group-hover:-translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                     Upload Documents
@@ -86,7 +92,7 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-4xl lg:text-5xl font-bold text-stone-800 mb-6">About Sri Lankan Law AI</h2>
+              <h2 className="text-4xl lg:text-5xl font-bold text-stone-800 mb-6">About LawKnow</h2>
               <div className="w-32 h-1 bg-gradient-to-r from-stone-700 to-amber-600 mx-auto mb-8"></div>
               <p className="text-lg lg:text-xl text-gray-700 max-w-4xl mx-auto leading-loose font-light">
                 Our mission is to <span className="font-semibold text-stone-800">democratize access to Sri Lankan legal information</span> through cutting-edge AI technology. 

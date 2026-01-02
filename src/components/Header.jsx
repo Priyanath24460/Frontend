@@ -28,25 +28,16 @@ const Header = () => {
         <div className="flex justify-between items-center">
           {/* Logo Section */}
           <Link to="/" className="flex items-center group">
-            <div className="relative">
-              {/* Logo Circle with Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
-              <div className="relative w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7 text-stone-900" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
-                </svg>
-              </div>
-            </div>
-            
             {/* Brand Name */}
-            <div className="ml-4">
-              <h1 className="text-2xl lg:text-3xl font-bold text-white group-hover:text-amber-300 transition-colors duration-300 tracking-tight">
-                Sri Lankan Law AI
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
+                <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-amber-400 bg-clip-text text-transparent group-hover:from-amber-200 group-hover:via-orange-200 group-hover:to-amber-300 transition-all duration-300">
+                  Law
+                </span>
+                <span className="text-white group-hover:text-amber-100 transition-colors duration-300">
+                  Know
+                </span>
               </h1>
-              <div className="flex items-center mt-0.5">
-                <div className="w-6 h-px bg-amber-400 mr-2"></div>
-                <span className="text-xs text-amber-200 font-medium tracking-widest uppercase">Legal Research Platform</span>
-              </div>
             </div>
           </Link>
 
