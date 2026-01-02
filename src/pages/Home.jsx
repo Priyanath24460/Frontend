@@ -57,7 +57,7 @@ const Home = () => {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-2">
                 <Link 
-                  to="/search" 
+                  to="/Scenario_Based_Case_Finder" 
                   className="group relative bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 px-10 py-4 rounded-lg font-semibold text-lg hover:from-amber-300 hover:to-orange-300 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-amber-400/40 hover:scale-105 overflow-hidden"
                 >
                   <span className="relative flex items-center justify-center gap-2">
@@ -83,8 +83,99 @@ const Home = () => {
           </div>
         </section>
 
+        {/* Core Features Section */}
+        <section className="py-24 bg-white">
+          <div className="max-w-7xl mx-auto px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl lg:text-5xl font-bold text-stone-800 mb-4">Our Core Features</h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-amber-400 to-orange-400 mx-auto mb-6"></div>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Comprehensive AI-powered legal tools designed for the Sri Lankan legal system
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Feature 1: Case Finder */}
+              <div className="group bg-gradient-to-br from-stone-50 to-amber-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100">
+                <div className="flex items-start gap-5">
+                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-stone-800 mb-3">Scenario-Based Case Finder</h3>
+                    <p className="text-gray-700 leading-relaxed">
+                      Describe your legal issue in plain language and find relevant past cases from the New Law Reports database. 
+                      Our AI understands your situation and matches it with similar precedent cases, helping you understand how 
+                      courts have handled similar issues.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 2: Case Summarizer */}
+              <div className="group bg-gradient-to-br from-stone-50 to-amber-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100">
+                <div className="flex items-start gap-5">
+                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-stone-800 mb-3">AI Case Summarizer</h3>
+                    <p className="text-gray-700 leading-relaxed">
+                      Upload legal judgments or court documents and get instant AI-generated summaries. Our system extracts key facts, 
+                      legal issues, court reasoning, and decisions in clear language. Compare similar cases side-by-side to understand 
+                      legal principles better.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 3: Contract Manager */}
+              <div className="group bg-gradient-to-br from-stone-50 to-amber-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100">
+                <div className="flex items-start gap-5">
+                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-stone-800 mb-3">Contract Lifecycle Manager</h3>
+                    <p className="text-gray-700 leading-relaxed">
+                      Automate contract review and creation with AI. Upload existing contracts or use templates for employment, 
+                      leases, and more. Our system identifies key clauses, highlights risks, suggests improvements, and helps you 
+                      create legally sound contracts.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 4: Rights Violation Screener */}
+              <div className="group bg-gradient-to-br from-stone-50 to-amber-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100">
+                <div className="flex items-start gap-5">
+                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-stone-800 mb-3">Fundamental Rights Screener</h3>
+                    <p className="text-gray-700 leading-relaxed">
+                      Understand if your experience may constitute a violation of Fundamental Rights under the Sri Lankan Constitution. 
+                      Describe the incident in your own words, and our AI will match it to relevant constitutional provisions and guide 
+                      you on possible next steps.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* About Section */}
-        <section className="py-24 bg-gradient-to-b from-white to-stone-50">
+        <section className="py-24 bg-gradient-to-b from-stone-50 to-white">
           <div className="max-w-6xl mx-auto px-8">
             <div className="text-center mb-20">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-stone-700 to-amber-600 rounded-full mb-8 shadow-xl">
@@ -112,125 +203,6 @@ const Home = () => {
                   <div className="text-5xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent mb-3">99.9%</div>
                   <div className="text-gray-700 font-semibold text-base">Accuracy Rate</div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section className="py-24 bg-white relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-stone-50/50 to-amber-50/50"></div>
-          <div className="relative max-w-7xl mx-auto px-8">
-            <div className="text-center mb-20">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-stone-700 to-amber-600 rounded-full mb-8 shadow-xl">
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.78 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 9.172V5L8 4z" />
-                </svg>
-              </div>
-              <h3 className="text-4xl lg:text-5xl font-bold mb-6 text-stone-800">Comprehensive Legal Solutions</h3>
-              <div className="w-32 h-1 bg-gradient-to-r from-stone-700 to-amber-600 mx-auto mb-8"></div>
-              <p className="text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto font-light leading-relaxed">Powered by advanced AI technology, specifically designed for the Sri Lankan legal system</p>
-            </div>
-            
-            {/* Main Features */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-20">
-              <Link to="/search" className="group block bg-white p-10 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-l-8 border-amber-600 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-100 to-transparent opacity-50 rounded-full -mr-16 -mt-16"></div>
-                <div className="relative">
-                  <div className="flex items-center mb-8">
-                    <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center mr-6 group-hover:from-amber-200 group-hover:to-amber-300 transition-all duration-300 shadow-lg">
-                      <svg className="w-10 h-10 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="text-3xl font-bold text-amber-900 mb-2">AI Legal Research</h4>
-                      <div className="w-16 h-1 bg-gradient-to-r from-amber-600 to-yellow-500"></div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 leading-relaxed mb-6 text-lg">
-                    Advanced semantic search through Sri Lankan case law, statutes, and legal precedents. 
-                    Ask complex legal questions and receive comprehensive answers with relevant citations.
-                  </p>
-                  <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                    <ul className="text-sm text-amber-800 space-y-2 font-medium">
-                      <li className="flex items-center"><span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>Search Supreme Court and Court of Appeal cases</li>
-                      <li className="flex items-center"><span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>Access statutory interpretations</li>
-                      <li className="flex items-center"><span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>Find legal precedents and ratios</li>
-                    </ul>
-                  </div>
-                </div>
-              </Link>
-              
-              <Link to="/upload" className="group block bg-white p-10 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-l-8 border-orange-600 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-transparent opacity-50 rounded-full -mr-16 -mt-16"></div>
-                <div className="relative">
-                  <div className="flex items-center mb-8">
-                    <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center mr-6 group-hover:from-orange-200 group-hover:to-orange-300 transition-all duration-300 shadow-lg">
-                      <svg className="w-10 h-10 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="text-3xl font-bold text-amber-900 mb-2">Document Analysis</h4>
-                      <div className="w-16 h-1 bg-gradient-to-r from-orange-600 to-yellow-500"></div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 leading-relaxed mb-6 text-lg">
-                    Upload legal documents for AI-powered analysis. Extract key information, identify legal issues, 
-                    and receive automated summaries of complex legal texts.
-                  </p>
-                  <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                    <ul className="text-sm text-orange-800 space-y-2 font-medium">
-                      <li className="flex items-center"><span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>Process court judgments and orders</li>
-                      <li className="flex items-center"><span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>Analyze contracts and agreements</li>
-                      <li className="flex items-center"><span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>Extract legal principles and holdings</li>
-                    </ul>
-                  </div>
-                </div>
-              </Link>
-            </div>
-
-            {/* Additional Features */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-8 rounded-2xl shadow-lg text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-amber-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <svg className="w-8 h-8 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-stone-800 mb-3">Legal Library</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Comprehensive database of Sri Lankan laws and regulations</p>
-              </div>
-              
-              <div className="bg-white p-8 rounded-2xl shadow-lg text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-amber-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <svg className="w-8 h-8 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-stone-800 mb-3">Smart Analytics</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">AI-powered insights and legal trend analysis</p>
-              </div>
-              
-              <div className="bg-white p-8 rounded-2xl shadow-lg text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-amber-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <svg className="w-8 h-8 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-stone-800 mb-3">Legal Assistant</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">24/7 AI-powered legal guidance and support</p>
-              </div>
-              
-              <div className="bg-white p-8 rounded-2xl shadow-lg text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-amber-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-md">
-                  <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-stone-800 mb-3">Community</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Connect with legal professionals and students</p>
               </div>
             </div>
           </div>
@@ -306,7 +278,7 @@ const Home = () => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-6 justify-center mt-16">
-              <Link to="/search" className="group bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 px-12 py-6 rounded-2xl font-bold text-xl hover:from-amber-300 hover:to-orange-300 transition-all duration-300 shadow-2xl hover:shadow-amber-400/30 hover:-translate-y-2">
+              <Link to="/Scenario_Based_Case_Finder" className="group bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 px-12 py-6 rounded-2xl font-bold text-xl hover:from-amber-300 hover:to-orange-300 transition-all duration-300 shadow-2xl hover:shadow-amber-400/30 hover:-translate-y-2">
                 <span className="flex items-center justify-center">
                   <svg className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
