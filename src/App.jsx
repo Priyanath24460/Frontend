@@ -14,7 +14,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/Scenario_Based_Case_Finder" element={<Scenario_Based_Case_Finder />} />
-          <Route path="/analysis" element={<ComprehensiveAnalysis />} />
+          <Route path="/contract-analysis" element={<ComprehensiveAnalysis />} />
         </Routes>
       </Router>
     </div>
