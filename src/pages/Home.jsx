@@ -142,11 +142,13 @@ const Home = () => {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-stone-800 mb-3">Contract Lifecycle Manager</h3>
+                    <h3 className="text-xl font-bold text-stone-800 mb-3">Legal Contract Analyzer</h3>
                     <p className="text-gray-700 leading-relaxed">
-                      Automate contract review and creation with AI. Upload existing contracts or use templates for employment, 
-                      leases, and more. Our system identifies key clauses, highlights risks, suggests improvements, and helps you 
-                      create legally sound contracts.
+
+                      Upload employment contracts and instantly get intelligent analysis. 
+                      Our system automatically extracts clauses, identifies legal risks, finds related court precedents, 
+                      and shows relevant legislation - all backed by real Sri Lankan employment law cases and regulations. 
+                      Perfect for understanding contract terms, spotting problems, and making informed legal decisions.
                     </p>
                   </div>
                 </div>
