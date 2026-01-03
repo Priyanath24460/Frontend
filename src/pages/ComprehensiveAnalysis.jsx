@@ -20,6 +20,7 @@ export default function ComprehensiveAnalysis(){
     setLoading(true);
     try{
       const data = await AnalysisAPI.uploadContractWithCases(file, options);
+      console.log('Analysis Result:', data); // Debug log
       setResult(data);
     }catch(err){ setError(err.message || 'Failed'); }
     finally{ setLoading(false); }
@@ -165,7 +166,7 @@ export default function ComprehensiveAnalysis(){
               </div>
             )}
 
-            {result.acts_law && Array.isArray(result.acts_law.clauses_with_acts) && (
+            {result.acts_law && Array.isArray(result.acts_law.clauses_with_acts) && result.acts_law.clauses_with_acts.length > 0 && (
               <div className="card">
                 <h3>Supporting Acts & Legislation ({result.acts_law.total_acts_retrieved} acts)</h3>
                 <div className="list">
@@ -289,16 +290,23 @@ function ClauseWithCases({ clause }){
 
 function ClauseWithActs({ clause }){
   const [expanded, setExpanded] = useState(false);
+  const actsCount = clause.supporting_acts?.length || 0;
 
   return (
     <div className="item">
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'start', marginBottom:10}}>
         <div style={{flex:1}}>
-          <div className="badge">{clause.clause_type || 'clause'}</div>
+          <div className="badge">{clause.clause_type || 'Clause ' + clause.clause_id}</div>
           <div style={{marginTop:6, fontSize:'.9rem', color:'var(--muted)', lineHeight:1.4}}>{clause.text_preview || clause.text}</div>
+          {clause.act_support_strength && (
+            <div style={{marginTop:6}}>
+              <span style={{fontSize:'.85rem', color:'var(--muted)'}}>Support Strength: </span>
+              <span style={{fontWeight:600}}>{(clause.act_support_strength * 100).toFixed(1)}%</span>
+            </div>
+          )}
         </div>
         <button className="button ghost" onClick={() => setExpanded(!expanded)} style={{whiteSpace:'nowrap', marginLeft:8, fontSize:'.85rem'}}>
-          {expanded ? '−' : '+'} ({clause.supporting_acts?.length || 0})
+          {expanded ? '−' : '+'} ({actsCount})
         </button>
       </div>
 
@@ -308,16 +316,16 @@ function ClauseWithActs({ clause }){
             {clause.supporting_acts.map((a, i) => (
               <div key={i} className="item" style={{padding:10}}>
                 <div style={{marginBottom:8}}>
-                  <div className="kv" style={{margin:'4px 0'}}><span>Rank</span><span className="badge">{a.rank}</span></div>
+                  <div className="kv" style={{margin:'4px 0'}}><span>Rank</span><span className="badge">{a.rank || i + 1}</span></div>
                   <div className="kv" style={{margin:'4px 0'}}><span>Similarity</span><span>{(a.similarity_score * 100).toFixed(1)}%</span></div>
                 </div>
                 <div style={{marginBottom:6}}>
-                  <strong style={{color:'var(--text-light)', fontSize:'.95rem'}}>{a.act_name} ({a.year})</strong>
+                  <strong style={{color:'var(--text-light)', fontSize:'.95rem'}}>{a.act_name} {a.year && `(${a.year})`}</strong>
                 </div>
-                <div className="kv" style={{margin:'4px 0'}}><span>Section</span><span className="badge">{a.section_number}</span></div>
-                <div className="kv" style={{margin:'4px 0'}}><span>Heading</span><span style={{fontSize:'.9rem'}}>{a.section_heading}</span></div>
+                {a.section_number && <div className="kv" style={{margin:'4px 0'}}><span>Section</span><span className="badge">{a.section_number}</span></div>}
+                {a.section_heading && <div className="kv" style={{margin:'4px 0'}}><span>Heading</span><span style={{fontSize:'.9rem'}}>{a.section_heading}</span></div>}
                 {a.domain && <div className="kv" style={{margin:'4px 0'}}><span>Domain</span><span>{a.domain}</span></div>}
-                <div style={{marginTop:6, fontSize:'.85rem', color:'var(--muted)', fontStyle:'italic'}}>Source: {a.retrieval_source || 'unknown'}</div>
+                {a.retrieval_source && <div style={{marginTop:6, fontSize:'.85rem', color:'var(--muted)', fontStyle:'italic'}}>Source: {a.retrieval_source}</div>}
               </div>
             ))}
           </div>
