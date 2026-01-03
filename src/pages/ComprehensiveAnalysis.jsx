@@ -124,19 +124,49 @@ export default function ComprehensiveAnalysis(){
     ]);
   };
 
+  const [expandedClauses, setExpandedClauses] = useState({});
+
+  const toggleExpandClause = (clauseId) => {
+    setExpandedClauses(prev => ({
+      ...prev,
+      [clauseId]: !prev[clauseId]
+    }));
+  };
+
   const renderClause = (clause) => {
     const clauseRisks = data.risks[clause.clause_id] || {};
     const riskList = clauseRisks.risks || [];
+    const isExpanded = expandedClauses[clause.clause_id];
+    const isLongText = clause.clause_text && clause.clause_text.length > 300;
+    const displayText = isExpanded ? clause.clause_text : clause.clause_text?.substring(0, 300);
+    
     return (
       <div key={clause.clause_id} className="clause-card">
         <div className="clause-header">
           <div>
-            <span className="clause-type-badge">{clause.type?.toUpperCase()}</span>
+            <span className="clause-type-badge">{clause.clause_type?.toUpperCase()}</span>
             <span className="clause-id">{clause.clause_id}</span>
           </div>
-          <span className="clause-length">{clause.full_text_length || 0} chars</span>
+          <span className="clause-length">{clause.text_length || 0} chars</span>
         </div>
-        <div className="clause-text">{clause.text}</div>
+
+        <div className="clause-text-container">
+          <p className="clause-text">
+            {displayText}
+            {isLongText && !isExpanded && '...'}
+          </p>
+          {isLongText && (
+            <button 
+              className="expand-btn"
+              onClick={() => toggleExpandClause(clause.clause_id)}
+              style={{marginTop: '8px', padding: '6px 12px', background: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '.9rem'}}
+            >
+              {isExpanded ? '📖 Read Less' : '📖 Read More'}
+            </button>
+          )}
+        </div>
+
+        {/* RISKS SECTION - Updates when available */}
         {!loading.risks && riskList.length > 0 && (
           <div className="risks-section">
             <h4>⚠️ Identified Risks ({riskList.length})</h4>
@@ -161,6 +191,8 @@ export default function ComprehensiveAnalysis(){
           </div>
         )}
         {loading.risks && <div className="loading-section">⏳ Analyzing risks...</div>}
+
+        {/* CASES SECTION - Updates when available */}
         {!loading.cases && data.cases.length > 0 && (
           <div className="cases-section">
             <h4>📚 Related Case Law ({data.cases.length})</h4>
@@ -183,6 +215,8 @@ export default function ComprehensiveAnalysis(){
           </div>
         )}
         {loading.cases && <div className="loading-section">⏳ Searching cases...</div>}
+
+        {/* LEGISLATION SECTION - Updates when available */}
         {!loading.acts && data.acts.length > 0 && (
           <div className="acts-section">
             <h4>📖 Related Legislation ({data.acts.length})</h4>
