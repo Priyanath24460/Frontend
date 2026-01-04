@@ -119,7 +119,7 @@ const Header = () => {
                         </Link>
                         
                         <Link 
-                          to="/#case-summarizer" 
+                          to="/case-summarizer" 
                           className="flex items-start p-4 rounded-lg hover:bg-amber-400/10 transition-all duration-200 group"
                         >
                           <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-400 rounded-lg flex items-center justify-center mr-3">
@@ -134,7 +134,7 @@ const Header = () => {
                         </Link>
                         
                         <Link 
-                          to="/#contract-manager" 
+                          to="/comprehensive_Analysis" 
                           className="flex items-start p-4 rounded-lg hover:bg-amber-400/10 transition-all duration-200 group"
                         >
                           <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-400 rounded-lg flex items-center justify-center mr-3">

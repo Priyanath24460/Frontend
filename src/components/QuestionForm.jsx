@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import API_URL from "../config/api";
+import { SECONDARY_API_URL } from "../config/api";
 
 export default function QuestionForm({ onAsk, setIsLoading, setError, selectedQuery, setSelectedQuery }) {
   const [question, setQuestion] = useState("");
@@ -16,7 +16,7 @@ export default function QuestionForm({ onAsk, setIsLoading, setError, selectedQu
     setError(null);
     
     try {
-      const res = await fetch(`${API_URL}/api/query`, {
+      const res = await fetch(`${SECONDARY_API_URL}/api/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
