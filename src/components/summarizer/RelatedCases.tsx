@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import "./RelatedCases.css";
 
 interface SimilarCase {
@@ -10,9 +11,9 @@ interface SimilarCase {
   year: number;
   similarity_score: number;
   weighted_score: number;
-  is_binding: boolean;
+  binding: boolean;
   court_weight: number;
-  recency_factor: number;
+  recency: number | null;
 }
 
 interface RelatedCasesProps {
@@ -78,15 +79,20 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
     );
   };
 
-  const getSimilarityColor = (score: number): string => {
-    if (score >= 0.8) return "#2ECC71"; // Green
-    if (score >= 0.6) return "#F39C12"; // Orange
-    if (score >= 0.4) return "#E67E22"; // Dark orange
-    return "#95A5A6"; // Gray
+  const formatPercentage = (value: number | null): string => {
+    // API now returns percentages (0-100), not decimals (0-1)
+    if (value === null || value === undefined) {
+      return "N/A";
+    }
+    return `${value.toFixed(1)}%`;
   };
 
-  const formatPercentage = (value: number): string => {
-    return `${(value * 100).toFixed(1)}%`;
+  const getSimilarityColor = (score: number): string => {
+    // Score is already 0-100, so adjust thresholds
+    if (score >= 80) return "#2ECC71"; // Green
+    if (score >= 60) return "#F39C12"; // Orange
+    if (score >= 40) return "#E67E22"; // Dark orange
+    return "#95A5A6"; // Gray
   };
 
   if (loading) {
@@ -153,7 +159,7 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
             <div className="case-content">
               <div className="case-header">
                 <h4 className="case-title">{similarCase.title}</h4>
-                {getAuthorityBadge(similarCase.is_binding)}
+                {getAuthorityBadge(similarCase.binding)}
               </div>
 
               <div className="case-metadata">
@@ -176,7 +182,7 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
                     <div
                       className="metric-fill"
                       style={{
-                        width: formatPercentage(similarCase.similarity_score),
+                        width: `${similarCase.similarity_score}%`,
                         backgroundColor: getSimilarityColor(
                           similarCase.similarity_score
                         ),
@@ -194,7 +200,7 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
                     <div
                       className="metric-fill"
                       style={{
-                        width: formatPercentage(similarCase.weighted_score),
+                        width: `${similarCase.weighted_score}%`,
                         backgroundColor: getSimilarityColor(
                           similarCase.weighted_score
                         ),
@@ -212,19 +218,17 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
                   Court: {formatPercentage(similarCase.court_weight)}
                 </span>
                 <span className="weight-badge" title="Recency adjustment">
-                  Recency: {formatPercentage(similarCase.recency_factor)}
+                  Recency: {formatPercentage(similarCase.recency)}
                 </span>
               </div>
 
               <div className="case-actions">
-                <button
+                <Link
+                  to={`/case-summarizer/${similarCase.document_id}`}
                   className="view-case-btn"
-                  onClick={() =>
-                    (window.location.href = `/case/${similarCase.document_id}`)
-                  }
                 >
                   View Case →
-                </button>
+                </Link>
               </div>
             </div>
           </div>

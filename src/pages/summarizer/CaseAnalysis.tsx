@@ -1,5 +1,5 @@
 // frontend/src/pages/CaseAnalysis.tsx
-import React, { useState } from "react";
+import React from "react";
 import DocumentUploadMUI from "../../components/summarizer/DocumentUploadMUI";
 import SummaryView from "../../components/summarizer/SummaryView";
 import ConstitutionalRightsHighlighter from "../../components/summarizer/ConstitutionalRightsHighlighter";
@@ -11,6 +11,9 @@ import RelatedCases from "../../components/summarizer/RelatedCases";
 import ExportButton from "../../components/summarizer/ExportButton";
 import axios from "axios";
 import Header from "../../components/Header";
+import { useCaseAnalysis } from "../../contexts/CaseAnalysisContext";
+import CaseBriefDisplay from "../../components/summarizer/CaseBriefDisplay";
+
 
 interface FundamentalRight {
   article: string;
@@ -48,23 +51,23 @@ interface CaseAnalysisProps {
 }
 
 const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
-  const [summary, setSummary] = useState("");
-  const [keywords, setKeywords] = useState<string[]>([]);
-  const [fundamentalRights, setFundamentalRights] = useState<
-    FundamentalRight[]
-  >([]);
-  const [constitutionalProvisions, setConstitutionalProvisions] = useState<
-    ConstitutionalProvision[]
-  >([]);
-  const [structureAnalysis, setStructureAnalysis] =
-    useState<StructureAnalysis | null>(null);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [currentDocumentId, setCurrentDocumentId] = useState<number | null>(
-    null
-  );
-  const [activeTab, setActiveTab] = useState<string>("summary");
+  const {
+    state,
+    setSummary,
+    setKeywords,
+    setFundamentalRights,
+    setConstitutionalProvisions,
+    setStructureAnalysis,
+    setAnalysisError,
+    setCurrentDocumentId,
+    setActiveTab,
+    resetState,
+  } = useCaseAnalysis();
 
   const handleUploadSuccess = async (doc: any) => {
+    // Reset state for new upload
+    resetState();
+    
     setAnalysisError(null);
     setCurrentDocumentId(doc.document_id);
 
@@ -200,11 +203,11 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                     </ul>
                   </div>
                   
-                  {currentDocumentId && (
+                  {state.currentDocumentId && (
                     <div className="mt-6">
                       <ExportButton
-                        documentId={currentDocumentId}
-                        documentTitle={`Document_${currentDocumentId}`}
+                        documentId={state.currentDocumentId}
+                        documentTitle={`Document_${state.currentDocumentId}`}
                         contentElementId="case-analysis-container"
                       />
                     </div>
@@ -223,12 +226,12 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-stone-800">Analysis Results</h2>
-                      {currentDocumentId && <p className="text-xs text-gray-500 mt-1">Document ID: {currentDocumentId}</p>}
+                      {state.currentDocumentId && <p className="text-xs text-gray-500 mt-1">Document ID: {state.currentDocumentId}</p>}
                     </div>
                   </div>
 
                   {/* Error State */}
-                  {analysisError && (
+                  {state.analysisError && (
                     <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
                       <div className="flex items-start">
                         <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,14 +239,14 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                         </svg>
                         <div>
                           <h3 className="text-red-800 font-semibold mb-1">Analysis Failed</h3>
-                          <p className="text-red-700 text-sm">{analysisError}</p>
+                          <p className="text-red-700 text-sm">{state.analysisError}</p>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {/* Empty State */}
-                  {!currentDocumentId && !analysisError && (
+                  {!state.currentDocumentId && !state.analysisError && (
                     <div className="text-center py-16">
                       <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center shadow-lg">
                         <svg className="w-12 h-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -292,14 +295,14 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                   )}
 
                   {/* Results Display */}
-                  {currentDocumentId && !analysisError && (
+                  {state.currentDocumentId && !state.analysisError && (
                     <div className="space-y-4">
                       {/* Tab Navigation */}
                       <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
                         <button
                           onClick={() => setActiveTab("summary")}
                           className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
-                            activeTab === "summary"
+                            state.activeTab === "summary"
                               ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
@@ -309,7 +312,7 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                         <button
                           onClick={() => setActiveTab("constitutional")}
                           className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
-                            activeTab === "constitutional"
+                            state.activeTab === "constitutional"
                               ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
@@ -319,7 +322,7 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                         <button
                           onClick={() => setActiveTab("entities")}
                           className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
-                            activeTab === "entities"
+                            state.activeTab === "entities"
                               ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
@@ -329,43 +332,59 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                         <button
                           onClick={() => setActiveTab("related")}
                           className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
-                            activeTab === "related"
+                            state.activeTab === "related"
                               ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
                           🔗 Related Cases
                         </button>
+                        <button
+                          onClick={() => setActiveTab("brief")}
+                          className={`px-4 py-2 rounded-t-lg font-medium text-sm transition-all ${
+                            state.activeTab === "brief"
+                              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          📋 Case Brief
+                        </button>
                       </div>
 
                       {/* Tab Content */}
                       <div className="mt-4">
-                        {activeTab === "summary" && (
+                        {state.activeTab === "summary" && (
                           <div className="animate-fadeIn">
-                            <MultiLevelSummary documentId={currentDocumentId} />
+                            <MultiLevelSummary documentId={state.currentDocumentId} />
                           </div>
                         )}
                         
-                        {activeTab === "constitutional" && (
+                        {state.activeTab === "constitutional" && (
                           <div className="animate-fadeIn space-y-4">
-                            <ConstitutionalRightsHighlighter rights={fundamentalRights} />
-                            <ConstitutionalProvisionsDisplay provisions={constitutionalProvisions} />
+                            <ConstitutionalRightsHighlighter rights={state.fundamentalRights} />
+                            <ConstitutionalProvisionsDisplay provisions={state.constitutionalProvisions} />
                           </div>
                         )}
                         
-                        {activeTab === "entities" && (
+                        {state.activeTab === "entities" && (
                           <div className="animate-fadeIn">
-                            <LegalEntitiesDisplay documentId={currentDocumentId} autoLoad={true} />
+                            <LegalEntitiesDisplay documentId={state.currentDocumentId} autoLoad={true} />
                           </div>
                         )}
                         
-                        {activeTab === "related" && (
+                        {state.activeTab === "related" && (
                           <div className="animate-fadeIn">
                             <RelatedCases
-                              documentId={currentDocumentId}
+                              documentId={state.currentDocumentId}
                               topK={5}
                               minSimilarity={0.3}
                             />
+                          </div>
+                        )}
+                        
+                        {state.activeTab === "brief" && (
+                          <div className="animate-fadeIn">
+                            <CaseBriefDisplay documentId={state.currentDocumentId} autoLoad={true} />
                           </div>
                         )}
                       </div>

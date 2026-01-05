@@ -51,35 +51,34 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
       return;
     }
 
-    setUploading(true);
-    setError(null);
-    setUploadProgress(0);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await axios.post(
+      setUploading(true);
+      setUploadProgress(0);
+      setError(null);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(
         "http://127.0.0.1:8000/api/documents/upload-sri-lanka",
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-          timeout: 30000,
+          timeout: 300000, // Increase to 5 minutes for BART model download
           onUploadProgress: (progressEvent) => {
-            const percentCompleted = progressEvent.total
-              ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-              : 0;
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / (progressEvent.total || 1)
+            );
             setUploadProgress(percentCompleted);
           },
         }
       );
 
-      console.log("Upload successful:", res.data);
+      console.log("Upload successful:", response.data);
       setUploadProgress(100);
-      setUploading(false);
-      onUploadSuccess(res.data);
+      onUploadSuccess(response.data);
 
       // Reset after success
       setTimeout(() => {
@@ -87,34 +86,18 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
         setUploadProgress(0);
       }, 2000);
     } catch (err: any) {
-      console.error("Upload error details:", err);
-
-      setUploading(false);
-      setUploadProgress(0);
+      console.error("Upload error:", err);
 
       if (err.code === "ECONNABORTED") {
-        setError("Request timed out. Please try again.");
-      } else if (err.response) {
-        let errorMessage = "Upload failed";
-
-        if (err.response.data?.detail) {
-          errorMessage = err.response.data.detail;
-        } else if (err.response.data?.error) {
-          errorMessage = err.response.data.error;
-        } else if (err.response.data?.message) {
-          errorMessage = err.response.data.message;
-        } else if (typeof err.response.data === "string") {
-          errorMessage = err.response.data;
-        } else if (err.response.status === 500) {
-          errorMessage = "Server error (500). Check backend logs.";
-        }
-
-        setError(`Server Error: ${errorMessage}`);
-      } else if (err.request) {
-        setError("No response from server. Is the backend running?");
+        setError(
+          "Upload timeout - The server is downloading AI models (first time only, ~1.6GB). " +
+            "This may take 5-10 minutes. Please wait and the analysis will complete automatically."
+        );
       } else {
-        setError(`Error: ${err.message}`);
+        setError(err.response?.data?.detail || "Upload failed");
       }
+    } finally {
+      setUploading(false);
     }
   };
 
