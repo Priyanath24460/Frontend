@@ -1,4 +1,9 @@
 import React, { useState } from "react";
+import { 
+  ClipboardDocumentListIcon, 
+  DocumentTextIcon, 
+  BookOpenIcon 
+} from '@heroicons/react/24/outline';
 import "./MultiLevelSummary.css";
 
 interface SectionSummary {
@@ -115,7 +120,10 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
     return (
       <div className="summary-content">
         <div className="summary-header">
-          <h3>📋 Executive Summary</h3>
+          <h3>
+            <ClipboardDocumentListIcon className="w-6 h-6 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+            Executive Summary
+          </h3>
           <div className="summary-meta">
             <span className="word-count">
               {executiveSummary.word_count} words
@@ -153,7 +161,10 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
     return (
       <div className="summary-content">
         <div className="summary-header">
-          <h3>📝 Detailed Summary</h3>
+          <h3>
+            <DocumentTextIcon className="w-6 h-6 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+            Detailed Summary
+          </h3>
           <div className="summary-meta">
             <span className="word-count">
               {detailedSummary.word_count} words
@@ -235,7 +246,10 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
 
     return (
       <div className="glossary-panel">
-        <h4>📚 Legal Terms Glossary</h4>
+        <h4>
+          <BookOpenIcon className="w-5 h-5 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+          Legal Terms Glossary
+        </h4>
         <div className="glossary-list">
           {glossary.slice(0, 10).map((entry, index) => (
             <div key={index} className="glossary-item">
@@ -260,7 +274,8 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
             }`}
             onClick={() => handleLevelChange("executive")}
           >
-            📋 Executive
+            <ClipboardDocumentListIcon className="w-5 h-5 inline-block mr-1" />
+            Executive
           </button>
           <button
             className={`level-btn ${
@@ -268,7 +283,8 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
             }`}
             onClick={() => handleLevelChange("detailed")}
           >
-            📝 Detailed
+            <DocumentTextIcon className="w-5 h-5 inline-block mr-1" />
+            Detailed
           </button>
           <button
             className={`level-btn ${
@@ -301,7 +317,7 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
 
       {error && (
         <div className="summary-error">
-          <p>❌ {error}</p>
+          <p>Error: {error}</p>
           <button onClick={() => fetchSummaries(plainLanguage)}>Retry</button>
         </div>
       )}

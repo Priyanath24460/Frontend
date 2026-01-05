@@ -39,6 +39,7 @@ interface CaseAnalysisState {
   structureAnalysis: StructureAnalysis | null;
   analysisError: string | null;
   currentDocumentId: number | null;
+  currentDocumentName: string | null;
   activeTab: string;
   shouldPersist: boolean;
 }
@@ -52,6 +53,7 @@ interface CaseAnalysisContextType {
   setStructureAnalysis: (analysis: StructureAnalysis | null) => void;
   setAnalysisError: (error: string | null) => void;
   setCurrentDocumentId: (id: number | null) => void;
+  setCurrentDocumentName: (name: string | null) => void;
   setActiveTab: (tab: string) => void;
   resetState: () => void;
 }
@@ -64,6 +66,7 @@ const initialState: CaseAnalysisState = {
   structureAnalysis: null,
   analysisError: null,
   currentDocumentId: null,
+  currentDocumentName: null,
   activeTab: 'summary',
   shouldPersist: false,
 };
@@ -74,21 +77,19 @@ const CaseAnalysisContext = createContext<CaseAnalysisContextType | undefined>(u
 
 export const CaseAnalysisProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<CaseAnalysisState>(() => {
-    // Load persisted state on initialization
-    const savedState = sessionStorage.getItem(STORAGE_KEY);
-    if (savedState) {
-      const parsed = JSON.parse(savedState);
-      // Only restore if it was marked for persistence
-      if (parsed.shouldPersist) {
-        return parsed;
-      }
-    }
+    // Clear old sessionStorage data on page load
+    sessionStorage.removeItem(STORAGE_KEY);
+    // Don't load from sessionStorage on initial mount - always start fresh
+    // Data will only persist during the session, not across page refreshes
+    console.log('🆕 Starting with fresh state (no persistence across refreshes)');
     return initialState;
   });
 
   // Persist state to session storage whenever it changes
   useEffect(() => {
-    if (state.shouldPersist && (state.summary || state.keywords.length > 0)) {
+    console.log('State changed:', state);
+    if (state.shouldPersist && (state.currentDocumentId || state.summary || state.keywords.length > 0)) {
+      console.log('Saving to sessionStorage:', state);
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } else if (!state.shouldPersist) {
       sessionStorage.removeItem(STORAGE_KEY);
@@ -106,7 +107,9 @@ export const CaseAnalysisProvider: React.FC<{ children: ReactNode }> = ({ childr
   const setAnalysisError = (analysisError: string | null) => 
     setState(prev => ({ ...prev, analysisError }));
   const setCurrentDocumentId = (currentDocumentId: number | null) => 
-    setState(prev => ({ ...prev, currentDocumentId }));
+    setState(prev => ({ ...prev, currentDocumentId, shouldPersist: true }));
+  const setCurrentDocumentName = (currentDocumentName: string | null) => 
+    setState(prev => ({ ...prev, currentDocumentName, shouldPersist: true }));
   const setActiveTab = (activeTab: string) => 
     setState(prev => ({ ...prev, activeTab }));
   const resetState = () => {
@@ -125,6 +128,7 @@ export const CaseAnalysisProvider: React.FC<{ children: ReactNode }> = ({ childr
         setStructureAnalysis,
         setAnalysisError,
         setCurrentDocumentId,
+        setCurrentDocumentName,
         setActiveTab,
         resetState,
       }}

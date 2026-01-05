@@ -1,5 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { 
+  CpuChipIcon, 
+  ScaleIcon, 
+  DocumentTextIcon, 
+  ChartBarIcon 
+} from '@heroicons/react/24/outline';
 
 interface DashboardProps {
   lang: string;
@@ -16,22 +22,22 @@ const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
     title: "Key Features",
     items: [
       {
-        icon: "🤖",
+        icon: <CpuChipIcon className="w-8 h-8" />,
         title: "AI-Powered Summarization",
         desc: "Multi-level summaries: Executive, Detailed, and Section-specific",
       },
       {
-        icon: "⚖️",
+        icon: <ScaleIcon className="w-8 h-8" />,
         title: "Legal Entity Recognition",
         desc: "Extract cases, courts, judges, statutes, and legal principles",
       },
       {
-        icon: "📜",
+        icon: <DocumentTextIcon className="w-8 h-8" />,
         title: "Constitutional Analysis",
         desc: "Detect fundamental rights violations and constitutional provisions",
       },
       {
-        icon: "📊",
+        icon: <ChartBarIcon className="w-8 h-8" />,
         title: "Document Structure",
         desc: "Automatic classification of legal document sections",
       },

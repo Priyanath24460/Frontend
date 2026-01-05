@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import {
+  DocumentTextIcon,
+  PencilSquareIcon,
+  QuestionMarkCircleIcon,
+  ScaleIcon,
+  LightBulbIcon,
+  SparklesIcon,
+  DocumentIcon,
+  BookOpenIcon,
+  CheckCircleIcon
+} from '@heroicons/react/24/outline';
 import './CaseBriefDisplay.css';
 
 interface CaseBriefProps {
@@ -80,7 +91,8 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
     return (
       <div className="case-brief-prompt">
         <button onClick={loadBrief} className="generate-brief-btn">
-          📋 Generate Structured Case Brief
+          <DocumentTextIcon className="icon" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
+          Generate Structured Case Brief
         </button>
         <p className="text-sm text-gray-500 mt-2">
           Create a professional case brief with facts, issues, holding, and ratio decidendi
@@ -117,7 +129,7 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
       {brief.executive_summary && (
         <div className="brief-section executive-summary">
           <h3 className="section-title">
-            <span className="icon">📄</span>
+            <DocumentTextIcon className="icon" />
             Executive Summary
           </h3>
           <p className="summary-text">{brief.executive_summary}</p>
@@ -128,7 +140,7 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
       {brief.facts && (
         <div className="brief-section facts">
           <h3 className="section-title">
-            <span className="icon">📝</span>
+            <PencilSquareIcon className="icon" />
             Facts
           </h3>
           <p className="section-content">{brief.facts}</p>
@@ -139,7 +151,7 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
       {brief.issues && Array.isArray(brief.issues) && brief.issues.length > 0 && (
         <div className="brief-section issues">
           <h3 className="section-title">
-            <span className="icon">❓</span>
+            <QuestionMarkCircleIcon className="icon" />
             Legal Issues
           </h3>
           <ul className="issues-list">
@@ -154,7 +166,7 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
       {brief.holding && (
         <div className="brief-section holding">
           <h3 className="section-title">
-            <span className="icon">⚖️</span>
+            <ScaleIcon className="icon" />
             Holding / Decision
           </h3>
           <p className="section-content">{brief.holding}</p>
@@ -165,7 +177,7 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
       {brief.reasoning && (
         <div className="brief-section reasoning">
           <h3 className="section-title">
-            <span className="icon">💭</span>
+            <LightBulbIcon className="icon" />
             Reasoning
           </h3>
           <p className="section-content">{brief.reasoning}</p>
@@ -176,7 +188,7 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
       {brief.ratio_decidendi && Array.isArray(brief.ratio_decidendi) && brief.ratio_decidendi.length > 0 && (
         <div className="brief-section ratio">
           <h3 className="section-title">
-            <span className="icon">⭐</span>
+            <SparklesIcon className="icon" />
             Ratio Decidendi (Legal Principles)
           </h3>
           <ul className="ratio-list">
@@ -191,7 +203,7 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
       {brief.procedural_principles && (
         <div className="brief-section procedural">
           <h3 className="section-title">
-            <span className="icon">📜</span>
+            <DocumentIcon className="icon" />
             Procedural / Evidentiary Principles
           </h3>
           {brief.procedural_principles.statutory_provisions && 
@@ -213,7 +225,7 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
       {brief.key_takeaways && Array.isArray(brief.key_takeaways) && brief.key_takeaways.length > 0 && (
         <div className="brief-section takeaways">
           <h3 className="section-title">
-            <span className="icon">💡</span>
+            <BookOpenIcon className="icon" />
             Key Takeaways
           </h3>
           <ul className="takeaways-list">
@@ -228,7 +240,7 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
       {brief.final_order && (
         <div className="brief-section final-order">
           <h3 className="section-title">
-            <span className="icon">✅</span>
+            <CheckCircleIcon className="icon" />
             Final Order
           </h3>
           <p className="order-text">{brief.final_order}</p>

@@ -1,4 +1,5 @@
 import React from "react";
+import { ScaleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import "./ConstitutionalRightsHighlighter.css";
 
 interface FundamentalRight {
@@ -21,7 +22,10 @@ const ConstitutionalRightsHighlighter: React.FC<
   if (!rights || rights.length === 0) {
     return (
       <div className="rights-container">
-        <h2>⚖️ Fundamental Rights (Articles 10–18)</h2>
+        <h2>
+          <ScaleIcon className="w-7 h-7 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+          Fundamental Rights (Articles 10–18)
+        </h2>
         <p className="no-data">
           No fundamental rights detected in this document.
         </p>
@@ -43,7 +47,8 @@ const ConstitutionalRightsHighlighter: React.FC<
   return (
     <div className="rights-container">
       <h2>
-        ⚖️ Fundamental Rights ({uniqueRights.length} unique articles detected)
+        <ScaleIcon className="w-6 h-6 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+        Fundamental Rights ({uniqueRights.length} unique articles detected)
       </h2>
       <p className="description">
         Fundamental rights protected under Chapter III of the Constitution of
@@ -60,7 +65,7 @@ const ConstitutionalRightsHighlighter: React.FC<
               <span className="method-badge">
                 {right.method === "explicit_mention"
                   ? "📌 Explicit"
-                  : "🔍 Detected"}
+                  : "Detected"}
               </span>
             )}
           </div>
@@ -79,7 +84,10 @@ const ConstitutionalRightsHighlighter: React.FC<
 
           {right.context && right.context !== right.matched_text && (
             <details className="right-details">
-              <summary>🔍 Context</summary>
+              <summary>
+                <MagnifyingGlassIcon className="w-4 h-4 inline-block mr-1" style={{verticalAlign: 'middle'}} />
+                Context
+              </summary>
               <p className="context-text">{right.context}</p>
             </details>
           )}

@@ -1,4 +1,5 @@
 import React from "react";
+import { BookOpenIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import "./ConstitutionalProvisionsDisplay.css";
 
 interface ConstitutionalProvision {
@@ -23,7 +24,10 @@ const ConstitutionalProvisionsDisplay: React.FC<
   if (!provisions || provisions.length === 0) {
     return (
       <div className="provisions-container">
-        <h2>📚 Constitutional Provisions</h2>
+        <h2>
+          <BookOpenIcon className="w-7 h-7 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+          Constitutional Provisions
+        </h2>
         <p className="no-data">No constitutional provisions detected.</p>
       </div>
     );
@@ -43,7 +47,8 @@ const ConstitutionalProvisionsDisplay: React.FC<
   return (
     <div className="provisions-container">
       <h2>
-        📚 Constitutional Provisions ({uniqueProvisions.length} unique articles
+        <BookOpenIcon className="w-6 h-6 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+        Constitutional Provisions ({uniqueProvisions.length} unique articles
         detected)
       </h2>
       <p className="description">
@@ -60,7 +65,7 @@ const ConstitutionalProvisionsDisplay: React.FC<
               <span className="method-badge">
                 {provision.method === "explicit_mention"
                   ? "📌 Explicit"
-                  : "🔍 Semantic"}
+                  : "Semantic"}
               </span>
               {provision.score && provision.method !== "explicit_mention" && (
                 <span className="score-badge">
@@ -99,7 +104,10 @@ const ConstitutionalProvisionsDisplay: React.FC<
           {provision.context &&
             provision.context !== provision.matched_text && (
               <details className="provision-details">
-                <summary>🔍 Context</summary>
+                <summary>
+                  <MagnifyingGlassIcon className="w-4 h-4 inline-block mr-1" style={{verticalAlign: 'middle'}} />
+                  Context
+                </summary>
                 <p className="context-text">{provision.context}</p>
               </details>
             )}

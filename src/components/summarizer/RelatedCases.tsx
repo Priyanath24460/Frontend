@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { ScaleIcon, BookOpenIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import "./RelatedCases.css";
 
 interface SimilarCase {
@@ -73,9 +74,15 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
 
   const getAuthorityBadge = (isBinding: boolean) => {
     return isBinding ? (
-      <span className="authority-badge binding">⚖️ Binding</span>
+      <span className="authority-badge binding">
+        <ScaleIcon className="w-4 h-4 inline-block" style={{verticalAlign: 'middle'}} />
+        {' '}Binding
+      </span>
     ) : (
-      <span className="authority-badge persuasive">📚 Persuasive</span>
+      <span className="authority-badge persuasive">
+        <BookOpenIcon className="w-4 h-4 inline-block" style={{verticalAlign: 'middle'}} />
+        {' '}Persuasive
+      </span>
     );
   };
 
@@ -112,7 +119,7 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
       <div className="related-cases-container">
         <h3 className="related-cases-title">🔗 Related Cases</h3>
         <div className="error-message">
-          <span className="error-icon">⚠️</span>
+          <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />
           <p>{error}</p>
         </div>
       </div>
@@ -124,7 +131,7 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
       <div className="related-cases-container">
         <h3 className="related-cases-title">🔗 Related Cases</h3>
         <div className="no-cases-message">
-          <span className="info-icon">ℹ️</span>
+          <InformationCircleIcon className="w-6 h-6 text-blue-500" />
           <p>
             No similar cases found. This might be a unique case or embeddings
             need to be generated.

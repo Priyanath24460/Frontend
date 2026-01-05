@@ -1,5 +1,12 @@
 // frontend/src/pages/CaseAnalysis.tsx
 import React from "react";
+import { 
+  DocumentTextIcon, 
+  ScaleIcon, 
+  UserGroupIcon, 
+  LinkIcon, 
+  ClipboardDocumentListIcon 
+} from '@heroicons/react/24/outline';
 import DocumentUploadMUI from "../../components/summarizer/DocumentUploadMUI";
 import SummaryView from "../../components/summarizer/SummaryView";
 import ConstitutionalRightsHighlighter from "../../components/summarizer/ConstitutionalRightsHighlighter";
@@ -60,16 +67,26 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
     setStructureAnalysis,
     setAnalysisError,
     setCurrentDocumentId,
+    setCurrentDocumentName,
     setActiveTab,
     resetState,
   } = useCaseAnalysis();
 
   const handleUploadSuccess = async (doc: any) => {
+    console.log('Upload response:', doc);
+    
+    // Try multiple fields for document name
+    const documentName = doc.file_name || doc.filename || doc.title || doc.name || `Document_${doc.document_id}`;
+    console.log('Setting document name:', documentName);
+    
     // Reset state for new upload
     resetState();
     
     setAnalysisError(null);
+    
+    // Set both ID and name together to ensure they persist
     setCurrentDocumentId(doc.document_id);
+    setCurrentDocumentName(documentName);
 
     // Set structure analysis from upload response
     if (doc.structure_analysis) {
@@ -207,7 +224,7 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                     <div className="mt-6">
                       <ExportButton
                         documentId={state.currentDocumentId}
-                        documentTitle={`Document_${state.currentDocumentId}`}
+                        documentTitle={state.currentDocumentName || `Document_${state.currentDocumentId}`}
                         contentElementId="case-analysis-container"
                       />
                     </div>
@@ -226,7 +243,11 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-stone-800">Analysis Results</h2>
-                      {state.currentDocumentId && <p className="text-xs text-gray-500 mt-1">Document ID: {state.currentDocumentId}</p>}
+                      {state.currentDocumentName && (
+                        <p className="text-xs text-gray-600 mt-1 font-medium">
+                          📄 {state.currentDocumentName}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -307,7 +328,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
-                          📄 Summary
+                          <DocumentTextIcon className="w-5 h-5 inline-block mr-1" />
+                          Summary
                         </button>
                         <button
                           onClick={() => setActiveTab("constitutional")}
@@ -317,7 +339,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
-                          ⚖️ Constitutional
+                          <ScaleIcon className="w-5 h-5 inline-block mr-1" />
+                          Constitutional
                         </button>
                         <button
                           onClick={() => setActiveTab("entities")}
@@ -327,7 +350,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
-                          👥 Legal Entities
+                          <UserGroupIcon className="w-5 h-5 inline-block mr-1" />
+                          Legal Entities
                         </button>
                         <button
                           onClick={() => setActiveTab("related")}
@@ -337,7 +361,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
-                          🔗 Related Cases
+                          <LinkIcon className="w-5 h-5 inline-block mr-1" />
+                          Related Cases
                         </button>
                         <button
                           onClick={() => setActiveTab("brief")}
@@ -347,7 +372,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
-                          📋 Case Brief
+                          <ClipboardDocumentListIcon className="w-5 h-5 inline-block mr-1" />
+                          Case Brief
                         </button>
                       </div>
 

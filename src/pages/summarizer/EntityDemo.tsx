@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import LegalEntitiesDisplay from "../components/LegalEntitiesDisplay";
+import { BookOpenIcon, MagnifyingGlassIcon, CheckBadgeIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import LegalEntitiesDisplay from "../../components/summarizer/LegalEntitiesDisplay";
 import "./EntityDemo.css";
 
 const SAMPLE_TEXTS = [
@@ -51,7 +52,10 @@ const EntityDemo: React.FC = () => {
       <div className="demo-controls">
         {/* Sample Text Selection */}
         <div className="sample-selection">
-          <h2>📚 Try Sample Texts</h2>
+          <h2>
+            <BookOpenIcon className="w-7 h-7 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+            Try Sample Texts
+          </h2>
           <div className="sample-buttons">
             {SAMPLE_TEXTS.map((sample, index) => (
               <button
@@ -78,7 +82,8 @@ const EntityDemo: React.FC = () => {
             rows={8}
           />
           <button className="analyze-btn" onClick={handleAnalyzeCustomText}>
-            🔍 Analyze Custom Text
+            <MagnifyingGlassIcon className="w-5 h-5 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+            Analyze Custom Text
           </button>
         </div>
       </div>
@@ -100,7 +105,10 @@ const EntityDemo: React.FC = () => {
         <h2>ℹ️ About Legal Entity Recognition</h2>
         <div className="info-grid">
           <div className="info-card">
-            <h3>🎯 What It Does</h3>
+            <h3>
+              <CheckBadgeIcon className="w-6 h-6 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+              What It Does
+            </h3>
             <p>
               Our custom-trained NER model automatically identifies and extracts
               8 types of legal entities from Sri Lankan legal documents with 87%
@@ -139,7 +147,10 @@ const EntityDemo: React.FC = () => {
           </div>
 
           <div className="info-card">
-            <h3>📊 Model Performance</h3>
+            <h3>
+              <ChartBarIcon className="w-6 h-6 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+              Model Performance
+            </h3>
             <ul>
               <li>
                 <strong>F1 Score:</strong> 87.28%

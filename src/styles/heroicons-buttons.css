@@ -1,0 +1,15 @@
+/* Heroicons button styling for tab buttons and icons */
+button svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.generate-brief-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.generate-brief-btn svg {
+  flex-shrink: 0;
+}

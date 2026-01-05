@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ExclamationTriangleIcon, DocumentTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import "./LegalEntitiesDisplay.css";
 
 interface Entity {
@@ -185,7 +186,10 @@ const LegalEntitiesDisplay: React.FC<LegalEntitiesDisplayProps> = ({
   if (error) {
     return (
       <div className="legal-entities-error">
-        <h3>⚠️ Error</h3>
+        <h3>
+          <ExclamationTriangleIcon className="w-6 h-6 inline-block mr-2 text-red-500" style={{verticalAlign: 'middle'}} />
+          Error
+        </h3>
         <p>{error}</p>
         <button onClick={extractEntities}>Try Again</button>
       </div>
@@ -241,7 +245,10 @@ const LegalEntitiesDisplay: React.FC<LegalEntitiesDisplayProps> = ({
       {/* Highlighted Text View */}
       {highlightedText && (
         <div className="highlighted-text-container">
-          <h3>📄 Highlighted Document</h3>
+          <h3>
+            <DocumentTextIcon className="w-6 h-6 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+            Highlighted Document
+          </h3>
           <div
             className="highlighted-text"
             dangerouslySetInnerHTML={{ __html: highlightedText }}
@@ -278,7 +285,10 @@ const LegalEntitiesDisplay: React.FC<LegalEntitiesDisplayProps> = ({
 
       {/* Statistics */}
       <div className="entity-statistics">
-        <h3>📊 Statistics</h3>
+        <h3>
+          <ChartBarIcon className="w-6 h-6 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+          Statistics
+        </h3>
         <div className="stats-grid">
           {Object.entries(entities).map(([type, entList]) => (
             <div key={type} className="stat-item">

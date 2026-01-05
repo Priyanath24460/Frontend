@@ -1,5 +1,6 @@
 // frontend/src/components/DocumentStructureDisplay.tsx
 import React from "react";
+import { ChartBarIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 import "./DocumentStructureDisplay.css";
 
 interface StructureAnalysis {
@@ -57,7 +58,10 @@ const DocumentStructureDisplay: React.FC<DocumentStructureDisplayProps> = ({
 
   return (
     <div className="structure-container">
-      <h3>📊 Document Structure Analysis</h3>
+      <h3>
+        <ChartBarIcon className="w-6 h-6 inline-block mr-2" style={{verticalAlign: 'middle'}} />
+        Document Structure Analysis
+      </h3>
       <p className="structure-subtitle">
         AI-powered classification of {total_paragraphs} paragraphs using hybrid
         BERT + rule-based approach
@@ -147,7 +151,7 @@ const DocumentStructureDisplay: React.FC<DocumentStructureDisplayProps> = ({
                 );
                 const methodLabels: { [key: string]: string } = {
                   bert: "🤖 BERT Model",
-                  rules: "📋 Rule-Based",
+                  rules: "Rule-Based",
                   fallback: "⚙️ Fallback",
                 };
                 const methodColors: { [key: string]: string } = {
