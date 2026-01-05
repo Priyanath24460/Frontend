@@ -63,7 +63,7 @@ const Header = () => {
                   )}
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link 
                   to="/upload" 
                   className={`relative px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 flex items-center ${
@@ -80,7 +80,7 @@ const Header = () => {
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-orange-400"></div>
                   )}
                 </Link>
-              </li>
+              </li> */}
               
               {/* Features Dropdown */}
               <li className="relative group" 
@@ -143,7 +143,7 @@ const Header = () => {
                             </svg>
                           </div>
                           <div>
-                            <h3 className="text-white font-semibold text-sm group-hover:text-amber-300 transition-colors">Contract Lifecycle Manager</h3>
+                            <h3 className="text-white font-semibold text-sm group-hover:text-amber-300 transition-colors">Contract Risk Identification System</h3>
                             <p className="text-stone-400 text-xs mt-1">Review and create contracts with AI</p>
                           </div>
                         </Link>
