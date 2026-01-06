@@ -1,5 +1,6 @@
 import { useState } from "react";
 import API_URL from "../config/api";
+import { DocumentTextIcon, PencilSquareIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 export default function UploadWithPreview({ onUpload }) {
   const [file, setFile] = useState(null);
@@ -183,7 +184,9 @@ export default function UploadWithPreview({ onUpload }) {
                 }`}
               >
                 <div className="text-center">
-                  <div className="text-2xl mb-1">📄</div>
+                  <div className="text-2xl mb-1 flex justify-center">
+                    <DocumentTextIcon className="w-8 h-8" />
+                  </div>
                   <div className="font-medium">Upload PDF File</div>
                   <div className="text-sm text-gray-500">Select a PDF document from your computer</div>
                 </div>
@@ -198,7 +201,9 @@ export default function UploadWithPreview({ onUpload }) {
                 }`}
               >
                 <div className="text-center">
-                  <div className="text-2xl mb-1">📝</div>
+                  <div className="text-2xl mb-1 flex justify-center">
+                    <PencilSquareIcon className="w-8 h-8" />
+                  </div>
                   <div className="font-medium">Paste Text</div>
                   <div className="text-sm text-gray-500">Copy and paste case text directly</div>
                 </div>
@@ -249,7 +254,10 @@ export default function UploadWithPreview({ onUpload }) {
                     Characters: {pastedText.length} | Words: {pastedText.trim() ? pastedText.trim().split(/\s+/).length : 0}
                   </p>
                   {pastedText.length > 10000 && (
-                    <p className="text-sm text-green-600">✅ Good length for analysis</p>
+                    <p className="text-sm text-green-600 flex items-center gap-1">
+                      <CheckCircleIcon className="w-4 h-4" />
+                      Good length for analysis
+                    </p>
                   )}
                 </div>
               </div>
@@ -278,13 +286,24 @@ export default function UploadWithPreview({ onUpload }) {
       {step === 2 && previewData && (
         <div>
           <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-4 text-green-600">📄 Document Preview</h3>
+            <h3 className="text-xl font-semibold mb-4 text-green-600 flex items-center gap-2">
+              <DocumentTextIcon className="w-6 h-6" />
+              Document Preview
+            </h3>
             
             {/* File Info */}
             <div className="bg-gray-50 p-4 rounded-lg mb-4">
               <h4 className="font-medium mb-2">Document Information</h4>
               <p><strong>Document:</strong> {previewData.fileName}</p>
-              <p><strong>Input Method:</strong> {previewData.isTextInput ? "📝 Pasted Text" : "📄 PDF File"}</p>
+              <p><strong>Input Method:</strong> {previewData.isTextInput ? (
+                <span className="inline-flex items-center gap-1">
+                  <PencilSquareIcon className="w-4 h-4 inline" /> Pasted Text
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <DocumentTextIcon className="w-4 h-4 inline" /> PDF File
+                </span>
+              )}</p>
               <p><strong>Size:</strong> {
                 previewData.isTextInput 
                   ? `${(previewData.fileSize / 1024).toFixed(1)} KB (${previewData.fileSize.toLocaleString()} characters)`
@@ -296,15 +315,22 @@ export default function UploadWithPreview({ onUpload }) {
             {/* Editable Metadata */}
             <div className="bg-blue-50 p-4 rounded-lg mb-4">
               <h4 className="font-medium mb-3">Comprehensive Case Metadata (Review & Edit)</h4>
-              <p className="text-sm text-gray-600 mb-4">
-                ✅ Auto-extracted | ⚠️ Needs review | ✏️ Please edit if needed
+              <p className="text-sm text-gray-600 mb-4 flex items-center gap-2">
+                <CheckCircleIcon className="w-4 h-4 text-green-600" /> Auto-extracted |
+                <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" /> Needs review |
+                <PencilSquareIcon className="w-4 h-4 text-blue-600" /> Please edit if needed
               </p>
               
               {/* Primary metadata */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Case Name {(editableMetadata.caseName === "Unknown Case" || !editableMetadata.caseName) ? "⚠️" : "✅"}
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    Case Name
+                    {(editableMetadata.caseName === "Unknown Case" || !editableMetadata.caseName) ? (
+                      <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
+                    ) : (
+                      <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                    )}
                   </label>
                   <input
                     type="text"
@@ -323,8 +349,13 @@ export default function UploadWithPreview({ onUpload }) {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Case Number {!editableMetadata.caseNumber ? "⚠️" : "✅"}
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    Case Number
+                    {!editableMetadata.caseNumber ? (
+                      <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
+                    ) : (
+                      <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                    )}
                   </label>
                   <input
                     type="text"
@@ -340,8 +371,13 @@ export default function UploadWithPreview({ onUpload }) {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Court {editableMetadata.court === "Unknown Court" ? "⚠️" : "✅"}
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    Court
+                    {editableMetadata.court === "Unknown Court" ? (
+                      <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
+                    ) : (
+                      <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                    )}
                   </label>
                   <input
                     type="text"
@@ -357,8 +393,13 @@ export default function UploadWithPreview({ onUpload }) {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Judgment Date {!editableMetadata.judgmentDate ? "⚠️" : "✅"}
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    Judgment Date
+                    {!editableMetadata.judgmentDate ? (
+                      <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
+                    ) : (
+                      <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                    )}
                   </label>
                   <input
                     type="text"
@@ -374,8 +415,13 @@ export default function UploadWithPreview({ onUpload }) {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Year {editableMetadata.year === new Date().getFullYear() ? "⚠️" : "✅"}
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    Year
+                    {editableMetadata.year === new Date().getFullYear() ? (
+                      <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
+                    ) : (
+                      <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                    )}
                   </label>
                   <input
                     type="number"
@@ -395,8 +441,13 @@ export default function UploadWithPreview({ onUpload }) {
 
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Case Type {(!editableMetadata.caseType || editableMetadata.caseType === "Unknown") ? "⚠️" : "✅"}
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    Case Type
+                    {(!editableMetadata.caseType || editableMetadata.caseType === "Unknown") ? (
+                      <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
+                    ) : (
+                      <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                    )}
                   </label>
                   <select
                     value={editableMetadata.caseType || "Unknown"}
@@ -421,8 +472,13 @@ export default function UploadWithPreview({ onUpload }) {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Judges {(!editableMetadata.judges || editableMetadata.judges.length === 0) ? "⚠️" : "✅"}
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    Judges
+                    {(!editableMetadata.judges || editableMetadata.judges.length === 0) ? (
+                      <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
+                    ) : (
+                      <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                    )}
                   </label>
                   <input
                     type="text"
@@ -471,9 +527,14 @@ export default function UploadWithPreview({ onUpload }) {
             <button
               onClick={handleConfirm}
               disabled={loading}
-              className="flex-1 bg-green-500 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
+              className="flex-1 bg-green-500 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded flex items-center justify-center gap-2"
             >
-              {loading ? loadingMessage || "Saving..." : "✅ Approve & Save"}
+              {loading ? loadingMessage || "Saving..." : (
+                <>
+                  <CheckCircleIcon className="w-5 h-5" />
+                  Approve & Save
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -482,7 +543,9 @@ export default function UploadWithPreview({ onUpload }) {
       {/* Step 3: Success */}
       {step === 3 && (
         <div className="text-center py-8">
-          <div className="text-6xl mb-4">✅</div>
+          <div className="text-6xl mb-4 flex justify-center">
+            <CheckCircleIcon className="w-24 h-24 text-green-500" />
+          </div>
           <h3 className="text-xl font-semibold text-green-600 mb-2">Document Saved Successfully!</h3>
           <p className="text-gray-600">The document has been processed and added to the database.</p>
           <p className="text-sm text-gray-500 mt-2">Returning to upload form...</p>

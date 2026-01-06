@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import { AnalysisAPI } from '../config/api.js';
+import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export default function FR_Violation_Screener() {
   const [scenario, setScenario] = useState('');
@@ -259,7 +260,7 @@ export default function FR_Violation_Screener() {
                             <ul className="space-y-2">
                               {result.summary.recommendations.map((rec, idx) => (
                                 <li key={idx} className="flex gap-3 text-gray-700">
-                                  <span className="text-amber-500 font-bold">→</span>
+                                  <ChevronRightIcon className="w-5 h-5 text-amber-500 flex-shrink-0" />
                                   <span>{rec}</span>
                                 </li>
                               ))}

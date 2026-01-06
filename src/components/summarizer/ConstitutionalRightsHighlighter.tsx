@@ -1,5 +1,6 @@
 import React from "react";
 import "./ConstitutionalRightsHighlighter.css";
+import { ScaleIcon, MapPinIcon, MagnifyingGlassIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 
 interface FundamentalRight {
   article: string;
@@ -21,7 +22,10 @@ const ConstitutionalRightsHighlighter: React.FC<
   if (!rights || rights.length === 0) {
     return (
       <div className="rights-container">
-        <h2>⚖️ Fundamental Rights (Articles 10–18)</h2>
+        <h2 className="flex items-center gap-2">
+          <ScaleIcon className="w-6 h-6" />
+          Fundamental Rights (Articles 10–18)
+        </h2>
         <p className="no-data">
           No fundamental rights detected in this document.
         </p>
@@ -42,8 +46,9 @@ const ConstitutionalRightsHighlighter: React.FC<
 
   return (
     <div className="rights-container">
-      <h2>
-        ⚖️ Fundamental Rights ({uniqueRights.length} unique articles detected)
+      <h2 className="flex items-center gap-2">
+        <ScaleIcon className="w-6 h-6" />
+        Fundamental Rights ({uniqueRights.length} unique articles detected)
       </h2>
       <p className="description">
         Fundamental rights protected under Chapter III of the Constitution of
@@ -57,10 +62,10 @@ const ConstitutionalRightsHighlighter: React.FC<
               {right.article_title || `Article ${right.article}`}
             </h3>
             {right.method && (
-              <span className="method-badge">
+              <span className="method-badge flex items-center gap-1">
                 {right.method === "explicit_mention"
-                  ? "📌 Explicit"
-                  : "🔍 Detected"}
+                  ? <><MapPinIcon className="w-4 h-4" /> Explicit</>
+                  : <><MagnifyingGlassIcon className="w-4 h-4" /> Detected</>}
               </span>
             )}
           </div>
@@ -72,14 +77,20 @@ const ConstitutionalRightsHighlighter: React.FC<
 
           {right.explanation && (
             <details className="right-details" open>
-              <summary>📖 Explanation</summary>
+              <summary className="flex items-center gap-2">
+                <BookOpenIcon className="w-4 h-4" />
+                Explanation
+              </summary>
               <p className="explanation-text">{right.explanation}</p>
             </details>
           )}
 
           {right.context && right.context !== right.matched_text && (
             <details className="right-details">
-              <summary>🔍 Context</summary>
+              <summary className="flex items-center gap-2">
+                <MagnifyingGlassIcon className="w-4 h-4" />
+                Context
+              </summary>
               <p className="context-text">{right.context}</p>
             </details>
           )}

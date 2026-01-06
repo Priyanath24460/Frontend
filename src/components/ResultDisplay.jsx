@@ -1,3 +1,5 @@
+import { ExclamationTriangleIcon, BookmarkIcon } from '@heroicons/react/24/outline';
+
 // Helper function to parse and render enhanced markdown-like content
 const parseEnhancedContent = (content) => {
   if (!content) return <p>No content available.</p>;
@@ -59,20 +61,22 @@ const parseEnhancedContent = (content) => {
       );
     }
     
-    // Warning/note sections (⚠️)
-    if (trimmedLine.includes('⚠️')) {
+    // Warning/note sections
+    if (trimmedLine.includes('⚠️') || trimmedLine.toLowerCase().includes('warning') || trimmedLine.toLowerCase().includes('note:')) {
       return (
-        <div key={index} className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-          <p className="text-yellow-800">{trimmedLine}</p>
+        <div key={index} className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 flex items-start gap-3">
+          <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <p className="text-yellow-800">{trimmedLine.replace('⚠️', '').trim()}</p>
         </div>
       );
     }
     
-    // Disclaimer sections (📌)
-    if (trimmedLine.includes('📌')) {
+    // Disclaimer sections
+    if (trimmedLine.includes('📌') || trimmedLine.toLowerCase().includes('disclaimer') || trimmedLine.toLowerCase().includes('note:')) {
       return (
-        <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <p className="text-blue-800 text-sm">{trimmedLine}</p>
+        <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-start gap-3">
+          <BookmarkIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <p className="text-blue-800 text-sm">{trimmedLine.replace('📌', '').trim()}</p>
         </div>
       );
     }

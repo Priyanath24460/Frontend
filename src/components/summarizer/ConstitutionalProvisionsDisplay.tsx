@@ -1,5 +1,6 @@
 import React from "react";
 import "./ConstitutionalProvisionsDisplay.css";
+import { BookOpenIcon, MapPinIcon, MagnifyingGlassIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 interface ConstitutionalProvision {
   article: string;
@@ -23,7 +24,10 @@ const ConstitutionalProvisionsDisplay: React.FC<
   if (!provisions || provisions.length === 0) {
     return (
       <div className="provisions-container">
-        <h2>📚 Constitutional Provisions</h2>
+        <h2 className="flex items-center gap-2">
+          <BookOpenIcon className="w-6 h-6" />
+          Constitutional Provisions
+        </h2>
         <p className="no-data">No constitutional provisions detected.</p>
       </div>
     );
@@ -42,8 +46,9 @@ const ConstitutionalProvisionsDisplay: React.FC<
 
   return (
     <div className="provisions-container">
-      <h2>
-        📚 Constitutional Provisions ({uniqueProvisions.length} unique articles
+      <h2 className="flex items-center gap-2">
+        <BookOpenIcon className="w-6 h-6" />
+        Constitutional Provisions ({uniqueProvisions.length} unique articles
         detected)
       </h2>
       <p className="description">
@@ -57,10 +62,10 @@ const ConstitutionalProvisionsDisplay: React.FC<
               {provision.article_title || `Article ${provision.article}`}
             </h3>
             <div className="badges">
-              <span className="method-badge">
+              <span className="method-badge flex items-center gap-1">
                 {provision.method === "explicit_mention"
-                  ? "📌 Explicit"
-                  : "🔍 Semantic"}
+                  ? <><MapPinIcon className="w-4 h-4" /> Explicit</>
+                  : <><MagnifyingGlassIcon className="w-4 h-4" /> Semantic</>}
               </span>
               {provision.score && provision.method !== "explicit_mention" && (
                 <span className="score-badge">
@@ -77,14 +82,20 @@ const ConstitutionalProvisionsDisplay: React.FC<
 
           {provision.explanation && (
             <details className="provision-details" open>
-              <summary>📖 Explanation</summary>
+              <summary className="flex items-center gap-2">
+                <BookOpenIcon className="w-4 h-4" />
+                Explanation
+              </summary>
               <p className="explanation-text">{provision.explanation}</p>
             </details>
           )}
 
           {provision.constitutional_provision && (
             <details className="provision-details">
-              <summary>📜 Constitutional Reference</summary>
+              <summary className="flex items-center gap-2">
+                <DocumentTextIcon className="w-4 h-4" />
+                Constitutional Reference
+              </summary>
               <p className="constitution-text">
                 {provision.constitutional_provision}
               </p>
@@ -99,7 +110,10 @@ const ConstitutionalProvisionsDisplay: React.FC<
           {provision.context &&
             provision.context !== provision.matched_text && (
               <details className="provision-details">
-                <summary>🔍 Context</summary>
+                <summary className="flex items-center gap-2">
+                  <MagnifyingGlassIcon className="w-4 h-4" />
+                  Context
+                </summary>
                 <p className="context-text">{provision.context}</p>
               </details>
             )}

@@ -1,6 +1,7 @@
 // frontend/src/components/DocumentStructureDisplay.tsx
 import React from "react";
 import "./DocumentStructureDisplay.css";
+import { ChartBarIcon, CpuChipIcon, ClipboardDocumentListIcon, CogIcon } from '@heroicons/react/24/outline';
 
 interface StructureAnalysis {
   total_paragraphs: number;
@@ -57,7 +58,10 @@ const DocumentStructureDisplay: React.FC<DocumentStructureDisplayProps> = ({
 
   return (
     <div className="structure-container">
-      <h3>📊 Document Structure Analysis</h3>
+      <h3 className="flex items-center gap-2">
+        <ChartBarIcon className="w-6 h-6" />
+        Document Structure Analysis
+      </h3>
       <p className="structure-subtitle">
         AI-powered classification of {total_paragraphs} paragraphs using hybrid
         BERT + rule-based approach
@@ -146,9 +150,14 @@ const DocumentStructureDisplay: React.FC<DocumentStructureDisplayProps> = ({
                   1
                 );
                 const methodLabels: { [key: string]: string } = {
-                  bert: "🤖 BERT Model",
-                  rules: "📋 Rule-Based",
-                  fallback: "⚙️ Fallback",
+                  bert: "BERT Model",
+                  rules: "Rule-Based",
+                  fallback: "Fallback",
+                };
+                const methodIcons: { [key: string]: JSX.Element } = {
+                  bert: <CpuChipIcon className="w-4 h-4" />,
+                  rules: <ClipboardDocumentListIcon className="w-4 h-4" />,
+                  fallback: <CogIcon className="w-4 h-4" />,
                 };
                 const methodColors: { [key: string]: string } = {
                   bert: "#3498db",
@@ -159,7 +168,8 @@ const DocumentStructureDisplay: React.FC<DocumentStructureDisplayProps> = ({
                 return (
                   <div key={method} className="method-item">
                     <div className="method-header">
-                      <span className="method-label">
+                      <span className="method-label flex items-center gap-2">
+                        {methodIcons[method]}
                         {methodLabels[method] || method}
                       </span>
                       <span className="method-count">

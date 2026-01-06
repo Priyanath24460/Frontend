@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import LegalEntitiesDisplay from "../components/LegalEntitiesDisplay";
 import "./EntityDemo.css";
+import { TagIcon, BookOpenIcon, PencilIcon, MagnifyingGlassIcon, InformationCircleIcon, ChartBarIcon, RocketLaunchIcon, WrenchIcon } from '@heroicons/react/24/outline';
 
 const SAMPLE_TEXTS = [
   {
@@ -41,7 +42,10 @@ const EntityDemo: React.FC = () => {
   return (
     <div className="entity-demo-container">
       <div className="demo-header">
-        <h1>🏷️ Legal Entity Recognition Demo</h1>
+        <h1 className="flex items-center gap-2 justify-center">
+          <TagIcon className="w-8 h-8" />
+          Legal Entity Recognition Demo
+        </h1>
         <p className="demo-subtitle">
           Extract case names, courts, judges, statutes, articles, legal
           principles, dates, and citations from Sri Lankan legal documents
@@ -51,7 +55,10 @@ const EntityDemo: React.FC = () => {
       <div className="demo-controls">
         {/* Sample Text Selection */}
         <div className="sample-selection">
-          <h2>📚 Try Sample Texts</h2>
+          <h2 className="flex items-center gap-2">
+            <BookOpenIcon className="w-6 h-6" />
+            Try Sample Texts
+          </h2>
           <div className="sample-buttons">
             {SAMPLE_TEXTS.map((sample, index) => (
               <button
@@ -69,7 +76,10 @@ const EntityDemo: React.FC = () => {
 
         {/* Custom Text Input */}
         <div className="custom-text-section">
-          <h2>✍️ Or Enter Your Own Text</h2>
+          <h2 className="flex items-center gap-2">
+            <PencilIcon className="w-6 h-6" />
+            Or Enter Your Own Text
+          </h2>
           <textarea
             className="custom-text-input"
             placeholder="Paste your legal text here... (e.g., court judgment, legal document excerpt)"
@@ -77,8 +87,9 @@ const EntityDemo: React.FC = () => {
             onChange={(e) => setCustomText(e.target.value)}
             rows={8}
           />
-          <button className="analyze-btn" onClick={handleAnalyzeCustomText}>
-            🔍 Analyze Custom Text
+          <button className="analyze-btn flex items-center justify-center gap-2" onClick={handleAnalyzeCustomText}>
+            <MagnifyingGlassIcon className="w-5 h-5" />
+            Analyze Custom Text
           </button>
         </div>
       </div>
@@ -97,10 +108,16 @@ const EntityDemo: React.FC = () => {
 
       {/* Information Section */}
       <div className="demo-info">
-        <h2>ℹ️ About Legal Entity Recognition</h2>
+        <h2 className="flex items-center gap-2">
+          <InformationCircleIcon className="w-6 h-6" />
+          About Legal Entity Recognition
+        </h2>
         <div className="info-grid">
           <div className="info-card">
-            <h3>🎯 What It Does</h3>
+            <h3 className="flex items-center gap-2">
+              <TagIcon className="w-5 h-5" />
+              What It Does
+            </h3>
             <p>
               Our custom-trained NER model automatically identifies and extracts
               8 types of legal entities from Sri Lankan legal documents with 87%
@@ -109,7 +126,10 @@ const EntityDemo: React.FC = () => {
           </div>
 
           <div className="info-card">
-            <h3>🏷️ Entity Types</h3>
+            <h3 className="flex items-center gap-2">
+              <TagIcon className="w-5 h-5" />
+              Entity Types
+            </h3>
             <ul>
               <li>
                 <strong>CASE_NAME:</strong> Case titles and party names
@@ -139,7 +159,10 @@ const EntityDemo: React.FC = () => {
           </div>
 
           <div className="info-card">
-            <h3>📊 Model Performance</h3>
+            <h3 className="flex items-center gap-2">
+              <ChartBarIcon className="w-5 h-5" />
+              Model Performance
+            </h3>
             <ul>
               <li>
                 <strong>F1 Score:</strong> 87.28%
@@ -157,7 +180,10 @@ const EntityDemo: React.FC = () => {
           </div>
 
           <div className="info-card">
-            <h3>🚀 Use Cases</h3>
+            <h3 className="flex items-center gap-2">
+              <RocketLaunchIcon className="w-5 h-5" />
+              Use Cases
+            </h3>
             <ul>
               <li>Legal research and case analysis</li>
               <li>Document indexing and search</li>
@@ -172,7 +198,10 @@ const EntityDemo: React.FC = () => {
 
       {/* Technical Details */}
       <div className="demo-technical">
-        <h2>🔧 Technical Implementation</h2>
+        <h2 className="flex items-center gap-2">
+          <WrenchIcon className="w-6 h-6" />
+          Technical Implementation
+        </h2>
         <div className="tech-details">
           <div className="tech-section">
             <h3>Training Process</h3>

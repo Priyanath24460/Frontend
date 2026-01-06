@@ -2,6 +2,18 @@ import React, { useState } from 'react';
 import FileUpload from '../components/FileUpload.jsx';
 import Header from '../components/Header.jsx';
 import { ContractAPI } from '../config/api.js';
+import { 
+  ExclamationTriangleIcon, 
+  DocumentTextIcon, 
+  BookOpenIcon, 
+  ScaleIcon, 
+  ClipboardDocumentIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  ChevronDownIcon,
+  ExclamationCircleIcon
+} from '@heroicons/react/24/outline';
 
 export default function ComprehensiveAnalysis(){
   const [clauses, setClauses] = useState([]);
@@ -32,7 +44,7 @@ export default function ComprehensiveAnalysis(){
       setContractType(contractTypeValue);
       
       if (contractTypeValue !== 'employment') {
-        setWarning(`⚠️ Limited Analysis: This is a ${result.contract_type || 'Non-Employment'} contract. Our system is optimized for employment contracts. You may see fewer related cases and specialized signals.`);
+        setWarning(`Limited Analysis: This is a ${result.contract_type || 'Non-Employment'} contract. Our system is optimized for employment contracts. You may see fewer related cases and specialized signals.`);
       } else {
         setWarning('');
       }
@@ -290,7 +302,7 @@ export default function ComprehensiveAnalysis(){
         {/* Header with expand/collapse */}
         <div onClick={() => toggleExpandClause(clause.clause_id)} className={`flex justify-between items-center cursor-pointer px-8 py-6 bg-gradient-to-r ${isExpanded ? 'from-stone-100 via-amber-50 to-orange-50 border-b-2 border-amber-200' : 'from-stone-50 to-gray-50'} transition-all duration-300`}>
           <div className="flex items-center gap-6 flex-1">
-            <span className={`text-2xl transition-transform duration-300 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>▼</span>
+            <ChevronDownIcon className={`w-6 h-6 transition-transform duration-300 ${isExpanded ? 'rotate-0' : '-rotate-90'}`} />
             <div className="flex items-center gap-3">
               <span className="bg-gradient-to-r from-stone-700 via-amber-700 to-orange-700 text-white px-3 py-1 rounded-lg text-sm font-bold uppercase">{clause.clause_type}</span>
               <span className="bg-amber-50 text-amber-700 px-3 py-1 rounded-lg text-sm font-semibold border border-amber-200">{clause.clause_id}</span>
@@ -313,7 +325,8 @@ export default function ComprehensiveAnalysis(){
                     : 'bg-white text-stone-600 border-2 border-stone-200 hover:border-stone-400'
                 }`}
               >
-                📄 Clause Text
+                <DocumentTextIcon className="w-4 h-4 inline-block mr-1" />
+                Clause Text
               </button>
 
               {/* Risks Tab */}
@@ -326,7 +339,8 @@ export default function ComprehensiveAnalysis(){
                 }`}
                 disabled={!hasRisks}
               >
-                ⚠️ Risks ({riskList.length})
+                <ExclamationTriangleIcon className="w-4 h-4 inline-block mr-1" />
+                Risks ({riskList.length})
               </button>
 
               {/* Cases Tab */}
@@ -339,7 +353,8 @@ export default function ComprehensiveAnalysis(){
                 }`}
                 disabled={!hasCases}
               >
-                📚 Cases ({data.cases.results?.length || 0})
+                <BookOpenIcon className="w-4 h-4 inline-block mr-1" />
+                Cases ({data.cases.results?.length || 0})
               </button>
 
               {/* Acts Tab */}
@@ -352,7 +367,8 @@ export default function ComprehensiveAnalysis(){
                 }`}
                 disabled={!hasActs}
               >
-                📖 Acts ({data.acts.results?.length || 0})
+                <BookOpenIcon className="w-4 h-4 inline-block mr-1" />
+                Acts ({data.acts.results?.length || 0})
               </button>
             </div>
 
@@ -361,7 +377,10 @@ export default function ComprehensiveAnalysis(){
               {/* TEXT TAB */}
               {activeTab === 'text' && (
                 <div>
-                  <h4 className="mb-4 text-stone-800 text-lg font-bold">📄 Full Clause Text</h4>
+                  <h4 className="mb-4 text-stone-800 text-lg font-bold flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5" />
+                    Full Clause Text
+                  </h4>
                   <div className="bg-gradient-to-br from-stone-50 to-amber-50 p-6 border-l-4 border-amber-700 rounded-lg mb-6 shadow-sm">
                     <p className="m-0 leading-relaxed whitespace-pre-wrap text-stone-700 text-base font-normal font-sans">
                       {clause.clause_text || '[No text available]'}
@@ -372,11 +391,12 @@ export default function ComprehensiveAnalysis(){
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(clause.clause_text);
-                      alert('✅ Clause text copied to clipboard!');
+                      alert('Clause text copied to clipboard!');
                     }}
-                    className="px-6 py-3 bg-gradient-to-r from-stone-700 via-amber-700 to-orange-700 text-white rounded-lg cursor-pointer font-bold text-sm transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                    className="px-6 py-3 bg-gradient-to-r from-stone-700 via-amber-700 to-orange-700 text-white rounded-lg cursor-pointer font-bold text-sm transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
                   >
-                    📋 Copy Clause Text
+                    <ClipboardDocumentIcon className="w-4 h-4" />
+                    Copy Clause Text
                   </button>
                 </div>
               )}
@@ -384,7 +404,10 @@ export default function ComprehensiveAnalysis(){
               {/* RISKS TAB */}
               {activeTab === 'risks' && (
                 <div>
-                  <h4 className="mb-4 text-orange-700 text-lg font-bold">⚠️ Identified Risks</h4>
+                  <h4 className="mb-4 text-orange-700 text-lg font-bold flex items-center gap-2">
+                    <ExclamationTriangleIcon className="w-5 h-5" />
+                    Identified Risks
+                  </h4>
                   {riskList.length > 0 ? (
                     <div className="space-y-3">
                       {riskList.map((risk, i) => (
@@ -399,8 +422,9 @@ export default function ComprehensiveAnalysis(){
                           {risk.legal_basis && Array.isArray(risk.legal_basis) && risk.legal_basis.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
                               {risk.legal_basis.map((b, j) => (
-                                <span key={j} className="bg-orange-200 text-orange-800 px-2 py-1 rounded text-xs font-medium">
-                                  ⚖️ {b}
+                                <span key={j} className="bg-orange-200 text-orange-800 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+                                  <ScaleIcon className="w-3 h-3" />
+                                  {b}
                                 </span>
                               ))}
                             </div>
@@ -409,7 +433,10 @@ export default function ComprehensiveAnalysis(){
                       ))}
                     </div>
                   ) : (
-                    <p className="text-stone-400 italic text-center py-16">✓ No risks identified for this clause</p>
+                    <p className="text-stone-400 italic text-center py-16 flex items-center justify-center gap-2">
+                      <CheckCircleIcon className="w-5 h-5" />
+                      No risks identified for this clause
+                    </p>
                   )}
                 </div>
               )}
@@ -417,7 +444,10 @@ export default function ComprehensiveAnalysis(){
               {/* CASES TAB */}
               {activeTab === 'cases' && (
                 <div>
-                  <h4 className="mb-4 text-blue-800 text-lg font-bold">📚 Related Case Law</h4>
+                  <h4 className="mb-4 text-blue-800 text-lg font-bold flex items-center gap-2">
+                    <BookOpenIcon className="w-5 h-5" />
+                    Related Case Law
+                  </h4>
                   {data.cases.results && data.cases.results.length > 0 ? (
                     <div className="space-y-3">
                       {data.cases.results.slice(0, 3).map((caseItem, i) => (
@@ -431,7 +461,7 @@ export default function ComprehensiveAnalysis(){
                           {caseItem.main_category && <p className="m-0 mb-1 text-xs text-stone-600"><strong>Category:</strong> {caseItem.main_category}</p>}
                           {caseItem.sub_category && <p className="m-0 mb-1 text-xs text-stone-600"><strong>Sub-Category:</strong> {caseItem.sub_category}</p>}
                           {caseItem.key_takeaway && <p className="m-0 mb-1 text-xs text-stone-600"><strong>Takeaway:</strong> {caseItem.key_takeaway}</p>}
-                          {caseItem.outcome && <p className="m-0 text-xs text-green-700 font-semibold"><strong>⚖️ Outcome:</strong> {caseItem.outcome}</p>}
+                          {caseItem.outcome && <p className="m-0 text-xs text-green-700 font-semibold flex items-center gap-1"><strong className="flex items-center gap-1"><ScaleIcon className="w-3 h-3" /> Outcome:</strong> {caseItem.outcome}</p>}
                         </div>
                       ))}
                       {data.cases.results.length > 3 && (
@@ -449,7 +479,10 @@ export default function ComprehensiveAnalysis(){
               {/* ACTS TAB */}
               {activeTab === 'acts' && (
                 <div>
-                  <h4 className="mb-4 text-purple-900 text-lg font-bold">📖 Related Legislation</h4>
+                  <h4 className="mb-4 text-purple-900 text-lg font-bold flex items-center gap-2">
+                    <BookOpenIcon className="w-5 h-5" />
+                    Related Legislation
+                  </h4>
                   {data.acts.results && data.acts.results.length > 0 ? (
                     <div className="space-y-3">
                       {data.acts.results.slice(0, 3).map((act, i) => (
@@ -531,10 +564,10 @@ export default function ComprehensiveAnalysis(){
           {warning && (
             <div className="mb-8 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-400 rounded-2xl p-6 shadow-lg">
               <div className="flex items-start gap-4">
-                <div className="text-3xl flex-shrink-0">⚠️</div>
+                <ExclamationTriangleIcon className="w-8 h-8 text-amber-600 flex-shrink-0" />
                 <div>
                   <p className="m-0 text-amber-900 font-bold text-lg mb-2">Limited Analysis Mode</p>
-                  <p className="m-0 text-amber-800 font-medium">{warning.replace('⚠️ Limited Analysis: ', '')}</p>
+                  <p className="m-0 text-amber-800 font-medium">{warning}</p>
                 </div>
               </div>
             </div>
@@ -652,19 +685,19 @@ export default function ComprehensiveAnalysis(){
                     </h4>
                     <div className="space-y-2">
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
-                        <span className="text-lg">{loading.clauses ? '⏳' : '✅'}</span>
+                        {loading.clauses ? <ClockIcon className="w-5 h-5 text-blue-600 animate-spin" /> : <CheckCircleIcon className="w-5 h-5 text-green-600" />}
                         <span className="text-sm font-semibold text-stone-700">Extracting Clauses</span>
                       </div>
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
-                        <span className="text-lg">{loading.risks ? '⏳' : (Object.keys(data.risks).length > 0 ? '✅' : '○')}</span>
+                        {loading.risks ? <ClockIcon className="w-5 h-5 text-orange-600 animate-spin" /> : (Object.keys(data.risks).length > 0 ? <CheckCircleIcon className="w-5 h-5 text-green-600" /> : <div className="w-5 h-5 rounded-full border-2 border-gray-400" />)}
                         <span className="text-sm font-semibold text-stone-700">Risk Analysis</span>
                       </div>
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-cyan-50 to-blue-100 rounded-lg">
-                        <span className="text-lg">{loading.cases ? '⏳' : (data.cases.results?.length > 0 ? '✅' : '○')}</span>
+                        {loading.cases ? <ClockIcon className="w-5 h-5 text-cyan-600 animate-spin" /> : (data.cases.results?.length > 0 ? <CheckCircleIcon className="w-5 h-5 text-green-600" /> : <div className="w-5 h-5 rounded-full border-2 border-gray-400" />)}
                         <span className="text-sm font-semibold text-stone-700">Case Law</span>
                       </div>
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
-                        <span className="text-lg">{loading.acts ? '⏳' : (data.acts.results?.length > 0 ? '✅' : '○')}</span>
+                        {loading.acts ? <ClockIcon className="w-5 h-5 text-purple-600 animate-spin" /> : (data.acts.results?.length > 0 ? <CheckCircleIcon className="w-5 h-5 text-green-600" /> : <div className="w-5 h-5 rounded-full border-2 border-gray-400" />)}
                         <span className="text-sm font-semibold text-stone-700">Legislation</span>
                       </div>
                     </div>
@@ -675,7 +708,7 @@ export default function ComprehensiveAnalysis(){
                 {error && (
                   <div className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400 rounded-2xl p-6 shadow-lg">
                     <div className="flex gap-3">
-                      <div className="text-2xl flex-shrink-0">❌</div>
+                      <XCircleIcon className="w-6 h-6 text-red-600 flex-shrink-0" />
                       <div>
                         <p className="text-red-700 font-bold mb-1">Error</p>
                         <p className="text-red-600 text-sm font-medium">{error}</p>
@@ -729,7 +762,7 @@ export default function ComprehensiveAnalysis(){
                   return (
                     <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-orange-50 border-3 border-orange-400 rounded-3xl p-10 shadow-2xl">
                       <div className="flex items-start gap-4 mb-8">
-                        <div className="text-5xl">🚨</div>
+                        <ExclamationCircleIcon className="w-12 h-12 text-orange-600" />
                         <div>
                           <h3 className="text-3xl font-bold text-orange-900">Risk Assessment Summary</h3>
                           <p className="text-orange-700 font-semibold mt-2">Critical findings from contract analysis</p>
@@ -742,7 +775,7 @@ export default function ComprehensiveAnalysis(){
                               <p className="text-orange-600 font-semibold text-sm mb-1">Total Risks Identified</p>
                               <p className="text-5xl font-bold text-orange-700">{summary.totalRisks}</p>
                             </div>
-                            <div className="text-4xl opacity-30">⚠️</div>
+                            <ExclamationTriangleIcon className="w-10 h-10 text-orange-300" />
                           </div>
                         </div>
                         <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-red-200">
@@ -751,7 +784,7 @@ export default function ComprehensiveAnalysis(){
                               <p className="text-red-600 font-semibold text-sm mb-1">High-Risk Clauses</p>
                               <p className="text-5xl font-bold text-red-700">{summary.highRiskClauseIds.length}</p>
                             </div>
-                            <div className="text-4xl opacity-30">🔴</div>
+                            <XCircleIcon className="w-10 h-10 text-red-300" />
                           </div>
                         </div>
                       </div>

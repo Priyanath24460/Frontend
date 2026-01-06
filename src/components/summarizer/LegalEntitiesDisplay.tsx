@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./LegalEntitiesDisplay.css";
+import { ExclamationTriangleIcon, TagIcon } from '@heroicons/react/24/outline';
 
 interface Entity {
   text: string;
@@ -185,7 +186,10 @@ const LegalEntitiesDisplay: React.FC<LegalEntitiesDisplayProps> = ({
   if (error) {
     return (
       <div className="legal-entities-error">
-        <h3>⚠️ Error</h3>
+        <h3 className="flex items-center gap-2">
+          <ExclamationTriangleIcon className="w-5 h-5" />
+          Error
+        </h3>
         <p>{error}</p>
         <button onClick={extractEntities}>Try Again</button>
       </div>
@@ -206,7 +210,10 @@ const LegalEntitiesDisplay: React.FC<LegalEntitiesDisplayProps> = ({
   return (
     <div className="legal-entities-container">
       <div className="entities-header">
-        <h2>🏷️ Legal Entities</h2>
+        <h2 className="flex items-center gap-2">
+          <TagIcon className="w-6 h-6" />
+          Legal Entities
+        </h2>
         <span className="entity-count-badge">
           {totalEntities} entities found
         </span>

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './CaseDetailPage.css';
 import Header from "../../components/Header";
+import { ChevronLeftIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
 interface CaseData {
   document_id: number;
@@ -62,7 +63,7 @@ const CaseDetailPage: React.FC = () => {
            data.analysis.entities_extracted === 0);
         
         if (needsAnalysis) {
-          console.log('⚠️ No analysis found, fetching fresh analysis...');
+          console.log('No analysis found, fetching fresh analysis...');
           
           try {
             // Fetch fresh analysis
@@ -82,7 +83,7 @@ const CaseDetailPage: React.FC = () => {
                 .reduce((acc: number, arr: any) => acc + arr.length, 0)
             };
             
-            console.log('✅ Fresh analysis fetched successfully');
+            console.log('Fresh analysis fetched successfully');
           } catch (analysisError) {
             console.error('Failed to fetch fresh analysis:', analysisError);
           }
@@ -122,7 +123,10 @@ const CaseDetailPage: React.FC = () => {
         <div className="case-detail-error">
           <h2>Error</h2>
           <p>{error}</p>
-          <button onClick={() => navigate(-1)} className="back-link">← Back</button>
+          <button onClick={() => navigate(-1)} className="back-link flex items-center gap-1">
+            <ChevronLeftIcon className="w-4 h-4" />
+            Back
+          </button>
         </div>
       </>
     );
@@ -134,7 +138,10 @@ const CaseDetailPage: React.FC = () => {
         <Header />
         <div className="case-detail-error">
           <h2>Case Not Found</h2>
-          <button onClick={() => navigate(-1)} className="back-link">← Back</button>
+          <button onClick={() => navigate(-1)} className="back-link flex items-center gap-1">
+            <ChevronLeftIcon className="w-4 h-4" />
+            Back
+          </button>
         </div>
       </>
     );
@@ -149,8 +156,9 @@ const CaseDetailPage: React.FC = () => {
         <main className="pt-24 pb-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Back Button */}
-            <button onClick={() => navigate(-1)} className="back-link mb-6">
-              ← Back to Cases
+            <button onClick={() => navigate(-1)} className="back-link mb-6 flex items-center gap-1">
+              <ChevronLeftIcon className="w-4 h-4" />
+              Back to Cases
             </button>
 
             {/* Page Header */}

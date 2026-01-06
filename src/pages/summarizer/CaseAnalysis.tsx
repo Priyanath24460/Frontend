@@ -8,6 +8,7 @@ import LegalEntitiesDisplay from "../../components/summarizer/LegalEntitiesDispl
 // import DocumentStructureDisplay from "../components/DocumentStructureDisplay";
 import MultiLevelSummary from "../../components/summarizer/MultiLevelSummary";
 import RelatedCases from "../../components/summarizer/RelatedCases";
+import { DocumentTextIcon, ScaleIcon, UserGroupIcon, LinkIcon } from '@heroicons/react/24/outline';
 import ExportButton from "../../components/summarizer/ExportButton";
 import axios from "axios";
 import Header from "../../components/Header";
@@ -306,7 +307,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
-                          📄 Summary
+                          <DocumentTextIcon className="w-4 h-4 inline-block mr-1" />
+                          Summary
                         </button>
                         <button
                           onClick={() => setActiveTab("constitutional")}
@@ -316,7 +318,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
-                          ⚖️ Constitutional
+                          <ScaleIcon className="w-4 h-4 inline-block mr-1" />
+                          Constitutional
                         </button>
                         <button
                           onClick={() => setActiveTab("entities")}
@@ -326,7 +329,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
-                          👥 Legal Entities
+                          <UserGroupIcon className="w-4 h-4 inline-block mr-1" />
+                          Legal Entities
                         </button>
                         <button
                           onClick={() => setActiveTab("related")}
@@ -336,7 +340,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
                         >
-                          🔗 Related Cases
+                          <LinkIcon className="w-4 h-4 inline-block mr-1" />
+                          Related Cases
                         </button>
                       </div>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { SECONDARY_API_URL } from "../config/api";
+import { LightBulbIcon } from '@heroicons/react/24/outline';
 
 export default function QuestionForm({ onAsk, setIsLoading, setError, selectedQuery, setSelectedQuery }) {
   const [question, setQuestion] = useState("");
@@ -59,8 +60,9 @@ export default function QuestionForm({ onAsk, setIsLoading, setError, selectedQu
             </svg>
           </div>
         </div>
-        <p className="mt-2 text-xs text-gray-500">
-          💡 Tip: The more specific your question, the better the results
+        <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+          <LightBulbIcon className="w-4 h-4 text-amber-500" />
+          <span>Tip: The more specific your question, the better the results</span>
         </p>
       </div>
       <button
