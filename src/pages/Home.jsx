@@ -49,7 +49,7 @@ const Home = () => {
                 </h2>
                 <p className="text-base lg:text-lg text-white/90 leading-relaxed font-light">
                   Navigate the Sri Lankan legal system with unprecedented precision. Our cutting-edge AI platform delivers 
-                  comprehensive legal research, intelligent case analysis, and advanced document processing—specifically designed 
+                  comprehensive legal research, intelligent case analysis, and advanced document processing specifically designed 
                   for legal professionals, students, and informed citizens.
                 </p>
               </div>

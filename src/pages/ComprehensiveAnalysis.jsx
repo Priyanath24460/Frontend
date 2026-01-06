@@ -534,7 +534,7 @@ export default function ComprehensiveAnalysis(){
             <div className="w-32 h-1 bg-gradient-to-r from-amber-600 to-orange-500 mx-auto mb-4"></div>
             <p className="text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6">
               Upload your employment contract for complete AI-powered analysis. Extract clauses, identify legal risks, 
-              find missing provisions, and discover related case law and legislation—all in one comprehensive report.
+              find missing provisions, and discover related case law and legislation all in one comprehensive report.
             </p>
             
             {/* Step-by-step guide */}
