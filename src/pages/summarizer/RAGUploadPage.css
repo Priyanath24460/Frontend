@@ -1,0 +1,214 @@
+.rag-upload-root {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.rag-upload-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.rag-upload-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #1a3a6b, #2563eb);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+
+.rag-upload-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a2340;
+  margin: 0 0 8px;
+}
+
+.rag-upload-header p {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* Drop zone */
+.rag-dropzone {
+  border: 2px dashed #c8d5e8;
+  border-radius: 16px;
+  padding: 52px 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f8fafc;
+}
+
+.rag-dropzone:hover,
+.rag-dropzone.dragging {
+  border-color: #2563eb;
+  background: #eff6ff;
+  transform: scale(1.01);
+}
+
+.rag-dropzone.has-file {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+.rag-dropzone-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.rag-dropzone-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.rag-dropzone-sub {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+.rag-dropzone-filename {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #15803d;
+  word-break: break-word;
+}
+
+.rag-dropzone-size {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+/* Error */
+.rag-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+
+/* Upload button */
+.rag-upload-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  letter-spacing: 0.5px;
+}
+
+.rag-upload-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+/* Progress */
+.rag-progress-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 28px;
+  margin-top: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.rag-progress-title {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 14px;
+}
+
+.rag-progress-title span {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.rag-progress-bar-outer {
+  background: #e2e8f0;
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.rag-progress-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #0ea5e9);
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.rag-progress-pct {
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-top: 6px;
+}
+
+/* Stages */
+.rag-stages {
+  display: flex;
+  justify-content: space-between;
+  margin: 24px 0 12px;
+}
+
+.rag-stage {
+  text-align: center;
+  opacity: 0.35;
+  flex: 1;
+  transition: opacity 0.3s;
+}
+
+.rag-stage.done {
+  opacity: 0.6;
+}
+
+.rag-stage.active {
+  opacity: 1;
+}
+
+.rag-stage-icon {
+  font-size: 1.3rem;
+  margin-bottom: 4px;
+}
+
+.rag-stage-label {
+  font-size: 0.7rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.rag-progress-stage-text {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #334155;
+  font-style: italic;
+}
+
+.rag-chunk-info {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #16a34a;
+  font-weight: 600;
+  margin-top: 8px;
+  background: #f0fdf4;
+  border-radius: 8px;
+  padding: 6px;
+}

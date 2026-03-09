@@ -59,7 +59,11 @@ const ConstitutionalProvisionsDisplay: React.FC<
         <div key={idx} className={`provision-box ${provision.method}`}>
           <div className="provision-header">
             <h3 className="article-title">
-              {provision.article_title || `Article ${provision.article}`}
+              {typeof provision.article_title === 'object' 
+                ? (provision.article_title as any).title || JSON.stringify(provision.article_title)
+                : provision.article_title || 
+                  `Article ${typeof provision.article === 'object' ? (provision.article as any).article_number || JSON.stringify(provision.article) : provision.article}`
+              }
             </h3>
             <div className="badges">
               <span className="method-badge">
@@ -77,13 +81,13 @@ const ConstitutionalProvisionsDisplay: React.FC<
 
           <div className="matched-text">
             <strong>Matched Text:</strong>
-            <p className="text-snippet">"{provision.matched_text}"</p>
+            <p className="text-snippet">"{typeof provision.matched_text === 'object' ? JSON.stringify(provision.matched_text) : provision.matched_text}"</p>
           </div>
 
           {provision.explanation && (
             <details className="provision-details" open>
               <summary>📖 Explanation</summary>
-              <p className="explanation-text">{provision.explanation}</p>
+              <p className="explanation-text">{typeof provision.explanation === 'object' ? JSON.stringify(provision.explanation) : provision.explanation}</p>
             </details>
           )}
 
@@ -91,11 +95,11 @@ const ConstitutionalProvisionsDisplay: React.FC<
             <details className="provision-details">
               <summary>📜 Constitutional Reference</summary>
               <p className="constitution-text">
-                {provision.constitutional_provision}
+                {typeof provision.constitutional_provision === 'object' ? JSON.stringify(provision.constitutional_provision) : provision.constitutional_provision}
               </p>
               {provision.document && (
                 <p className="source-doc">
-                  <small>Source: {provision.document}</small>
+                  <small>Source: {typeof provision.document === 'object' ? JSON.stringify(provision.document) : provision.document}</small>
                 </p>
               )}
             </details>
@@ -108,7 +112,7 @@ const ConstitutionalProvisionsDisplay: React.FC<
                   <MagnifyingGlassIcon className="w-4 h-4 inline-block mr-1" style={{verticalAlign: 'middle'}} />
                   Context
                 </summary>
-                <p className="context-text">{provision.context}</p>
+                <p className="context-text">{typeof provision.context === 'object' ? JSON.stringify(provision.context) : provision.context}</p>
               </details>
             )}
         </div>

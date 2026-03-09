@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { BACKEND_BASE } from '../../config/api';
 import './CaseDetailPage.css';
+
 import Header from "../../components/Header";
 
 interface CaseData {
@@ -49,7 +51,7 @@ const CaseDetailPage: React.FC = () => {
     const fetchCase = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`/api/analysis/case/${id}`);
+        const response = await axios.get(`${BACKEND_BASE}/api/analysis/case/${id}`);
         
         console.log('=== CASE DETAILS API RESPONSE ===');
         console.log('Full response:', response.data);
@@ -67,30 +69,59 @@ const CaseDetailPage: React.FC = () => {
         if (needsAnalysis) {
           console.log('⚠️ No analysis found, fetching fresh analysis...');
           
-          try {
+            try {
             // Fetch fresh analysis
             const [entitiesRes, rightsRes] = await Promise.all([
-              axios.get(`http://127.0.0.1:8000/api/analysis/entities/${id}`),
-              axios.post(`http://127.0.0.1:8000/api/analysis/summarize/with-local-context?document_id=${id}`, {})
+              axios.get(`${BACKEND_BASE}/api/analysis/entities/${id}`),
+              axios.post(`${BACKEND_BASE}/api/analysis/summarize/with-local-context?document_id=${id}`, {}, { timeout: 120000 })
             ]);
-            
+
             // Merge analysis results with case data
             data.entities = entitiesRes.data.entities || {};
-            data.rights = rightsRes.data.fundamental_rights || [];
-            data.citations = rightsRes.data.citations || [];
+            const fr = rightsRes.data.fundamental_rights || [];
+            data.rights = fr.map((r: any) => {
+              const articleObj = typeof r.article === 'object' ? r.article : null;
+              return {
+                article_number: r.article_number ?? (articleObj ? articleObj.article_number : r.article) ?? '',
+                matched_text: r.matched_text ?? r.text ?? r.context ?? '',
+                explanation_en: r.explanation_en ?? (articleObj ? articleObj.title : r.title) ?? r.description ?? '',
+              };
+            });
+            data.citations = (rightsRes.data.citations || []).map((c: any) =>
+              typeof c === 'string' ? c : c.title ?? c.text ?? c.article_number ?? JSON.stringify(c)
+            );
             data.analysis = {
-              rights_detected: (rightsRes.data.fundamental_rights || []).length,
-              citations_found: (rightsRes.data.citations || []).length,
+              rights_detected: data.rights.length,
+              citations_found: data.citations.length,
               entities_extracted: Object.values(entitiesRes.data.entities || {})
-                .reduce((acc: number, arr: any) => acc + arr.length, 0)
+                .reduce((acc: number, arr: any) => acc + (Array.isArray(arr) ? arr.length : 0), 0)
             };
-            
-            console.log('✅ Fresh analysis fetched successfully');
+
+            console.log('Fresh analysis fetched successfully');
           } catch (analysisError) {
             console.error('Failed to fetch fresh analysis:', analysisError);
           }
         }
         
+        // Normalize citations to strings in case the API returned objects
+        if (Array.isArray(data.citations)) {
+          data.citations = data.citations.map((c: any) =>
+            typeof c === 'string' ? c : c.title ?? c.text ?? c.article_number ?? JSON.stringify(c)
+          );
+        }
+        // Normalize rights fields to strings
+        if (Array.isArray(data.rights)) {
+          data.rights = data.rights.map((r: any) => ({
+            ...r,
+            article_number: typeof r.article_number === 'object' && r.article_number !== null
+              ? (r.article_number.article_number ?? r.article_number.title ?? String(r.article_number))
+              : r.article_number ?? '',
+            matched_text: typeof r.matched_text === 'string' ? r.matched_text
+              : typeof r.text === 'string' ? r.text : '',
+            explanation_en: typeof r.explanation_en === 'string' ? r.explanation_en
+              : typeof r.title === 'string' ? r.title : '',
+          }));
+        }
         setCaseData(data);
         
         // Get actual text similarity if we have a source document
@@ -123,7 +154,7 @@ const CaseDetailPage: React.FC = () => {
       console.log(`Comparing document ${sourceId} with ${targetId}`);
       
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/analysis/compare-documents',
+        `${BACKEND_BASE}/api/analysis/compare-documents`,
         null,
         {
           params: {
@@ -208,11 +239,10 @@ const CaseDetailPage: React.FC = () => {
     );
   }
 
-  const isPDF = caseData.file_name.endsWith('.pdf');
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-stone-50 to-amber-50">
+      <div className="min-h-screen bg-linear-to-b from-stone-50 to-amber-50">
         <Header />
         <main className="pt-24 pb-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -223,19 +253,19 @@ const CaseDetailPage: React.FC = () => {
 
             {/* Page Header */}
             <div className="text-center mb-12">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full mb-6 shadow-xl">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-linear-to-br from-amber-400 to-orange-400 rounded-full mb-6 shadow-xl">
                 <svg className="w-10 h-10 text-stone-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
               <h1 className="text-4xl lg:text-5xl font-bold text-stone-800 mb-4">{caseData.file_name}</h1>
-              <div className="w-32 h-1 bg-gradient-to-r from-amber-600 to-orange-500 mx-auto"></div>
+              <div className="w-32 h-1 bg-linear-to-r from-amber-600 to-orange-500 mx-auto"></div>
             </div>
 
             {/* Metadata Card */}
             <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 mb-6 border-t-4 border-amber-500">
               <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center mr-4 shadow-md">
+                <div className="w-12 h-12 bg-linear-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center mr-4 shadow-md">
                   <svg className="w-6 h-6 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -267,11 +297,11 @@ const CaseDetailPage: React.FC = () => {
             </div>
 
             {/* Analysis Summary - Only show if there's actual data */}
-            {(caseData.analysis.rights_detected > 0 || 
-              caseData.analysis.citations_found > 0) && (
+            {(caseData.analysis?.rights_detected > 0 || 
+              caseData.analysis?.citations_found > 0) && (
               <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 mb-6 border-t-4 border-orange-500">
                 <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center mr-4 shadow-md">
+                  <div className="w-12 h-12 bg-linear-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center mr-4 shadow-md">
                     <svg className="w-6 h-6 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
@@ -279,12 +309,12 @@ const CaseDetailPage: React.FC = () => {
                   <h2 className="text-2xl font-bold text-stone-800">Analysis Summary</h2>
                 </div>
                 <div className="analysis-stats">
-                  <div className="stat-card bg-gradient-to-br from-blue-50 to-blue-100 border-l-4 border-blue-500">
-                    <span className="stat-value text-blue-600">{caseData.analysis.rights_detected}</span>
+                  <div className="stat-card bg-linear-to-br from-blue-50 to-blue-100 border-l-4 border-blue-500">
+                    <span className="stat-value text-blue-600">{caseData.analysis?.rights_detected ?? 0}</span>
                     <span className="stat-label">Rights Detected</span>
                   </div>
-                  <div className="stat-card bg-gradient-to-br from-green-50 to-green-100 border-l-4 border-green-500">
-                    <span className="stat-value text-green-600">{caseData.analysis.citations_found}</span>
+                  <div className="stat-card bg-linear-to-br from-green-50 to-green-100 border-l-4 border-green-500">
+                    <span className="stat-value text-green-600">{caseData.analysis?.citations_found ?? 0}</span>
                     <span className="stat-label">Citations Found</span>
                   </div>
                 </div>
@@ -295,7 +325,7 @@ const CaseDetailPage: React.FC = () => {
             {caseData.rights && caseData.rights.length > 0 && (
               <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 mb-6 border-t-4 border-blue-500">
                 <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mr-4 shadow-md">
+                  <div className="w-12 h-12 bg-linear-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mr-4 shadow-md">
                     <svg className="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                     </svg>
@@ -303,13 +333,19 @@ const CaseDetailPage: React.FC = () => {
                   <h2 className="text-2xl font-bold text-stone-800">Constitutional Rights Detected</h2>
                 </div>
                 <div className="rights-list">
-                  {caseData.rights.map((right, idx) => (
-                    <div key={idx} className="right-card bg-gradient-to-br from-blue-50 to-indigo-50 border-l-4 border-blue-500">
+                  {(caseData.rights ?? []).map((right: any, idx: number) => (
+                    <div key={idx} className="right-card bg-linear-to-br from-blue-50 to-indigo-50 border-l-4 border-blue-500">
                       <div className="right-header">
-                        <strong className="text-blue-700 text-lg">Article {right.article_number}</strong>
+                        <strong className="text-blue-700 text-lg">Article {String(right.article_number ?? '')}</strong>
                       </div>
-                      <p className="right-matched text-gray-700 italic">{right.matched_text}</p>
-                      <p className="right-explanation text-gray-800">{right.explanation_en}</p>
+                      <p className="right-matched text-gray-700 italic">
+                        {typeof right.matched_text === 'string' ? right.matched_text
+                         : typeof right.text === 'string' ? right.text : ''}
+                      </p>
+                      <p className="right-explanation text-gray-800">
+                        {typeof right.explanation_en === 'string' ? right.explanation_en
+                         : typeof right.title === 'string' ? right.title : ''}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -320,28 +356,26 @@ const CaseDetailPage: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 border-t-4 border-amber-500">
               <div className="text-header">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center mr-4 shadow-md">
+                  <div className="w-12 h-12 bg-linear-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center mr-4 shadow-md">
                     <svg className="w-6 h-6 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
                   <h2 className="text-2xl font-bold text-stone-800">Full Case Document</h2>
                 </div>
-                {!isPDF && (
-                  <button
-                    className="toggle-text-btn bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                <button
+                    className="toggle-text-btn bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
                     onClick={() => setShowFullText(!showFullText)}
                   >
                     {showFullText ? 'Show Less' : 'Show Full Text'}
                   </button>
-                )}
               </div>
               
               {/* Enhanced info banner with actual similarity metrics */}
               <div className="mb-4 space-y-3">
                 <div className="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-lg">
                   <div className="flex items-start">
-                    <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div className="flex-1">
@@ -371,26 +405,16 @@ const CaseDetailPage: React.FC = () => {
               </div>
 
               <div className="case-text-content">
-                {isPDF && caseData.file_path ? (
-                  <iframe
-                    src={`http://127.0.0.1:8000${caseData.file_path}`}
-                    className="pdf-viewer"
-                    title="Case PDF"
-                  />
-                ) : (
-                  <>
-                    <div 
-                      className="highlighted-case-text bg-gradient-to-br from-gray-50 to-stone-50"
-                      dangerouslySetInnerHTML={{ 
-                        __html: showFullText ? highlightedText : highlightedText.substring(0, 5000)
-                      }}
-                    />
-                    {!showFullText && caseData.text.full_length > 5000 && (
-                      <p className="text-truncated-notice">
-                        Showing first 5000 characters. Click "Show Full Text" to see complete document.
-                      </p>
-                    )}
-                  </>
+                <div 
+                  className="highlighted-case-text bg-linear-to-br from-gray-50 to-stone-50"
+                  dangerouslySetInnerHTML={{ 
+                    __html: showFullText ? highlightedText : highlightedText.substring(0, 5000)
+                  }}
+                />
+                {!showFullText && (caseData.text?.full_length ?? 0) > 5000 && (
+                  <p className="text-truncated-notice">
+                    Showing first 5000 characters. Click "Show Full Text" to see complete document.
+                  </p>
                 )}
               </div>
             </div>

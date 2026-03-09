@@ -159,6 +159,16 @@
   background: #b91c1c;
 }
 
+.summary-source-badge {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: var(--spacing-md);
+  padding: 4px 10px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  display: inline-block;
+}
+
 /* Summary Display */
 .summary-display {
   animation: fadeIn 0.4s ease;
@@ -235,6 +245,38 @@
   white-space: pre-wrap;
   font-size: 15px;
   line-height: 1.8;
+}
+
+.detailed-summary-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detailed-summary-section {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fafafa;
+  border: 1px solid #f3f4f6;
+}
+
+.detailed-summary-section__label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  border-left: 4px solid #374151;
+  background: #f8fafc;
+  color: #374151;
+}
+
+.detailed-summary-section__body {
+  padding: 14px 18px 18px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #374151;
+  white-space: pre-wrap;
 }
 
 .citations {

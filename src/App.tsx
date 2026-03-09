@@ -214,7 +214,8 @@ const CaseDetailPage: React.FC = () => {
           <div className="case-text-content">
             {isPDF && caseData.file_path ? (
               <iframe
-                src={`http://127.0.0.1:8000${caseData.file_path}`}
+                src={`http://localhost:8011${caseData.file_path}`}
+
                 className="pdf-viewer"
                 title="Case PDF"
               />

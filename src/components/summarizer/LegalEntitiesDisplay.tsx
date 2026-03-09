@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ExclamationTriangleIcon, DocumentTextIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { BACKEND_BASE } from '../../config/api';
 import "./LegalEntitiesDisplay.css";
+
 
 interface Entity {
   text: string;
@@ -66,7 +68,7 @@ const LegalEntitiesDisplay: React.FC<LegalEntitiesDisplayProps> = ({
     setError(null);
 
     try {
-      const baseUrl = "http://127.0.0.1:8000";
+      const baseUrl = BACKEND_BASE;
       let response;
 
       if (documentId) {

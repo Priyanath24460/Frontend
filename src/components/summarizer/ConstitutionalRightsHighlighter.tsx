@@ -59,7 +59,11 @@ const ConstitutionalRightsHighlighter: React.FC<
         <div key={idx} className="right-box">
           <div className="right-header">
             <h3 className="right-title">
-              {right.article_title || `Article ${right.article}`}
+              {typeof right.article_title === 'object' 
+                ? (right.article_title as any).title || JSON.stringify(right.article_title)
+                : right.article_title || 
+                  `Article ${typeof right.article === 'object' ? (right.article as any).article_number || JSON.stringify(right.article) : right.article}`
+              }
             </h3>
             {right.method && (
               <span className="method-badge">
@@ -72,13 +76,13 @@ const ConstitutionalRightsHighlighter: React.FC<
 
           <div className="matched-text">
             <strong>Matched Text:</strong>
-            <p className="text-snippet">"{right.matched_text}"</p>
+            <p className="text-snippet">"{typeof right.matched_text === 'object' ? JSON.stringify(right.matched_text) : right.matched_text}"</p>
           </div>
 
           {right.explanation && (
             <details className="right-details" open>
               <summary>📖 Explanation</summary>
-              <p className="explanation-text">{right.explanation}</p>
+              <p className="explanation-text">{typeof right.explanation === 'object' ? JSON.stringify(right.explanation) : right.explanation}</p>
             </details>
           )}
 
@@ -88,7 +92,7 @@ const ConstitutionalRightsHighlighter: React.FC<
                 <MagnifyingGlassIcon className="w-4 h-4 inline-block mr-1" style={{verticalAlign: 'middle'}} />
                 Context
               </summary>
-              <p className="context-text">{right.context}</p>
+              <p className="context-text">{typeof right.context === 'object' ? JSON.stringify(right.context) : right.context}</p>
             </details>
           )}
         </div>

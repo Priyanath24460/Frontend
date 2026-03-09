@@ -4,7 +4,9 @@ import {
   DocumentTextIcon, 
   BookOpenIcon 
 } from '@heroicons/react/24/outline';
+import { BACKEND_BASE } from '../../config/api';
 import "./MultiLevelSummary.css";
+
 
 interface SectionSummary {
   summary: string;
@@ -62,6 +64,8 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
   const [glossary, setGlossary] = useState<
     Array<{ term: string; definition: string; occurrences: number }>
   >([]);
+  const [usingFallback, setUsingFallback] = useState<boolean>(false);
+  const [summarySource, setSummarySource] = useState<string | null>(null);
 
   const fetchSummaries = async (includePlain: boolean = false) => {
     setLoading(true);
@@ -69,7 +73,7 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/analysis/summarize/multi-level/${documentId}?include_plain_language=${includePlain}`
+        `${BACKEND_BASE}/api/analysis/summarize/multi-level/${documentId}?include_plain_language=${includePlain}`
       );
 
       if (!response.ok) {
@@ -82,6 +86,8 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
         setExecutiveSummary(data.summaries.executive);
         setDetailedSummary(data.summaries.detailed);
         setSectionSummaries(data.summaries.section_specific);
+        setUsingFallback(!!data.using_fallback);
+        setSummarySource(data.summary_source ?? null);
 
         if (includePlain && data.summaries.plain_language) {
           setPlainExecutive(data.summaries.plain_language.executive);
@@ -131,9 +137,9 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
             <span className="target-range">
               {executiveSummary.target_range}
             </span>
-            {plainLanguage && plainExecutive && (
+            {plainLanguage && glossary.length > 0 && (
               <span className="terms-simplified">
-                ✓ {plainExecutive.terms_simplified} terms simplified
+                ✓ {glossary.length} terms simplified
               </span>
             )}
           </div>
@@ -150,6 +156,57 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
     );
   };
 
+  /** Parse detailed summary into sections by **LABEL:** or plain "LABEL:" headers so both API and fallback show section-wise */
+  const parseDetailedSummarySections = (text: string): Array<{ label: string; body: string }> => {
+    if (!text?.trim()) return [];
+    const sections: Array<{ label: string; body: string }> = [];
+    const lines = text.split(/\r?\n/);
+    let currentLabel: string | null = null;
+    let currentBody: string[] = [];
+    const reBold = /^\s*\*\*(.+?):\*\*\s*$/;
+    const plainSectionLabels = /^\s*(FACTS|ISSUES|DECISION|PROCEDURAL POSTURE|PETITIONER'S ARGUMENTS|RESPONDENT'S ARGUMENTS|COURT'S ANALYSIS|REASONING|HOLDING):\s*(.*)$/i;
+    const flush = () => {
+      if (currentLabel !== null) {
+        const body = currentBody.join("\n").replace(/\*\*/g, "").trim();
+        if (body) sections.push({ label: currentLabel, body });
+      }
+    };
+    for (const line of lines) {
+      const boldMatch = line.match(reBold);
+      const plainMatch = line.match(plainSectionLabels);
+      if (boldMatch) {
+        flush();
+        currentLabel = boldMatch[1].trim();
+        currentBody = [];
+      } else if (plainMatch) {
+        flush();
+        currentLabel = plainMatch[1].trim().toUpperCase();
+        currentBody = plainMatch[2].trim() ? [plainMatch[2]] : [];
+      } else {
+        if (currentLabel !== null) currentBody.push(line);
+        else if (line.trim()) {
+          currentLabel = "";
+          currentBody.push(line);
+        }
+      }
+    }
+    flush();
+    if (sections.length === 0 && text.trim()) sections.push({ label: "", body: text.replace(/\*\*/g, "").trim() });
+    return sections;
+  };
+
+  const DETAIL_LABEL_COLORS: Record<string, string> = {
+    "FACTS": "#0d9488",
+    "ISSUES": "#7c3aed",
+    "PROCEDURAL POSTURE": "#6d28d9",
+    "PETITIONER'S ARGUMENTS": "#c2410c",
+    "RESPONDENT'S ARGUMENTS": "#b45309",
+    "COURT'S ANALYSIS": "#0369a1",
+    "HOLDING": "#15803d",
+    "REASONING": "#0f766e",
+    "DECISION": "#15803d",
+  };
+
   const renderDetailedSummary = () => {
     if (!detailedSummary) return <p>No detailed summary available</p>;
 
@@ -157,6 +214,8 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
       plainLanguage && plainDetailed
         ? plainDetailed.plain_summary
         : detailedSummary.summary;
+
+    const sections = parseDetailedSummarySections(summary || "");
 
     return (
       <div className="summary-content">
@@ -170,15 +229,36 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
               {detailedSummary.word_count} words
             </span>
             <span className="target-range">{detailedSummary.target_range}</span>
-            {plainLanguage && plainDetailed && (
+            {plainLanguage && glossary.length > 0 && (
               <span className="terms-simplified">
-                ✓ {plainDetailed.terms_simplified} terms simplified
+                ✓ {glossary.length} terms simplified
               </span>
             )}
           </div>
         </div>
         <div className="summary-text detailed">
-          {summary || "No summary available"}
+          {sections.length > 0 ? (
+            <div className="detailed-summary-sections">
+              {sections.map(({ label, body }, i) => (
+                <div key={i} className="detailed-summary-section">
+                  {label && (
+                    <div
+                      className="detailed-summary-section__label"
+                      style={{
+                        color: DETAIL_LABEL_COLORS[label.toUpperCase()] || "#374151",
+                        borderLeftColor: DETAIL_LABEL_COLORS[label.toUpperCase()] || "#374151",
+                      }}
+                    >
+                      {label}
+                    </div>
+                  )}
+                  <div className="detailed-summary-section__body">{body}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            (summary || "No summary available").replace(/\*\*/g, "")
+          )}
         </div>
         {detailedSummary.citations && detailedSummary.citations.length > 0 && (
           <div className="citations">
@@ -195,12 +275,16 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
     }
 
     const sectionOrder = [
-      "FACTS",
-      "ISSUES",
-      "LEGAL_ANALYSIS",
-      "REASONING",
-      "JUDGMENT",
-      "ORDERS",
+      "Case Identification",
+      "Statutory Provisions",
+      "Legal Issue",
+      "Facts",
+      "Procedural History",
+      "Arguments",
+      "Court’s Reasoning",
+      "Decision / Holding",
+      "Rule of Law",
+      "Key Takeaways"
     ];
     const sortedSections = Object.keys(sectionSummaries).sort((a, b) => {
       const indexA = sectionOrder.indexOf(a);
@@ -243,20 +327,22 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
 
   const renderGlossary = () => {
     if (!plainLanguage || glossary.length === 0) return null;
+    // Show all glossary terms (no artificial limit) so users see every simplified term
+    const totalTerms = glossary.length;
 
     return (
       <div className="glossary-panel">
         <h4>
           <BookOpenIcon className="w-5 h-5 inline-block mr-2" style={{verticalAlign: 'middle'}} />
           Legal Terms Glossary
+          <span className="glossary-count"> ({totalTerms} term{totalTerms !== 1 ? "s" : ""})</span>
         </h4>
         <div className="glossary-list">
-          {glossary.slice(0, 10).map((entry, index) => (
+          {glossary.map((entry, index) => (
             <div key={index} className="glossary-item">
               <span className="glossary-term">{entry.term}</span>
               <span className="glossary-arrow">→</span>
               <span className="glossary-definition">{entry.definition}</span>
-              <span className="glossary-count">({entry.occurrences}x)</span>
             </div>
           ))}
         </div>
@@ -319,6 +405,12 @@ const MultiLevelSummary: React.FC<MultiLevelSummaryProps> = ({
         <div className="summary-error">
           <p>Error: {error}</p>
           <button onClick={() => fetchSummaries(plainLanguage)}>Retry</button>
+        </div>
+      )}
+
+      {!loading && !error && summarySource && (
+        <div className="summary-source-badge" title="How this summary was generated">
+          Source: {summarySource === "llm" ? "AI (OpenAI/Google)" : summarySource === "flan_t5" ? "AI (local FLAN-T5)" : summarySource === "regex_fallback" ? "Fallback (API failed)" : "Fallback (extractive)"}
         </div>
       )}
 

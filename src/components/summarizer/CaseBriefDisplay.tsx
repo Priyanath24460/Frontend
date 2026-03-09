@@ -5,16 +5,19 @@ import {
   PencilSquareIcon,
   QuestionMarkCircleIcon,
   ScaleIcon,
-  LightBulbIcon,
   SparklesIcon,
   DocumentIcon,
   BookOpenIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  LinkIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import './CaseBriefDisplay.css';
+import { BACKEND_BASE } from '../../config/api';
 
 interface CaseBriefProps {
   documentId: number;
+  fileName?: string;
   autoLoad?: boolean;
 }
 
@@ -24,23 +27,29 @@ interface CaseBrief {
     court: string;
     year: string | number;
     citation: string;
+    judges?: string;
   };
-  executive_summary?: string;
+  area_of_law?: string;
   facts: string;
-  issues: string[];
-  holding: string;
-  reasoning: string;
-  ratio_decidendi: string[];
-  procedural_principles: {
+  issues?: string[];
+  holding?: string;
+  reasoning?: string;
+  final_order?: string;
+  ratio_decidendi?: string[];
+  procedural_principles?: {
     statutory_provisions?: string[];
     procedural_rules?: string[];
     note?: string;
   };
-  key_takeaways: string[];
-  final_order: string;
+  executive_summary?: string;
+  related_cases?: string[];
+  key_takeaways?: string[];
 }
 
-const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = false }) => {
+const UNIDENTIFIED = ['Not identified', 'Case name not identified', 'N/A', 'Unknown Case'];
+const isUnidentified = (val?: string) => !val || UNIDENTIFIED.some(u => val.trim().startsWith(u));
+
+const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, fileName, autoLoad = false }) => {
   const [brief, setBrief] = useState<CaseBrief | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,11 +58,10 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
     try {
       setLoading(true);
       setError(null);
-      
       const response = await axios.get(
-        `http://127.0.0.1:8000/api/analysis/case-brief/${documentId}`
+        `${BACKEND_BASE}/api/analysis/case-brief/${documentId}`,
+        { timeout: 120000 }
       );
-      
       setBrief(response.data.case_brief);
     } catch (err: any) {
       console.error('Failed to load case brief:', err);
@@ -64,16 +72,14 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
   };
 
   useEffect(() => {
-    if (autoLoad && documentId) {
-      loadBrief();
-    }
+    if (autoLoad && documentId) loadBrief();
   }, [documentId, autoLoad]);
 
   if (loading) {
     return (
       <div className="case-brief-loading">
         <div className="spinner"></div>
-        <p>Generating structured case brief...</p>
+        <p>Generating structured case brief…</p>
       </div>
     );
   }
@@ -103,40 +109,86 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
 
   if (!brief) return null;
 
+  const ci = brief.case_identification || {};
+  // Display the case name — fall back to the file name prop if still unidentified
+  const displayCaseName = isUnidentified(ci.case_name)
+    ? (fileName || 'Case Name Not Available')
+    : ci.case_name;
+
+  // Normalize a value to a plain string, handling both old string[] and new object[] shapes
+  const toStr = (v: unknown): string => {
+    if (typeof v === 'string') return v;
+    if (v && typeof v === 'object') {
+      const o = v as Record<string, unknown>;
+      // statutory provision object: {statute_and_section, context, relevance}
+      if (o.statute_and_section) return `${o.statute_and_section}${o.context ? ' — ' + o.context : ''}`;
+      // related case object: {case_name, citation, how_related, key_holding, relevance_score}
+      if (o.case_name)           return `${o.case_name}${o.citation ? ' (' + o.citation + ')' : ''}${o.how_related ? ' — ' + o.how_related : ''}`;
+      // constitutional provision object: {article, context_in_judgment, relevance}
+      if (o.article)             return `Article ${o.article}${o.context_in_judgment ? ': ' + o.context_in_judgment : ''}`;
+      return JSON.stringify(o);
+    }
+    return String(v ?? '');
+  };
+
+  const statues = [
+    ...(brief.procedural_principles?.statutory_provisions || []),
+  ].filter((v, i, a) => a.indexOf(v) === i); 
+
+  const legalIssues = brief.issues || [];
+  const ruleOfLaw = brief.ratio_decidendi || [];
+  const holdingText = brief.holding || '';
+  const reasoningText = brief.reasoning || '';
+  const proceduralNote = brief.procedural_principles?.note || 
+    (brief.procedural_principles?.procedural_rules?.length ? brief.procedural_principles.procedural_rules.join('; ') : null);
+
   return (
     <div className="case-brief-container">
-      {/* Case Citation Header */}
-      {brief.case_identification && (
-        <div className="brief-header">
-          <h2 className="case-name">
-            {brief.case_identification.case_name || 'Case Name Not Available'}
-          </h2>
-          <div className="citation-details">
-            <span className="court">{brief.case_identification.court || 'N/A'}</span>
-            <span className="separator">•</span>
-            <span className="year">{brief.case_identification.year || 'N/A'}</span>
-            {brief.case_identification.citation && brief.case_identification.citation !== 'N/A' && (
-              <>
-                <span className="separator">•</span>
-                <span className="citation">{brief.case_identification.citation}</span>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* Executive Summary */}
-      {brief.executive_summary && (
-        <div className="brief-section executive-summary">
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <div className="brief-header">
+        <h2 className="case-name">{displayCaseName}</h2>
+        <div className="citation-details">
+          {ci.court && <span className="court">{ci.court}</span>}
+          {ci.court && ci.year && <span className="separator">•</span>}
+          {ci.year && <span className="year">{ci.year}</span>}
+          {ci.citation && ci.citation !== 'N/A' && (
+            <>
+              <span className="separator">•</span>
+              <span className="citation">{ci.citation}</span>
+            </>
+          )}
+          {ci.judges && ci.judges !== 'N/A' && (
+            <>
+              <span className="separator">•</span>
+              <span className="judges">Judges: {ci.judges}</span>
+            </>
+          )}
+          {brief.area_of_law && brief.area_of_law !== 'N/A' && (
+            <>
+              <span className="separator">•</span>
+              <span className="area-of-law" style={{ color: '#b45309', fontStyle: 'italic' }}>
+                {brief.area_of_law}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── Statutory Provisions ───────────────────────────────────────── */}
+      {statues.length > 0 && (
+        <div className="brief-section procedural">
           <h3 className="section-title">
-            <DocumentTextIcon className="icon" />
-            Executive Summary
+            <DocumentIcon className="icon" />
+            Statutory Provisions
           </h3>
-          <p className="summary-text">{brief.executive_summary}</p>
+          <ul className="principles-list">
+            {statues.map((s, i) => <li key={i}>{s}</li>)}
+          </ul>
         </div>
       )}
 
-      {/* Facts */}
+      {/* ── Facts ─────────────────────────────────────────────────────── */}
       {brief.facts && (
         <div className="brief-section facts">
           <h3 className="section-title">
@@ -147,96 +199,42 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
         </div>
       )}
 
-      {/* Issues */}
-      {brief.issues && Array.isArray(brief.issues) && brief.issues.length > 0 && (
+      {/* ── Issues ────────────────────────────────────────────────────── */}
+      {legalIssues.length > 0 && (
         <div className="brief-section issues">
           <h3 className="section-title">
             <QuestionMarkCircleIcon className="icon" />
             Legal Issues
           </h3>
           <ul className="issues-list">
-            {brief.issues.map((issue, idx) => (
-              <li key={idx}>{issue}</li>
-            ))}
+            {legalIssues.map((issue, idx) => <li key={idx}>{issue}</li>)}
           </ul>
         </div>
       )}
 
-      {/* Holding/Decision */}
-      {brief.holding && (
+      {/* ── Holding ───────────────────────────────────────────────────── */}
+      {holdingText && (
         <div className="brief-section holding">
           <h3 className="section-title">
             <ScaleIcon className="icon" />
             Holding / Decision
           </h3>
-          <p className="section-content">{brief.holding}</p>
+          <p className="section-content">{holdingText}</p>
         </div>
       )}
 
-      {/* Reasoning */}
-      {brief.reasoning && (
+      {/* ── Reasoning ────────────────────────── */}
+      {reasoningText && (
         <div className="brief-section reasoning">
           <h3 className="section-title">
-            <LightBulbIcon className="icon" />
-            Reasoning
-          </h3>
-          <p className="section-content">{brief.reasoning}</p>
-        </div>
-      )}
-
-      {/* Ratio Decidendi */}
-      {brief.ratio_decidendi && Array.isArray(brief.ratio_decidendi) && brief.ratio_decidendi.length > 0 && (
-        <div className="brief-section ratio">
-          <h3 className="section-title">
-            <SparklesIcon className="icon" />
-            Ratio Decidendi (Legal Principles)
-          </h3>
-          <ul className="ratio-list">
-            {brief.ratio_decidendi.map((principle, idx) => (
-              <li key={idx}><strong>•</strong> {principle}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Procedural Principles */}
-      {brief.procedural_principles && (
-        <div className="brief-section procedural">
-          <h3 className="section-title">
-            <DocumentIcon className="icon" />
-            Procedural / Evidentiary Principles
-          </h3>
-          {brief.procedural_principles.statutory_provisions && 
-           brief.procedural_principles.statutory_provisions.length > 0 ? (
-            <ul className="principles-list">
-              {brief.procedural_principles.statutory_provisions.map((principle: string, idx: number) => (
-                <li key={idx}>{principle}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="section-content">
-              {brief.procedural_principles.note || 'No specific procedural principles cited.'}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Key Takeaways */}
-      {brief.key_takeaways && Array.isArray(brief.key_takeaways) && brief.key_takeaways.length > 0 && (
-        <div className="brief-section takeaways">
-          <h3 className="section-title">
             <BookOpenIcon className="icon" />
-            Key Takeaways
+            Judicial Reasoning
           </h3>
-          <ul className="takeaways-list">
-            {brief.key_takeaways.map((takeaway: string, idx: number) => (
-              <li key={idx}>{takeaway}</li>
-            ))}
-          </ul>
+          <p className="section-content">{reasoningText}</p>
         </div>
       )}
 
-      {/* Final Order */}
+      {/* ── Final Order ───────────────────────────────────────────────── */}
       {brief.final_order && (
         <div className="brief-section final-order">
           <h3 className="section-title">
@@ -246,6 +244,46 @@ const CaseBriefDisplay: React.FC<CaseBriefProps> = ({ documentId, autoLoad = fal
           <p className="order-text">{brief.final_order}</p>
         </div>
       )}
+
+      {/* ── Ratio Decidendi ───────────────────────────────────────────── */}
+      {ruleOfLaw.length > 0 && (
+        <div className="brief-section ratio">
+          <h3 className="section-title">
+            <SparklesIcon className="icon" />
+            Ratio Decidendi
+          </h3>
+          <ul className="ratio-list">
+            {ruleOfLaw.map((principle, idx) => (
+              <li key={idx}><strong>•</strong> {principle}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* ── Procedural Principles ─────────────────────────────────── */}
+      {proceduralNote && proceduralNote !== 'Not a primarily procedural case.' && (
+        <div className="brief-section procedural">
+          <h3 className="section-title">
+            <DocumentTextIcon className="icon" />
+            Procedural & Evidentiary Principles
+          </h3>
+          <p className="section-content">{proceduralNote}</p>
+        </div>
+      )}
+
+      {/* ── Key Takeaways ────────────────────── */}
+      {brief.key_takeaways && brief.key_takeaways.length > 0 && (
+        <div className="brief-section takeaways">
+          <h3 className="section-title">
+            <BookOpenIcon className="icon" />
+            Key Takeaways
+          </h3>
+          <ul className="takeaways-list">
+            {brief.key_takeaways.map((t, idx) => <li key={idx}>{t}</li>)}
+          </ul>
+        </div>
+      )}
+
     </div>
   );
 };

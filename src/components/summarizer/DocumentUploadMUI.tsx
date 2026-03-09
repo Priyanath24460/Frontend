@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { BACKEND_BASE } from "../../config/api";
+
 import {
   Box,
   Button,
@@ -60,20 +62,20 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
       formData.append("file", file);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/documents/upload-sri-lanka",
+        `${BACKEND_BASE}/api/documents/upload-sri-lanka`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-          timeout: 300000, // Increase to 5 minutes for BART model download
+          timeout: 900000, // 15 minutes — first-time server may download AI models (~1.6GB)
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / (progressEvent.total || 1)
+              (progressEvent.loaded * 100) / (progressEvent.total || 1),
             );
             setUploadProgress(percentCompleted);
           },
-        }
+        },
       );
 
       console.log("Upload successful:", response.data);
@@ -90,8 +92,8 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
 
       if (err.code === "ECONNABORTED") {
         setError(
-          "Upload timeout - The server is downloading AI models (first time only, ~1.6GB). " +
-            "This may take 5-10 minutes. Please wait and the analysis will complete automatically."
+          "Request took too long. On first run the server downloads AI models (~1.6GB), which can take 5–15 minutes. " +
+            "Try uploading again in a few minutes; the analysis will complete once models are ready.",
         );
       } else {
         setError(err.response?.data?.detail || "Upload failed");
@@ -184,15 +186,131 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
               <Typography variant="caption" color="text.secondary">
                 Maximum file size: 10MB
               </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+                First upload may take 5–15 min while the server loads AI models (~1.6GB, one-time).
+              </Typography>
             </Stack>
           )}
         </Box>
 
         {uploading && (
           <Box>
+            {/* Treat 0–99% as upload, 100% as server-side analysis */}
+            {/*
+              When uploadProgress >= 100 the browser has finished sending bytes,
+              but the backend may still be processing. Show an animated loader
+              in that \"analyzing\" phase instead of a static 100% bar.
+            */}
+            {(() => {
+              const isAnalyzing = uploadProgress >= 100;
+              return (
+                <>
+                  <LinearProgress
+                    variant={isAnalyzing ? "indeterminate" : "determinate"}
+                    value={isAnalyzing ? undefined : uploadProgress}
+                    sx={{
+                      height: 10,
+                      borderRadius: 5,
+                      backgroundColor: "#e0e0e0",
+                      "& .MuiLinearProgress-bar": {
+                        borderRadius: 5,
+                        background:
+                          "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
+                      },
+                    }}
+                  />
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 1, display: "block", textAlign: "center" }}
+                  >
+                    {isAnalyzing
+                      ? "Analyzing case with AI…"
+                      : `Uploading… ${uploadProgress}%`}
+                  </Typography>
+                </>
+              );
+            })()}
+          </Box>
+        )}
+
+        {/*
+        Legacy: keep explicit 100% success state after backend finishes
+        */}
+        {uploadProgress === 100 && !uploading && !error && (
+          <Alert
+            severity="success"
+            icon={<CheckCircleIcon fontSize="inherit" />}
+          >
+            Upload and analysis completed successfully!
+          </Alert>
+        )}
+
+        <Box sx={{ display: "flex", gap: 2.5 }}>
+          <Button
+            variant="contained"
+            onClick={uploadDocument}
+            disabled={!file || uploading}
+            startIcon={<CloudUploadIcon />}
+            fullWidth
+            sx={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              color: "white",
+              fontWeight: 600,
+              padding: "14px",
+              borderRadius: 2,
+              textTransform: "none",
+              fontSize: "1rem",
+              boxShadow: "0 4px 6px rgba(102, 126, 234, 0.4)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #764ba2 0%, #667eea 100%)",
+                boxShadow: "0 6px 10px rgba(102, 126, 234, 0.6)",
+              },
+              "&:disabled": {
+                opacity: 0.6,
+                background: "#95a5a6",
+              },
+            }}
+          >
+            {uploading
+              ? uploadProgress >= 100
+                ? "Analyzing…"
+                : "Uploading…"
+              : "Upload & Analyze"}
+          </Button>
+
+          {file && !uploading && (
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setFile(null);
+                setError(null);
+                setUploadProgress(0);
+              }}
+              sx={{
+                borderColor: "#e74c3c",
+                color: "#e74c3c",
+                fontWeight: 600,
+                textTransform: "none",
+                "&:hover": {
+                  borderColor: "#c0392b",
+                  backgroundColor: "rgba(231, 76, 60, 0.1)",
+                },
+              }}
+            >
+              Clear
+            </Button>
+          )}
+        </Box>
+
+        {/* Existing success + clear buttons below are now redundant but preserved for safety */}
+        {/* (Can be simplified later if desired.) */}
+        {/* 
+        {uploading && (
+          <Box>
             <LinearProgress
-              variant="determinate"
-              value={uploadProgress}
+              variant={uploadProgress > 0 ? "determinate" : "indeterminate"}
+              value={uploadProgress > 0 ? uploadProgress : undefined}
               sx={{
                 height: 10,
                 borderRadius: 5,
@@ -209,12 +327,14 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
               color="text.secondary"
               sx={{ mt: 1, display: "block", textAlign: "center" }}
             >
-              Uploading... {uploadProgress}%
+              {uploadProgress > 0
+                ? `Uploading... ${uploadProgress}%`
+                : "Uploading & processing… (this can take a few minutes)"}
             </Typography>
           </Box>
         )}
 
-        {uploadProgress === 100 && !uploading && (
+        {uploadProgress === 100 && !uploading && !error && (
           <Alert
             severity="success"
             icon={<CheckCircleIcon fontSize="inherit" />}
@@ -249,7 +369,7 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
               },
             }}
           >
-            {uploading ? "Uploading..." : "Upload & Analyze"}
+            {uploading ? "Processing..." : "Upload & Analyze"}
           </Button>
 
           {file && !uploading && (
@@ -275,6 +395,7 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
             </Button>
           )}
         </Box>
+        */}
       </Stack>
     </Paper>
   );
