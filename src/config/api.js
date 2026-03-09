@@ -3,6 +3,14 @@ const BACKEND_PORT = 8011;
 const BACKEND_HOST = 'http://localhost';
 export const BACKEND_BASE = `${BACKEND_HOST}:${BACKEND_PORT}`;
 
+// FR Violation Screener Backend (different port)
+const FR_SCREENER_PORT = 8016;
+export const FR_SCREENER_BASE = `${BACKEND_HOST}:${FR_SCREENER_PORT}`;
+
+// Pass Case Finder Backend (Scenario-Based Case Finder - port 5000)
+const CASE_FINDER_PORT = 5000;
+export const API_URL = `${BACKEND_HOST}:${CASE_FINDER_PORT}`;
+
 // Named export used by RAGResultsPage, CaseChatPanel, SearchInterface, etc.
 export const API = {
 	RAG: `${BACKEND_BASE}/api/rag`,
@@ -27,6 +35,21 @@ export const AnalysisAPI = {
 		});
 		if (!response.ok) {
 			throw new Error('Failed to upload and analyze contract');
+		}
+		return response.json();
+	},
+
+	async screenScenario(scenario) {
+		const response = await fetch(`${FR_SCREENER_BASE}/screen-scenario`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ scenario }),
+		});
+		if (!response.ok) {
+			const error = await response.json().catch(() => ({}));
+			throw new Error(error.detail || 'Failed to screen scenario');
 		}
 		return response.json();
 	},
