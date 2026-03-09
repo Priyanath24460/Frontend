@@ -31,8 +31,8 @@ export default defineConfig({
         changeOrigin: true
       },
       '/api': {
-        target: 'http://localhost:5000',
-        changeOrigin: true
+        target: 'http://localhost:8000',
+        changeOrigin: true,
       }
     }
   }

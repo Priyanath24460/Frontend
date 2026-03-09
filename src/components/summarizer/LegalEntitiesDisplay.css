@@ -1,0 +1,343 @@
+.legal-entities-container {
+  padding: 32px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 24px 0;
+}
+
+.entities-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.entities-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.entity-count-badge {
+  background: #3498db;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Entity Type Filters */
+.entity-type-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.entity-filter-btn {
+  padding: 10px 20px;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.entity-filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.entity-filter-btn.active {
+  border-color: #333;
+  font-weight: 600;
+}
+
+/* Highlighted Text View */
+.highlighted-text-container {
+  margin: 28px 0;
+  padding: 24px;
+  background: #fafafa;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.highlighted-text-container h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.highlighted-text {
+  line-height: 1.8;
+  font-size: 15px;
+  color: #333;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.highlighted-text mark {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.highlighted-text mark:hover {
+  opacity: 0.8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Entity Lists by Type */
+.entities-by-type {
+  margin: 28px 0;
+}
+
+.entity-type-section {
+  margin-bottom: 28px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 4px solid #3498db;
+}
+
+.entity-type-section h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.entity-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.entity-tag {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.entity-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Statistics */
+.entity-statistics {
+  margin-top: 32px;
+  padding: 24px;
+  background: #2c3e50;
+  border-radius: 12px;
+  color: white;
+}
+
+.entity-statistics h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  background: white;
+  color: #2c3e50;
+  padding: 6px 14px;
+  border-radius: 12px;
+}
+
+/* Refresh Button */
+.refresh-btn {
+  margin-top: 24px;
+  padding: 14px 28px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.refresh-btn:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading State */
+.legal-entities-loading {
+  text-align: center;
+  padding: 48px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 24px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.legal-entities-loading p {
+  color: #666;
+  font-size: 16px;
+}
+
+/* Error State */
+.legal-entities-error {
+  text-align: center;
+  padding: 48px;
+  background: #fee;
+  border-radius: 12px;
+  border: 2px solid #fcc;
+}
+
+.legal-entities-error h3 {
+  color: #c33;
+  margin-top: 0;
+}
+
+.legal-entities-error p {
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.legal-entities-error button {
+  padding: 12px 24px;
+  background: #c33;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.legal-entities-error button:hover {
+  background: #a22;
+}
+
+/* Empty State */
+.legal-entities-empty {
+  text-align: center;
+  padding: 48px;
+  color: #999;
+}
+
+.legal-entities-empty button {
+  margin-top: 24px;
+  padding: 14px 28px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.legal-entities-empty button:hover {
+  background: #2980b9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .entity-type-filters {
+    justify-content: center;
+  }
+
+  .entity-filter-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .entities-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .entity-count-badge {
+    align-self: flex-start;
+  }
+}
+
+/* Smooth Scrollbar */
+.highlighted-text::-webkit-scrollbar {
+  width: 8px;
+}
+
+.highlighted-text::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.highlighted-text::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.highlighted-text::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
