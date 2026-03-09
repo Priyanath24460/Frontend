@@ -19,6 +19,9 @@ export default function ComprehensiveAnalysis(){
     summary: null
   });
   const [error, setError] = useState('');
+  const [expandedClauses, setExpandedClauses] = useState({});
+  const [clauseTabs, setClauseTabs] = useState({});
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const extractClauses = async (pdfFile) => {
     setLoading(prev => ({ ...prev, clauses: true }));
@@ -127,27 +130,62 @@ export default function ComprehensiveAnalysis(){
         setLoading(prev => ({ ...prev, cases: false }));
         return;
       }
-      const clause_text = clauseList.map(c => c.clause_text).join(' ').substring(0, 500);
-      const allSignals = clauseList.flatMap(c => c.signals || []);
-      console.log('Searching cases with clause_text:', clause_text.substring(0, 100) + '...');
-      const response = await fetch('http://localhost:8002/api/v1/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clause_text, signals: allSignals, top_k: 10 })
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Case search API response:', errorText);
-        throw new Error(`HTTP ${response.status}`)
+      
+      // ✓ FIX: Search each clause individually instead of combining all clauses
+      // This ensures each clause gets relevant case results, not generic ones
+      const allCaseResults = [];
+      
+      for (const clause of clauseList) {
+        const clause_text = clause.clause_text || '';
+        const signals = clause.signals || [];
+        const problem_type = clause.problem_type || null;  // NEW: Problem type for targeted search
+        
+        // Validate clause has content
+        if (!clause_text || clause_text.trim().length === 0) {
+          console.warn(`Skipping empty clause: ${clause.clause_id}`);
+          continue;
+        }
+        
+        console.log(`Searching cases for clause ${clause.clause_id}:`, clause_text.substring(0, 100) + '...');
+        
+        try {
+          const response = await fetch('http://localhost:8008/api/v1/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              clause_text: clause_text.substring(0, 500),  // Limit query size
+              signals: signals,
+              problem_type: problem_type,  // NEW: Send problem type for targeted search
+              top_k: 10 
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            const caseResults = result.cases || result.results || [];
+            
+            // Tag results with source clause for display
+            const taggedResults = caseResults.map(c => ({
+              ...c,
+              source_clause_id: clause.clause_id,
+              source_clause_type: clause.clause_type
+            }));
+            
+            allCaseResults.push(...taggedResults);
+            console.log(`  ✓ Found ${caseResults.length} cases for ${clause.clause_id}`);
+          } else {
+            console.warn(`Case search failed for ${clause.clause_id}: HTTP ${response.status}`);
+          }
+        } catch (err) {
+          console.warn(`Case search error for ${clause.clause_id}:`, err.message);
+        }
       }
-      const result = await response.json();
-      console.log('Case search results:', result);
-      // API returns { cases: [...] } not { results: [...] }
-      const caseResults = result.cases || result.results || [];
-      setData(prev => ({ ...prev, cases: { results: caseResults } }));
+      
+      console.log(`Total case results across all clauses: ${allCaseResults.length}`);
+      setData(prev => ({ ...prev, cases: { results: allCaseResults } }));
       setLoading(prev => ({ ...prev, cases: false }));
     } catch (err) {
-      console.warn(`Case search failed: ${err.message}`);
+      console.warn(`Case search batch failed: ${err.message}`);
       setLoading(prev => ({ ...prev, cases: false }));
     }
   };
@@ -159,27 +197,62 @@ export default function ComprehensiveAnalysis(){
         setLoading(prev => ({ ...prev, acts: false }));
         return;
       }
-      const query_text = clauseList.map(c => c.clause_text).join(' ').substring(0, 500);
-      const allSignals = clauseList.flatMap(c => c.signals || []);
-      console.log('Searching acts with query_text:', query_text.substring(0, 100) + '...');
-      const response = await fetch('http://localhost:8003/api/v1/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query_text, signals: allSignals, top_k: 10 })
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Act search API response:', errorText);
-        throw new Error(`HTTP ${response.status}`)
+      
+      // ✓ FIX: Search each clause individually instead of combining all clauses
+      // This ensures each clause gets relevant act/legislation results, not generic ones
+      const allActResults = [];
+      
+      for (const clause of clauseList) {
+        const query_text = clause.clause_text || '';
+        const signals = clause.signals || [];
+        const problem_type = clause.problem_type || null;  // NEW: Problem type for targeted search
+        
+        // Validate clause has content
+        if (!query_text || query_text.trim().length === 0) {
+          console.warn(`Skipping empty clause: ${clause.clause_id}`);
+          continue;
+        }
+        
+        console.log(`Searching acts for clause ${clause.clause_id}:`, query_text.substring(0, 100) + '...');
+        
+        try {
+          const response = await fetch('http://localhost:8009/api/v1/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              query_text: query_text.substring(0, 500),  // Limit query size
+              signals: signals,
+              problem_type: problem_type,  // NEW: Send problem type for targeted search
+              top_k: 10 
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            const actResults = result.sections || result.results || [];
+            
+            // Tag results with source clause for display
+            const taggedResults = actResults.map(a => ({
+              ...a,
+              source_clause_id: clause.clause_id,
+              source_clause_type: clause.clause_type
+            }));
+            
+            allActResults.push(...taggedResults);
+            console.log(`  ✓ Found ${actResults.length} acts for ${clause.clause_id}`);
+          } else {
+            console.warn(`Act search failed for ${clause.clause_id}: HTTP ${response.status}`);
+          }
+        } catch (err) {
+          console.warn(`Act search error for ${clause.clause_id}:`, err.message);
+        }
       }
-      const result = await response.json();
-      console.log('Act search results:', result);
-      // API returns { sections: [...] } not { results: [...] }
-      const actResults = result.sections || result.results || [];
-      setData(prev => ({ ...prev, acts: { results: actResults } }));
+      
+      console.log(`Total act results across all clauses: ${allActResults.length}`);
+      setData(prev => ({ ...prev, acts: { results: allActResults } }));
       setLoading(prev => ({ ...prev, acts: false }));
     } catch (err) {
-      console.warn(`Act search failed: ${err.message}`);
+      console.warn(`Act search batch failed: ${err.message}`);
       setLoading(prev => ({ ...prev, acts: false }));
     }
   };
@@ -188,6 +261,7 @@ export default function ComprehensiveAnalysis(){
     setError('');
     setClauses([]);
     setData({ risks: {}, cases: { results: [] }, acts: { results: [] }, summary: null });
+    setIsAnalyzing(true);
     
     // Extract clauses and risks in parallel to get complete data
     const [extractedClauses, riskData] = await Promise.all([
@@ -198,7 +272,10 @@ export default function ComprehensiveAnalysis(){
       return [null, null];
     });
     
-    if (!riskData || !riskData.clauses) return;
+    if (!riskData || !riskData.clauses) {
+      setIsAnalyzing(false);
+      return;
+    }
     
     // Use clauses from risk API (has all 6), merge with extracted for better text
     const clauseTextMap = {};
@@ -215,7 +292,10 @@ export default function ComprehensiveAnalysis(){
     }));
     
     console.log('Final clauses to display:', allClauses);
+    
+    // DISPLAY CLAUSES IMMEDIATELY (progressive display)
     setClauses(allClauses);
+    setData(prev => ({ ...prev, risks: riskData.risks }));
     
     // Auto-expand all clauses
     const expandedState = {};
@@ -227,18 +307,17 @@ export default function ComprehensiveAnalysis(){
     setExpandedClauses(expandedState);
     setClauseTabs(initialTabs);
     
-    // Update risks data
-    setData(prev => ({ ...prev, risks: riskData.risks, summary: riskData.summary }));
+    // NOW search for cases and acts in parallel (without blocking)
+    setLoading(prev => ({ ...prev, cases: true, acts: true }));
     
-    // Run case and act searches in parallel
-    await Promise.all([
+    Promise.all([
       searchCases(allClauses),
       searchActs(allClauses)
-    ]).catch(err => console.error('Search analysis error:', err));
+    ]).finally(() => {
+      setIsAnalyzing(false);
+      setLoading(prev => ({ ...prev, cases: false, acts: false }));
+    });
   };
-
-  const [expandedClauses, setExpandedClauses] = useState({});
-  const [clauseTabs, setClauseTabs] = useState({}); // Track active tab for each clause
 
   const toggleExpandClause = (clauseId) => {
     setExpandedClauses(prev => ({
@@ -274,7 +353,7 @@ export default function ComprehensiveAnalysis(){
     
     return {
       totalRisks,
-      highRiskClauseIds: highRiskClauses.map((_, i) => {
+      highRiskClauseIds: highRiskClauses.map((_) => {
         const clauseId = Object.keys(data.risks)[Object.values(data.risks).indexOf(_)];
         return clauseId;
       }).filter(Boolean),
@@ -295,11 +374,11 @@ export default function ComprehensiveAnalysis(){
     return (
       <div key={clause.clause_id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-amber-100 overflow-hidden transition-all duration-300">
         {/* Header with expand/collapse */}
-        <div onClick={() => toggleExpandClause(clause.clause_id)} className={`flex justify-between items-center cursor-pointer px-8 py-6 bg-gradient-to-r ${isExpanded ? 'from-stone-100 via-amber-50 to-orange-50 border-b-2 border-amber-200' : 'from-stone-50 to-gray-50'} transition-all duration-300`}>
+        <div onClick={() => toggleExpandClause(clause.clause_id)} className={`flex justify-between items-center cursor-pointer px-8 py-6 bg-linear-to-r ${isExpanded ? 'from-stone-100 via-amber-50 to-orange-50 border-b-2 border-amber-200' : 'from-stone-50 to-gray-50'} transition-all duration-300`}>
           <div className="flex items-center gap-6 flex-1">
             <span className={`text-2xl transition-transform duration-300 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>▼</span>
             <div className="flex items-center gap-3">
-              <span className="bg-gradient-to-r from-stone-700 via-amber-700 to-orange-700 text-white px-3 py-1 rounded-lg text-sm font-bold uppercase">{clause.clause_type}</span>
+              <span className="bg-linear-to-r from-stone-700 via-amber-700 to-orange-700 text-white px-3 py-1 rounded-lg text-sm font-bold uppercase">{clause.clause_type}</span>
               <span className="bg-amber-50 text-amber-700 px-3 py-1 rounded-lg text-sm font-semibold border border-amber-200">{clause.clause_id}</span>
             </div>
           </div>
@@ -316,7 +395,7 @@ export default function ComprehensiveAnalysis(){
                 onClick={() => setActiveTab(clause.clause_id, 'text')}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
                   activeTab === 'text'
-                    ? 'bg-gradient-to-r from-stone-700 via-amber-700 to-orange-700 text-white shadow-lg'
+                    ? 'bg-linear-to-r from-stone-700 via-amber-700 to-orange-700 text-white shadow-lg'
                     : 'bg-white text-stone-600 border-2 border-stone-200 hover:border-stone-400'
                 }`}
               >
@@ -342,11 +421,11 @@ export default function ComprehensiveAnalysis(){
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
                   activeTab === 'cases'
                     ? 'bg-blue-600 text-white shadow-lg'
-                    : `${hasCases ? 'bg-white text-stone-600 border-2 border-blue-300' : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'}`
+                    : `${hasCases || loading.cases ? 'bg-white text-stone-600 border-2 border-blue-300' : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'}`
                 }`}
-                disabled={!hasCases}
+                disabled={!hasCases && !loading.cases}
               >
-                📚 Cases ({data.cases.results?.length || 0})
+                📚 Cases {loading.cases ? '⏳' : `(${data.cases.results?.length || 0})`}
               </button>
 
               {/* Acts Tab */}
@@ -355,11 +434,11 @@ export default function ComprehensiveAnalysis(){
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
                   activeTab === 'acts'
                     ? 'bg-purple-600 text-white shadow-lg'
-                    : `${hasActs ? 'bg-white text-stone-600 border-2 border-purple-300' : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'}`
+                    : `${hasActs || loading.acts ? 'bg-white text-stone-600 border-2 border-purple-300' : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'}`
                 }`}
-                disabled={!hasActs}
+                disabled={!hasActs && !loading.acts}
               >
-                📖 Acts ({data.acts.results?.length || 0})
+                📖 Acts {loading.acts ? '⏳' : `(${data.acts.results?.length || 0})`}
               </button>
             </div>
 
@@ -369,7 +448,7 @@ export default function ComprehensiveAnalysis(){
               {activeTab === 'text' && (
                 <div>
                   <h4 className="mb-4 text-stone-800 text-lg font-bold">📄 Full Clause Text</h4>
-                  <div className="bg-gradient-to-br from-stone-50 to-amber-50 p-6 border-l-4 border-amber-700 rounded-lg mb-6 shadow-sm">
+                  <div className="bg-linear-to-br from-stone-50 to-amber-50 p-6 border-l-4 border-amber-700 rounded-lg mb-6 shadow-sm">
                     <p className="m-0 leading-relaxed whitespace-pre-wrap text-stone-700 text-base font-normal font-sans">
                       {clause.clause_text || '[No text available]'}
                     </p>
@@ -381,7 +460,7 @@ export default function ComprehensiveAnalysis(){
                       navigator.clipboard.writeText(clause.clause_text);
                       alert('✅ Clause text copied to clipboard!');
                     }}
-                    className="px-6 py-3 bg-gradient-to-r from-stone-700 via-amber-700 to-orange-700 text-white rounded-lg cursor-pointer font-bold text-sm transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                    className="px-6 py-3 bg-linear-to-r from-stone-700 via-amber-700 to-orange-700 text-white rounded-lg cursor-pointer font-bold text-sm transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
                   >
                     📋 Copy Clause Text
                   </button>
@@ -395,11 +474,11 @@ export default function ComprehensiveAnalysis(){
                   {riskList.length > 0 ? (
                     <div className="space-y-3">
                       {riskList.map((risk, i) => (
-                        <div key={i} className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 border-l-4 border-orange-600 rounded-lg shadow-sm">
+                        <div key={i} className="bg-linear-to-r from-orange-50 to-amber-50 p-4 border-l-4 border-orange-600 rounded-lg shadow-sm">
                           <div className="flex justify-between items-start mb-2">
                             <strong className="text-orange-700 text-sm">{risk.risk}</strong>
                             <span className="bg-orange-600 text-white px-2 py-1 rounded text-xs font-bold">
-                              {(risk.confidence * 100).toFixed(0)}% confidence
+                              {risk.confidence_percent || `${(risk.confidence * 100).toFixed(0)}%`} confidence
                             </span>
                           </div>
                           {risk.explanation && <p className="m-0 mb-2 text-sm text-stone-600">{risk.explanation}</p>}
@@ -425,10 +504,20 @@ export default function ComprehensiveAnalysis(){
               {activeTab === 'cases' && (
                 <div>
                   <h4 className="mb-4 text-blue-800 text-lg font-bold">📚 Related Case Law</h4>
-                  {data.cases.results && data.cases.results.length > 0 ? (
+                  {loading.cases ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="bg-linear-to-r from-blue-50 to-cyan-50 p-4 border-l-4 border-blue-600 rounded-lg animate-pulse">
+                          <div className="h-4 bg-blue-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-blue-100 rounded w-1/2"></div>
+                        </div>
+                      ))}
+                      <p className="text-center text-blue-600 font-semibold mt-4">⏳ Searching case law...</p>
+                    </div>
+                  ) : data.cases.results && data.cases.results.length > 0 ? (
                     <div className="space-y-3">
                       {data.cases.results.slice(0, 3).map((caseItem, i) => (
-                        <div key={i} className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 border-l-4 border-blue-600 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div key={i} className="bg-linear-to-r from-blue-50 to-cyan-50 p-4 border-l-4 border-blue-600 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-2">
                             <strong className="text-blue-800 text-sm">{caseItem.case_name}</strong>
                             <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">
@@ -457,10 +546,20 @@ export default function ComprehensiveAnalysis(){
               {activeTab === 'acts' && (
                 <div>
                   <h4 className="mb-4 text-purple-900 text-lg font-bold">📖 Related Legislation</h4>
-                  {data.acts.results && data.acts.results.length > 0 ? (
+                  {loading.acts ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="bg-linear-to-r from-purple-50 to-pink-50 p-4 border-l-4 border-purple-600 rounded-lg animate-pulse">
+                          <div className="h-4 bg-purple-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-purple-100 rounded w-1/2"></div>
+                        </div>
+                      ))}
+                      <p className="text-center text-purple-600 font-semibold mt-4">⏳ Searching legislation...</p>
+                    </div>
+                  ) : data.acts.results && data.acts.results.length > 0 ? (
                     <div className="space-y-3">
                       {data.acts.results.slice(0, 3).map((act, i) => (
-                        <div key={i} className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 border-l-4 border-purple-600 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div key={i} className="bg-linear-to-r from-purple-50 to-pink-50 p-4 border-l-4 border-purple-600 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-2">
                             <strong className="text-purple-900 text-sm">{act.act_name} {act.year && `(${act.year})`}</strong>
                             <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold">
@@ -490,288 +589,98 @@ export default function ComprehensiveAnalysis(){
     );
   };
 
-  const isAnalyzing = Object.values(loading).some(v => v);
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-linear-to-b from-stone-50 to-amber-50">
       <Header />
-      <main className="pt-16">
-        {/* Hero Section with Background */}
-        <section className="bg-gradient-to-br from-stone-600 via-amber-900 to-orange-800 text-white py-16 relative overflow-hidden">
-          {/* Background Image Overlay */}
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-stone-900 via-stone-900/70 to-transparent"></div>
-          </div>
+      <main className="pt-20 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <section className="mb-8 rounded-2xl bg-linear-to-r from-stone-800 via-amber-900 to-orange-800 text-white p-8 shadow-xl">
+            <h1 className="text-3xl md:text-4xl font-bold">Comprehensive Contract Analysis</h1>
+            <p className="mt-2 text-amber-100">
+              Upload a contract to extract clauses, detect risks, and retrieve related case law and legislation.
+            </p>
+          </section>
 
-          {/* Content */}
-          <div className="relative max-w-7xl mx-auto px-8">
-            <div className="flex flex-col lg:flex-row justify-between items-start gap-12">
-              <div className="flex-1">
-                <h1 className="text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-                  Contract Risk
-                  <span className="block bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">
-                    Analysis
-                  </span>
-                </h1>
-                <p className="text-lg text-white/90 mb-6 font-light max-w-2xl leading-relaxed">
-                  Upload your contract and get instant AI-powered analysis. Identify risks, extract key clauses, and find related legal cases and legislation.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2 text-amber-300 font-semibold">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                    Instant Analysis
-                  </div>
-                  <div className="flex items-center gap-2 text-amber-300 font-semibold">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                    Risk Detection
-                  </div>
-                  <div className="flex items-center gap-2 text-amber-300 font-semibold">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                    Legal Research
-                  </div>
-                </div>
-              </div>
-              {contractType && (
-                <div className="hidden lg:block bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 w-80">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-400 rounded-lg flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-white/70 text-sm font-medium">Contract Type</p>
-                        <p className="text-xl font-bold text-white">{contractType.toUpperCase()}</p>
-                      </div>
-                    </div>
-                    {clauses.length > 0 && (
-                      <div className="pt-4 border-t border-white/20 flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-white/70 text-sm font-medium">Clauses Found</p>
-                          <p className="text-xl font-bold text-white">{clauses.length}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Main Content Area */}
-        <div className="max-w-7xl mx-auto px-8 py-16">
-          {/* Warning Banner */}
           {warning && (
-            <div className="mb-8 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-400 rounded-2xl p-6 shadow-lg animate-pulse">
-              <div className="flex items-start gap-4">
-                <div className="text-3xl flex-shrink-0">⚠️</div>
-                <div>
-                  <p className="m-0 text-amber-900 font-bold text-lg mb-2">Limited Analysis Mode</p>
-                  <p className="m-0 text-amber-800 font-medium">{warning.replace('⚠️ Limited Analysis: ', '')}</p>
-                </div>
-              </div>
+            <div className="mb-6 rounded-xl border border-amber-300 bg-linear-to-r from-amber-50 to-orange-50 p-4 text-amber-900">
+              {warning.replace('⚠️ Limited Analysis: ', '')}
             </div>
           )}
 
-          {/* Upload Section */}
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-300 bg-linear-to-r from-red-50 to-red-100 p-4 text-red-800">
+              {error}
+            </div>
+          )}
+
           {clauses.length === 0 ? (
-            <div className="mb-12">
-              <div className="bg-white rounded-3xl shadow-2xl border border-amber-100 p-12 text-center">
-                <div className="mb-8">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                    <svg className="w-12 h-12 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                  </div>
-                  <h2 className="text-3xl font-bold text-stone-800 mb-2">Upload Your Contract</h2>
-                  <p className="text-lg text-gray-600">Choose a PDF file to analyze. Our AI will extract clauses, identify risks, and find related legal information.</p>
-                </div>
-                <FileUpload onUpload={onUpload} label="📄 Select Contract PDF" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-amber-100 shadow-lg p-8">
+                <FileUpload onUpload={onUpload} />
+              </div>
+              <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 shadow-lg p-6">
+                <h3 className="text-lg font-bold text-blue-900">What You Get</h3>
+                <ul className="mt-3 space-y-2 text-sm text-blue-800">
+                  <li>Clause extraction and contract typing</li>
+                  <li>Risk detection per clause</li>
+                  <li>Related case law references</li>
+                  <li>Relevant legal acts and sections</li>
+                </ul>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              {/* SIDEBAR */}
-              <div className="lg:col-span-1 flex flex-col gap-6">
-                {/* Upload Card */}
-                <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-6 hover:shadow-xl transition-all duration-300">
-                  <h4 className="font-bold text-stone-800 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    Upload Again
-                  </h4>
-                  <FileUpload onUpload={onUpload} label="📄 Choose File" />
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <aside className="lg:col-span-1 space-y-4">
+                <div className="bg-white rounded-2xl border border-amber-100 shadow-lg p-4">
+                  <FileUpload onUpload={onUpload} label="Upload Another PDF" />
                 </div>
 
-                {/* Progress Card */}
+                <div className="bg-white rounded-2xl border border-amber-100 shadow-lg p-4 space-y-2">
+                  <p className="text-sm text-stone-600">Contract Type</p>
+                  <p className="text-lg font-bold text-stone-800">{(contractType || 'unknown').toUpperCase()}</p>
+                  <p className="text-sm text-stone-600">Total Clauses</p>
+                  <p className="text-lg font-bold text-stone-800">{clauses.length}</p>
+                  <p className="text-sm text-stone-600">Cases</p>
+                  <p className="text-lg font-bold text-blue-700">{data.cases.results?.length || 0}</p>
+                  <p className="text-sm text-stone-600">Acts</p>
+                  <p className="text-lg font-bold text-purple-700">{data.acts.results?.length || 0}</p>
+                </div>
+
                 {isAnalyzing && (
-                  <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-6">
-                    <h4 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2">
-                      <svg className="w-5 h-5 animate-spin text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Analysis Progress
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
-                        <span className="text-lg">{loading.clauses ? '⏳' : '✅'}</span>
-                        <span className="text-sm font-semibold text-stone-700">Extracting Clauses</span>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
-                        <span className="text-lg">{loading.risks ? '⏳' : (Object.keys(data.risks).length > 0 ? '✅' : '○')}</span>
-                        <span className="text-sm font-semibold text-stone-700">Risk Analysis</span>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-cyan-50 to-blue-100 rounded-lg">
-                        <span className="text-lg">{loading.cases ? '⏳' : (data.cases.results?.length > 0 ? '✅' : '○')}</span>
-                        <span className="text-sm font-semibold text-stone-700">Case Law</span>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
-                        <span className="text-lg">{loading.acts ? '⏳' : (data.acts.results?.length > 0 ? '✅' : '○')}</span>
-                        <span className="text-sm font-semibold text-stone-700">Legislation</span>
-                      </div>
-                    </div>
+                  <div className="bg-linear-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-300 p-4 text-sm text-amber-900">
+                    Analysis in progress. Clauses are shown first, then cases and acts load progressively.
                   </div>
                 )}
+              </aside>
 
-                {/* Error Card */}
-                {error && (
-                  <div className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400 rounded-2xl p-6 shadow-lg">
-                    <div className="flex gap-3">
-                      <div className="text-2xl flex-shrink-0">❌</div>
-                      <div>
-                        <p className="text-red-700 font-bold mb-1">Error</p>
-                        <p className="text-red-600 text-sm font-medium">{error}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Summary Card */}
-                {clauses.length > 0 && (
-                  <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-6">
-                    <h4 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2">
-                      <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                      Summary
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center p-3 bg-gradient-to-r from-stone-50 to-amber-50 rounded-xl border-l-4 border-stone-700">
-                        <span className="text-sm text-stone-600 font-semibold">Total Clauses</span>
-                        <span className="text-2xl font-bold text-stone-800">{clauses.length}</span>
-                      </div>
-                      {Object.keys(data.risks).length > 0 && (
-                        <div className="flex justify-between items-center p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border-l-4 border-orange-600">
-                          <span className="text-sm text-stone-600 font-semibold">With Risks</span>
-                          <span className="text-2xl font-bold text-orange-700">{Object.keys(data.risks).filter(k => data.risks[k].risks.length > 0).length}</span>
-                        </div>
-                      )}
-                      {data.cases.results?.length > 0 && (
-                        <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border-l-4 border-blue-600">
-                          <span className="text-sm text-stone-600 font-semibold">Cases Found</span>
-                          <span className="text-2xl font-bold text-blue-700">{data.cases.results.length}</span>
-                        </div>
-                      )}
-                      {data.acts.results?.length > 0 && (
-                        <div className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-l-4 border-purple-600">
-                          <span className="text-sm text-stone-600 font-semibold">Legislation</span>
-                          <span className="text-2xl font-bold text-purple-700">{data.acts.results.length}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* MAIN CONTENT */}
-              <div className="lg:col-span-3 space-y-8">
-                {/* Risk Summary */}
+              <section className="lg:col-span-3 space-y-6">
                 {Object.keys(data.risks).length > 0 && (() => {
                   const summary = getRiskSummary();
                   return (
-                    <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-orange-50 border-3 border-orange-400 rounded-3xl p-10 shadow-2xl">
-                      <div className="flex items-start gap-4 mb-8">
-                        <div className="text-5xl">🚨</div>
-                        <div>
-                          <h3 className="text-3xl font-bold text-orange-900">Risk Assessment Summary</h3>
-                          <p className="text-orange-700 font-semibold mt-2">Critical findings from contract analysis</p>
+                    <div className="rounded-2xl border border-orange-300 bg-linear-to-br from-orange-50 to-amber-50 p-6 shadow-lg">
+                      <h2 className="text-xl font-bold text-orange-900">Risk Summary</h2>
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="rounded-lg bg-white border border-orange-200 p-3">
+                          <p className="text-xs text-orange-700">Total Risks</p>
+                          <p className="text-2xl font-bold text-orange-800">{summary.totalRisks}</p>
+                        </div>
+                        <div className="rounded-lg bg-white border border-red-200 p-3">
+                          <p className="text-xs text-red-700">High-Risk Clauses</p>
+                          <p className="text-2xl font-bold text-red-800">{summary.highRiskClauseIds.length}</p>
+                        </div>
+                        <div className="rounded-lg bg-white border border-amber-200 p-3">
+                          <p className="text-xs text-amber-700">Missing Provisions</p>
+                          <p className="text-2xl font-bold text-amber-800">{summary.missingProvisions.length}</p>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-orange-200">
-                          <div className="flex items-end justify-between">
-                            <div>
-                              <p className="text-orange-600 font-semibold text-sm mb-1">Total Risks Identified</p>
-                              <p className="text-5xl font-bold text-orange-700">{summary.totalRisks}</p>
-                            </div>
-                            <div className="text-4xl opacity-30">⚠️</div>
-                          </div>
-                        </div>
-                        <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-red-200">
-                          <div className="flex items-end justify-between">
-                            <div>
-                              <p className="text-red-600 font-semibold text-sm mb-1">High-Risk Clauses</p>
-                              <p className="text-5xl font-bold text-red-700">{summary.highRiskClauseIds.length}</p>
-                            </div>
-                            <div className="text-4xl opacity-30">🔴</div>
-                          </div>
-                        </div>
-                      </div>
-                      {summary.missingProvisions.length > 0 && (
-                        <div className="bg-white rounded-2xl p-6 shadow-lg">
-                          <p className="text-stone-800 font-bold text-lg mb-4 flex items-center gap-2">
-                            <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Missing Provisions ({summary.missingProvisions.length})
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {summary.missingProvisions.slice(0, 10).map((p, i) => (
-                              <span key={i} className="bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 text-sm font-semibold px-4 py-2 rounded-full border border-orange-300 shadow-sm">
-                                {p.replace(/_/g, ' ')}
-                              </span>
-                            ))}
-                            {summary.missingProvisions.length > 10 && (
-                              <span className="bg-orange-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg">
-                                +{summary.missingProvisions.length - 10} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })()}
 
-                {/* Clauses Section */}
-                <div>
-                  <div className="mb-8">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-4xl font-bold text-stone-800 flex items-center gap-3">
-                        <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Extracted Clauses
-                      </h2>
-                      <div className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-6 py-2 rounded-full font-bold shadow-lg">
-                        {clauses.length} Clauses
-                      </div>
-                    </div>
-                    <p className="text-gray-600 font-medium">Click to expand and view full details, risks, and related legal information</p>
-                  </div>
-                  <div className="space-y-4">
-                    {clauses.map((clause) => renderClause(clause))}
-                  </div>
+                <div className="space-y-4">
+                  {clauses.map((clause) => renderClause(clause))}
                 </div>
-              </div>
+              </section>
             </div>
           )}
         </div>
