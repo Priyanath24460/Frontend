@@ -1,0 +1,142 @@
+.chunks-viewer {
+    font-family: 'Inter', sans-serif;
+}
+
+.chunks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chunks-count {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.chunks-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.chunks-filter-btn {
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #374151;
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chunks-filter-btn.active {
+    border-color: transparent;
+}
+
+.chunks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chunk-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+}
+
+.chunk-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.chunk-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.chunk-section-badge {
+    color: #fff;
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.chunk-idx {
+    font-size: 0.73rem;
+    color: #94a3b8;
+}
+
+.chunk-case {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+.chunk-sim-badge {
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.chunk-text {
+    font-size: 0.875rem;
+    color: #374151;
+    line-height: 1.65;
+    margin-bottom: 8px;
+}
+
+.chunk-expand-btn {
+    background: none;
+    border: none;
+    font-size: 0.75rem;
+    color: #6d28d9;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.chunk-refs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.chunk-ref {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.chunk-ref.art {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.chunk-ref.cit {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.chunks-empty {
+    text-align: center;
+    padding: 30px;
+    color: #94a3b8;
+}
