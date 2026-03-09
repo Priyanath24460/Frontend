@@ -8,6 +8,7 @@ const Search = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedQuery, setSelectedQuery] = useState("");
+  const [lastQuestion, setLastQuestion] = useState("");
 
   const exampleQueries = [
     "What are the legal precedents for property disputes in Sri Lanka?",
@@ -92,6 +93,7 @@ const Search = () => {
                   setError={setError}
                   selectedQuery={selectedQuery}
                   setSelectedQuery={setSelectedQuery}
+                  setLastQuestion={setLastQuestion}
                 />
                 
                 {/* Example Queries Section */}
@@ -151,111 +153,104 @@ const Search = () => {
             
             {/* Results Section */}
             <div className="lg:col-span-3">
-              <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 border-t-4 border-orange-500">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center mr-4 shadow-md">
-                    <svg className="w-6 h-6 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-stone-800">Search Results</h2>
-                    {result && <p className="text-xs text-gray-500 mt-1">Analysis complete</p>}
-                  </div>
-                </div>
+              <div className="bg-white rounded-2xl shadow-xl border-t-4 border-orange-500">
+                {/* Error, Loading, and Empty States */}
+                {(error || isLoading || !result) && (
+                  <div className="p-6 lg:p-8">
+                    {/* Error State */}
+                    {error && (
+                      <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                        <div className="flex items-start">
+                          <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div>
+                            <h3 className="text-red-800 font-semibold mb-1">Search Failed</h3>
+                            <p className="text-red-700 text-sm">{error}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-                {/* Error State */}
-                {error && (
-                  <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-                    <div className="flex items-start">
-                      <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <div>
-                        <h3 className="text-red-800 font-semibold mb-1">Search Failed</h3>
-                        <p className="text-red-700 text-sm">{error}</p>
+                    {/* Loading State */}
+                    {isLoading && (
+                      <div className="text-center py-16">
+                        <div className="relative w-24 h-24 mx-auto mb-6">
+                          <div className="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full animate-ping opacity-75"></div>
+                          <div className="relative w-24 h-24 bg-gradient-to-br from-amber-200 to-orange-200 rounded-full flex items-center justify-center shadow-lg">
+                            <svg className="w-12 h-12 text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">Searching Case Law...</h3>
+                        <p className="text-gray-600 mb-4">Our AI is analyzing legal documents to find the best answer</p>
+                        <div className="max-w-md mx-auto">
+                          <div className="flex justify-between text-xs text-gray-500 mb-2">
+                            <span>Processing query</span>
+                            <span>Please wait...</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full animate-pulse"></div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                )}
+                    )}
 
-                {/* Loading State */}
-                {isLoading && (
-                  <div className="text-center py-16">
-                    <div className="relative w-24 h-24 mx-auto mb-6">
-                      <div className="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full animate-ping opacity-75"></div>
-                      <div className="relative w-24 h-24 bg-gradient-to-br from-amber-200 to-orange-200 rounded-full flex items-center justify-center shadow-lg">
-                        <svg className="w-12 h-12 text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                    {/* Empty State */}
+                    {!result && !isLoading && (
+                      <div className="text-center py-16">
+                        <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center shadow-lg">
+                          <svg className="w-12 h-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">Ready to Search</h3>
+                        <p className="text-gray-600 mb-6">Enter a question on the left to search for legal cases and documents</p>
+                        
+                        {/* What to expect section */}
+                        <div className="max-w-md mx-auto bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                          <h4 className="font-bold text-blue-900 mb-3 flex items-center justify-center">
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            What You'll Get:
+                          </h4>
+                          <ul className="text-sm text-blue-800 space-y-2 text-left">
+                            <li className="flex items-start">
+                              <svg className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>Direct answers based on case law</span>
+                            </li>
+                            <li className="flex items-start">
+                              <svg className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>Relevant case citations and references</span>
+                            </li>
+                            <li className="flex items-start">
+                              <svg className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>Detailed legal explanations</span>
+                            </li>
+                            <li className="flex items-start">
+                              <svg className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>Supporting reference sections</span>
+                            </li>
+                          </ul>
+                        </div>
                       </div>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">Searching Case Law...</h3>
-                    <p className="text-gray-600 mb-4">Our AI is analyzing legal documents to find the best answer</p>
-                    <div className="max-w-md mx-auto">
-                      <div className="flex justify-between text-xs text-gray-500 mb-2">
-                        <span>Processing query</span>
-                        <span>Please wait...</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full animate-pulse"></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Empty State */}
-                {!result && !isLoading && (
-                  <div className="text-center py-16">
-                    <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center shadow-lg">
-                      <svg className="w-12 h-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">Ready to Search</h3>
-                    <p className="text-gray-600 mb-6">Enter a question on the left to search for legal cases and documents</p>
-                    
-                    {/* What to expect section */}
-                    <div className="max-w-md mx-auto bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                      <h4 className="font-bold text-blue-900 mb-3 flex items-center justify-center">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        What You'll Get:
-                      </h4>
-                      <ul className="text-sm text-blue-800 space-y-2 text-left">
-                        <li className="flex items-start">
-                          <svg className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>Direct answers based on case law</span>
-                        </li>
-                        <li className="flex items-start">
-                          <svg className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>Relevant case citations and references</span>
-                        </li>
-                        <li className="flex items-start">
-                          <svg className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>Detailed legal explanations</span>
-                        </li>
-                        <li className="flex items-start">
-                          <svg className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>Supporting reference sections</span>
-                        </li>
-                      </ul>
-                    </div>
+                    )}
                   </div>
                 )}
 
                 {/* Results Display */}
                 {result && !isLoading && (
-                  <ResultDisplay result={result} />
+                  <ResultDisplay result={result} userQuestion={lastQuestion} />
                 )}
               </div>
             </div>
