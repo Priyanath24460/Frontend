@@ -106,6 +106,14 @@ export default function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route
+                path="/contract-risk-analysis"
+                element={
+                  <ProtectedRoute>
+                    <ContractRiskAnalysis />
+                  </ProtectedRoute>
+                }
+              />
               </Routes>
             </React.Suspense>
           </Router>
