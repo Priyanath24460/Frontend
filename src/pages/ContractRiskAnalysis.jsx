@@ -2,6 +2,10 @@ import React, { useRef, useState } from 'react';
 import FileUpload from '../components/FileUpload.jsx';
 import Header from '../components/Header.jsx';
 import { AnalysisAPI } from '../config/api.js';
+import ResultsOverviewNav from '../components/ResultsSections/ResultsOverviewNav.jsx';
+import RiskAlertsSummary from '../components/ResultsSections/RiskAlertsSummary.jsx';
+import TopReferencesSection from '../components/ResultsSections/TopReferencesSection.jsx';
+import ClauseAnalysisHeader from '../components/ResultsSections/ClauseAnalysisHeader.jsx';
 
 // ─── Lightweight Markdown Renderer ──────────────────────────────────────────────
 function SimpleMarkdown({ text }) {
@@ -15,8 +19,8 @@ function SimpleMarkdown({ text }) {
   const flushList = () => {
     if (listItems.length > 0) {
       elements.push(
-        <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-1 mb-4 text-stone-700">
-          {listItems.map((item, i) => <li key={i} className="text-sm leading-relaxed">{parseInline(item)}</li>)}
+        <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-2 mb-5 text-gray-700 ml-2">
+          {listItems.map((item, i) => <li key={i} className="text-sm leading-relaxed text-gray-800 font-medium">{parseInline(item)}</li>)}
         </ul>
       );
       listItems = [];
@@ -26,8 +30,8 @@ function SimpleMarkdown({ text }) {
   const flushBlockquote = () => {
     if (blockquoteLines.length > 0) {
       elements.push(
-        <blockquote key={`bq-${elements.length}`} className="border-l-4 border-amber-400 pl-4 py-2 mb-4 bg-amber-50 rounded-r-lg">
-          {blockquoteLines.map((line, i) => <p key={i} className="text-sm text-stone-600 italic">{parseInline(line)}</p>)}
+        <blockquote key={`bq-${elements.length}`} className="border-l-4 border-amber-500 pl-5 py-3 mb-5 bg-amber-50 rounded-r-lg shadow-sm">
+          {blockquoteLines.map((line, i) => <p key={i} className="text-sm text-amber-900 italic font-medium leading-relaxed">{parseInline(line)}</p>)}
         </blockquote>
       );
       blockquoteLines = [];
@@ -47,7 +51,7 @@ function SimpleMarkdown({ text }) {
       if (boldMatch) {
         const idx = boldMatch.index;
         if (idx > 0) parts.push(<span key={key++}>{remaining.slice(0, idx)}</span>);
-        parts.push(<strong key={key++} className="font-bold text-stone-800">{boldMatch[1]}</strong>);
+        parts.push(<strong key={key++} className="font-bold text-amber-900">{boldMatch[1]}</strong>);
         remaining = remaining.slice(idx + boldMatch[0].length);
         continue;
       }
@@ -56,7 +60,7 @@ function SimpleMarkdown({ text }) {
       if (codeMatch) {
         const idx = codeMatch.index;
         if (idx > 0) parts.push(<span key={key++}>{remaining.slice(0, idx)}</span>);
-        parts.push(<code key={key++} className="bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded text-xs font-mono">{codeMatch[1]}</code>);
+        parts.push(<code key={key++} className="bg-stone-300 text-stone-900 px-2 py-1 rounded text-xs font-mono font-bold">{codeMatch[1]}</code>);
         remaining = remaining.slice(idx + codeMatch[0].length);
         continue;
       }
@@ -90,8 +94,8 @@ function SimpleMarkdown({ text }) {
     if (trimmed.startsWith('### ')) {
       flushList();
       elements.push(
-        <h4 key={`h3-${i}`} className="text-lg font-bold text-stone-800 mt-6 mb-3 flex items-center gap-2">
-          {parseInline(trimmed.slice(4))}
+        <h4 key={`h3-${i}`} className="text-base font-bold text-orange-700 mt-6 mb-3 flex items-center gap-2 pb-2 border-b-2 border-orange-200">
+          🔹 {parseInline(trimmed.slice(4))}
         </h4>
       );
       continue;
@@ -99,8 +103,8 @@ function SimpleMarkdown({ text }) {
     if (trimmed.startsWith('## ')) {
       flushList();
       elements.push(
-        <h3 key={`h2-${i}`} className="text-xl font-bold text-stone-900 mt-8 mb-4 pb-2 border-b-2 border-amber-200">
-          {parseInline(trimmed.slice(3))}
+        <h3 key={`h2-${i}`} className="text-xl font-bold text-stone-900 mt-7 mb-4 pb-3 border-b-2 border-amber-300 flex items-center gap-2">
+          📌 {parseInline(trimmed.slice(3))}
         </h3>
       );
       continue;
@@ -108,8 +112,8 @@ function SimpleMarkdown({ text }) {
     if (trimmed.startsWith('# ')) {
       flushList();
       elements.push(
-        <h2 key={`h1-${i}`} className="text-2xl font-bold text-stone-900 mt-6 mb-4">
-          {parseInline(trimmed.slice(2))}
+        <h2 key={`h1-${i}`} className="text-2xl font-bold text-stone-900 mt-6 mb-4 flex items-center gap-2">
+          📊 {parseInline(trimmed.slice(2))}
         </h2>
       );
       continue;
@@ -118,7 +122,7 @@ function SimpleMarkdown({ text }) {
     // Horizontal rule
     if (trimmed === '---' || trimmed === '***') {
       flushList();
-      elements.push(<hr key={`hr-${i}`} className="my-6 border-stone-200" />);
+      elements.push(<div key={`hr-${i}`} className="my-6 border-t-2 border-stone-300" />);
       continue;
     }
 
@@ -135,7 +139,7 @@ function SimpleMarkdown({ text }) {
     // Regular paragraph
     flushList();
     elements.push(
-      <p key={`p-${i}`} className="text-sm text-stone-700 leading-relaxed mb-3">
+      <p key={`p-${i}`} className="text-sm text-gray-800 leading-relaxed mb-4 font-medium">
         {parseInline(trimmed)}
       </p>
     );
@@ -144,7 +148,7 @@ function SimpleMarkdown({ text }) {
   flushList();
   flushBlockquote();
 
-  return <div className="prose-sm">{elements}</div>;
+  return <div className="prose-sm max-w-none">{elements}</div>;
 }
 
 // ─── Severity badge colors ─────────────────────────────────────────────────────
@@ -174,6 +178,8 @@ export default function ContractRiskAnalysis() {
   const [inputMode, setInputMode] = useState('pdf');   // 'pdf' | 'text'
   const [contractText, setContractText] = useState('');
   const requestIdRef = useRef(0);
+  const [simplifiedOpen, setSimplifiedOpen] = useState(false);
+  const [simplifiedOpenClauses, setSimplifiedOpenClauses] = useState({});
 
   // ── Shared handler that processes the API response ──────────────────────────
   const handleResult = (data, sourceName) => {
@@ -273,8 +279,11 @@ export default function ContractRiskAnalysis() {
     try {
       const data = await AnalysisAPI.uploadContractWithCases(file, {
         include_ai_report: false,
-        use_bert_support: false,
+        use_bert_support: true,
         use_simple_english: true,
+        // Request fewer cases/acts by default to reduce backend work and latency
+        top_k_cases: 5,
+        top_k_acts: 3,
       });
       handleResult(data, file.name);
       void requestDeferredAiReport(data, requestId);
@@ -306,8 +315,11 @@ export default function ContractRiskAnalysis() {
       
       const data = await AnalysisAPI.uploadContractWithCases(textFile, {
         include_ai_report: false,
-        use_bert_support: false,
+        use_bert_support: true,
         use_simple_english: true,
+        // Request fewer cases/acts by default to reduce backend work and latency
+        top_k_cases: 5,
+        top_k_acts: 3,
       });
       handleResult(data, 'Text Input');
       void requestDeferredAiReport(data, requestId);
@@ -325,6 +337,9 @@ export default function ContractRiskAnalysis() {
   };
 
   const setTab = (id, tab) => setClauseTabs(prev => ({ ...prev, [id]: tab }));
+
+  const toggleSimplified = () => setSimplifiedOpen(prev => !prev);
+  const toggleSimplifiedClause = (id) => setSimplifiedOpenClauses(prev => ({ ...prev, [id]: !prev[id] }));
 
   // Build a lookup: clause_id → cases
   const caseLookup = {};
@@ -356,19 +371,19 @@ export default function ContractRiskAnalysis() {
       : severities.includes('MEDIUM') ? 'MEDIUM' : 'LOW';
 
     return (
-      <div id={`clause-${clause_id}`} key={clause_id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-amber-100 overflow-hidden transition-all duration-300">
+      <div id={`clause-${clause_id}`} key={clause_id} className="bg-white rounded-2xl shadow-md hover:shadow-2xl hover:shadow-amber-500/20 border border-amber-100/50 overflow-hidden transition-all duration-300 hover:border-amber-200">
         {/* ── Header ────────────────────────────────────────────────────── */}
         <div
           onClick={() => toggle(clause_id)}
           className={`flex justify-between items-center cursor-pointer px-8 py-5 transition-all duration-300 ${
             isExpanded
-              ? 'bg-gradient-to-r from-stone-100 via-amber-50 to-orange-50 border-b-2 border-amber-200'
-              : 'bg-gradient-to-r from-stone-50 to-gray-50'
+              ? 'bg-linear-to-r from-stone-100 via-amber-50 to-orange-50 border-b-2 border-amber-200'
+              : 'bg-linear-to-r from-stone-50 to-gray-50'
           }`}
         >
           <div className="flex items-center gap-4 flex-1">
             <span className={`text-xl transition-transform duration-300 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>▼</span>
-            <span className="bg-gradient-to-r from-stone-700 via-amber-700 to-orange-700 text-white px-3 py-1 rounded-lg text-sm font-bold uppercase">
+            <span className="bg-linear-to-r from-stone-700 via-amber-700 to-orange-700 text-white px-3 py-1 rounded-lg text-sm font-bold uppercase">
               {clause_type || 'clause'}
             </span>
             <span className="bg-amber-50 text-amber-700 px-3 py-1 rounded-lg text-sm font-semibold border border-amber-200">
@@ -414,15 +429,15 @@ export default function ContractRiskAnalysis() {
               {/* ── TEXT TAB ───────────────────────────────────────────── */}
               {activeTab === 'text' && (
                 <div>
-                  <h4 className="mb-4 text-stone-800 text-lg font-bold">📄 Full Clause Text</h4>
-                  <div className="bg-gradient-to-br from-stone-50 to-amber-50 p-6 border-l-4 border-amber-700 rounded-lg shadow-sm">
-                    <p className="m-0 leading-relaxed whitespace-pre-wrap text-stone-700 text-base">
+                  <h4 className="mb-4 text-stone-900 text-lg font-bold tracking-tight">📄 Full Clause Text</h4>
+                  <div className="bg-linear-to-br from-stone-50 to-amber-50 p-6 border-l-4 border-amber-700 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <p className="m-0 leading-relaxed whitespace-pre-wrap text-stone-800 text-base font-medium">
                       {text_preview || '[No text available]'}
                     </p>
                   </div>
                   <button
                     onClick={() => { navigator.clipboard.writeText(text_preview); }}
-                    className="mt-4 px-5 py-2 bg-gradient-to-r from-stone-700 to-amber-700 text-white rounded-lg text-sm font-bold hover:shadow-lg transition-all"
+                    className="mt-4 px-5 py-2 bg-linear-to-r from-stone-700 to-amber-700 text-white rounded-lg text-sm font-bold hover:shadow-lg transition-all"
                   >
                     📋 Copy Text
                   </button>
@@ -435,7 +450,7 @@ export default function ContractRiskAnalysis() {
                   <h4 className="mb-4 text-orange-700 text-lg font-bold">🔍 Detected Risk Patterns</h4>
                   <div className="space-y-4">
                     {detections.map((det, i) => (
-                      <div key={i} className={`bg-gradient-to-r from-orange-50 to-amber-50 p-5 rounded-xl border-l-4 ${SEVERITY_BORDER[det.severity] || 'border-stone-300'} shadow-sm`}>
+                      <div key={i} className={`bg-linear-to-r from-orange-50 to-amber-50 p-5 rounded-xl border-l-4 ${SEVERITY_BORDER[det.severity] || 'border-stone-300'} shadow-sm`}>
                         <div className="flex justify-between items-start mb-3">
                           <div>
                             <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold mr-2 ${SEVERITY_STYLES[det.severity]}`}>
@@ -447,15 +462,15 @@ export default function ContractRiskAnalysis() {
                             {((det.confidence || 0) * 100).toFixed(0)}% confidence
                           </span>
                         </div>
-                        <p className="text-sm text-stone-600 mb-2">{det.description}</p>
+                        <p className="text-sm text-stone-700 font-medium mb-2">{det.description}</p>
                         {det.consequences && (
                           <p className="text-sm text-red-700 font-medium">
                             <strong>Consequences:</strong> {det.consequences}
                           </p>
                         )}
                         {det.matched_trigger && (
-                          <p className="mt-1 text-xs text-stone-500">
-                            Trigger: <code className="bg-stone-200 px-1.5 py-0.5 rounded text-stone-700">{det.matched_trigger}</code>
+                          <p className="mt-1 text-xs text-stone-700 font-medium">
+                            Trigger: <code className="bg-stone-300 px-1.5 py-0.5 rounded text-stone-900 font-bold">{det.matched_trigger}</code>
                           </p>
                         )}
                         
@@ -477,7 +492,7 @@ export default function ContractRiskAnalysis() {
                               <div className="space-y-2">
                                 {Object.entries(det.outcome_distribution.outcome_distribution).map(([outcome, data], idx) => (
                                   <div key={idx} className="flex items-center gap-3">
-                                    <div className="w-32 flex-shrink-0">
+                                    <div className="w-32 shrink-0">
                                       <p className="text-xs font-medium text-stone-700 capitalize">
                                         {outcome === 'employee' ? '👤 Employee Win' :
                                          outcome === 'employer' ? '🏢 Employer Win' :
@@ -488,7 +503,7 @@ export default function ContractRiskAnalysis() {
                                          outcome.charAt(0).toUpperCase() + outcome.slice(1)}
                                       </p>
                                     </div>
-                                    <div className="flex-grow">
+                                    <div className="grow">
                                       <div className="w-full bg-stone-200 rounded-full h-2 overflow-hidden">
                                         <div 
                                           className={`h-full transition-all ${
@@ -501,16 +516,16 @@ export default function ContractRiskAnalysis() {
                                     </div>
                                     <div className="w-16 text-right">
                                       <p className="text-xs font-bold text-stone-700">{data.percentage}%</p>
-                                      <p className="text-xs text-stone-500">({data.count})</p>
+                                      <p className="text-xs text-stone-700 font-semibold">({data.count})</p>
                                     </div>
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-xs text-stone-500">No outcome data available</p>
+                              <p className="text-xs text-stone-700 font-medium">No outcome data available</p>
                             )}
                             
-                            <p className="text-xs text-stone-600 mt-2 italic">
+                            <p className="text-xs text-stone-800 font-medium mt-2 italic">
                               {det.outcome_distribution.risk_level === 'HIGH' 
                                 ? '⚠️ High proportion of cases favor the employee/plaintiff. This clause carries significant legal risk.'
                                 : det.outcome_distribution.risk_level === 'MEDIUM'
@@ -523,12 +538,12 @@ export default function ContractRiskAnalysis() {
                         {/* Inline supporting cases from the pattern itself */}
                         {det.supporting_cases && det.supporting_cases.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-orange-200">
-                            <p className="text-xs font-bold text-stone-600 mb-2">📚 Pattern's Supporting Cases ({det.supporting_cases.length}):</p>
+                            <p className="text-xs font-bold text-stone-800 mb-2">📚 Pattern's Supporting Cases ({det.supporting_cases.length}):</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                               {det.supporting_cases.slice(0, 4).map((sc, j) => (
                                 <div key={j} className="bg-white p-2 rounded border border-orange-200 text-xs">
                                   <p className="font-semibold text-stone-800 truncate">{sc.case_name}</p>
-                                  <p className="text-stone-500">{sc.year} · {sc.citation}</p>
+                                  <p className="text-stone-700 font-medium text-xs">{sc.year} · {sc.citation}</p>
                                 </div>
                               ))}
                             </div>
@@ -551,7 +566,7 @@ export default function ContractRiskAnalysis() {
                   {clauseCases && clauseCases.supporting_cases?.length > 0 ? (
                     <div className="space-y-3">
                       {clauseCases.supporting_cases.map((c, i) => (
-                        <div key={i} className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 border-l-4 border-blue-600 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div key={i} className="bg-linear-to-r from-orange-50 to-amber-50 p-4 border-l-4 border-orange-600 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-2">
                             <strong className="text-blue-800 text-sm">{c.case_name}</strong>
                             <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold whitespace-nowrap">
@@ -559,15 +574,15 @@ export default function ContractRiskAnalysis() {
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-2 mb-2">
-                            {c.year && <span className="text-xs text-stone-500 bg-stone-100 px-2 py-0.5 rounded">{c.year}</span>}
-                            {c.category && <span className="text-xs text-stone-500 bg-stone-100 px-2 py-0.5 rounded">{c.category}</span>}
+                            {c.year && <span className="text-xs text-stone-800 font-semibold bg-stone-200 px-2 py-0.5 rounded">{c.year}</span>}
+                            {c.category && <span className="text-xs text-stone-800 font-semibold bg-stone-200 px-2 py-0.5 rounded">{c.category}</span>}
                             {c.source && (
                               <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                                 c.source === 'hybrid' || c.source === 'pattern_linked'
                                   ? 'bg-green-100 text-green-700'
                                   : c.source === 'semantic_search'
                                     ? 'bg-blue-100 text-blue-700'
-                                    : 'bg-stone-100 text-stone-600'
+                                    : 'bg-stone-200 text-stone-800 font-semibold'
                               }`}>
                                 {c.source === 'hybrid' ? '🔗 Pattern + Semantic' :
                                  c.source === 'pattern_linked' ? '🔗 Pattern-Linked' :
@@ -577,18 +592,18 @@ export default function ContractRiskAnalysis() {
                             )}
                           </div>
                           {c.from_pattern && (
-                            <p className="text-xs text-stone-500 mb-1">
-                              From pattern: <code className="bg-stone-200 px-1 py-0.5 rounded">{c.from_pattern}</code>
+                            <p className="text-xs text-stone-700 font-medium mb-1">
+                              From pattern: <code className="bg-stone-300 px-1 py-0.5 rounded text-stone-900 font-bold">{c.from_pattern}</code>
                             </p>
                           )}
                           {c.snippet && (
-                            <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">{c.snippet}</p>
+                            <p className="text-xs text-stone-700 font-medium leading-relaxed line-clamp-3">{c.snippet}</p>
                           )}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-stone-400 italic text-center py-12">No related case law found for this clause</p>
+                    <p className="text-stone-600 font-semibold italic text-center py-12">No related case law found for this clause</p>
                   )}
                 </div>
               )}
@@ -600,15 +615,15 @@ export default function ContractRiskAnalysis() {
                   {clauseActs && clauseActs.supporting_acts?.length > 0 ? (
                     <div className="space-y-3">
                       {clauseActs.supporting_acts.map((act, i) => (
-                        <div key={i} className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 border-l-4 border-purple-600 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div key={i} className="bg-linear-to-r from-purple-50 to-pink-50 p-4 border-l-4 border-purple-600 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-2">
                             <strong className="text-purple-900 text-sm">{act.act_name} {act.year ? `(${act.year})` : ''}</strong>
                             <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold whitespace-nowrap">
                               {((act.similarity_score || 0) * 100).toFixed(0)}% match
                             </span>
                           </div>
-                          {act.section_number && <p className="m-0 mb-1 text-xs text-stone-600"><strong>Section:</strong> {act.section_number}</p>}
-                          {act.section_heading && <p className="m-0 mb-1 text-xs text-stone-600"><strong>Heading:</strong> {act.section_heading}</p>}
+                          {act.section_number && <p className="m-0 mb-1 text-xs text-stone-800 font-semibold"><strong>Section:</strong> {act.section_number}</p>}
+                          {act.section_heading && <p className="m-0 mb-1 text-xs text-stone-800 font-semibold"><strong>Heading:</strong> {act.section_heading}</p>}
                           <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                             act.source_label === 'case-backed'
                               ? 'bg-green-100 text-green-700'
@@ -620,7 +635,7 @@ export default function ContractRiskAnalysis() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-stone-400 italic text-center py-12">No related legislation found for this clause</p>
+                    <p className="text-stone-600 font-semibold italic text-center py-12">No related legislation found for this clause</p>
                   )}
                 </div>
               )}
@@ -659,42 +674,50 @@ export default function ContractRiskAnalysis() {
 
   // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-amber-50">
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="pt-24 pb-16">
+      <main className="pt-28 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* ── Hero Header ──────────────────────────────────────────── */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full mb-6 shadow-xl">
-              <svg className="w-10 h-10 text-stone-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center justify-center w-28 h-28 bg-linear-to-br from-amber-400 via-orange-400 to-orange-500 rounded-full mb-10 shadow-2xl shadow-amber-500/40 hover:scale-105 transition-transform duration-300">
+              <svg className="w-14 h-14 text-stone-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <h1 className="text-4xl lg:text-5xl font-bold text-stone-800 mb-4">
-              Contract Risk &amp; Pattern Analysis
+            <h1 className="text-6xl lg:text-7xl font-black text-stone-900 mb-6 leading-tight tracking-tight">
+              Contract Risk
+              <br />
+              <span className="bg-linear-to-r from-amber-500 via-orange-500 to-amber-600 bg-clip-text text-transparent drop-shadow-sm">Analysis</span>
             </h1>
-            <div className="w-32 h-1 bg-gradient-to-r from-amber-600 to-orange-500 mx-auto mb-4"></div>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Upload a contract PDF or paste the text to detect legal risk patterns backed by Sri Lankan case law,
-              find supporting cases and applicable legislation — all in a single analysis.
+            <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed mb-12 font-medium">
+              Intelligent contract analysis powered by AI-driven pattern detection, backed by Sri Lankan case law and legislation.
             </p>
+            <div className="flex flex-wrap justify-center gap-3 text-sm font-semibold">
+              <span className="flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-amber-50 to-orange-50 rounded-full border-2 border-amber-200 text-amber-900 shadow-sm hover:shadow-md transition-shadow">✨ Pattern Detection</span>
+              <span className="flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-amber-50 to-orange-50 rounded-full border-2 border-amber-200 text-amber-900 shadow-sm hover:shadow-md transition-shadow">📚 Case Law</span>
+              <span className="flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-amber-50 to-orange-50 rounded-full border-2 border-amber-200 text-amber-900 shadow-sm hover:shadow-md transition-shadow">⚖️ Legislation</span>
+              <span className="flex items-center gap-2 px-5 py-2.5 bg-linear-to-r from-amber-50 to-orange-50 rounded-full border-2 border-amber-200 text-amber-900 shadow-sm hover:shadow-md transition-shadow">🤖 AI Analysis</span>
+            </div>
           </div>
 
           {/* ── Before results: Upload / Text section ─────────────────── */}
           {!result && !loading && (
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-              <div className="lg:col-span-3">
-                <div className="bg-white rounded-2xl shadow-xl p-8 lg:p-12 border-t-4 border-amber-500">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="lg:col-span-2">
+                <div className="bg-linear-to-br from-stone-50 via-white to-stone-50 rounded-3xl shadow-2xl shadow-stone-900/10 p-10 border border-stone-300/40 backdrop-blur-sm hover:shadow-2xl hover:shadow-amber-500/20 transition-all duration-300">
+                  <h2 className="text-3xl font-bold text-stone-900 mb-3 tracking-tight">Analyze Your Contract</h2>
+                  <p className="text-gray-700 text-base mb-10 font-medium">Choose your input method and let our AI-powered system analyze potential risks</p>
 
                   {/* ── Mode Toggle ─────────────────────────────────────── */}
-                  <div className="flex gap-2 mb-8 bg-stone-100 rounded-xl p-1.5">
+                  <div className="flex gap-3 mb-10 bg-linear-to-r from-stone-100 to-white rounded-xl p-2.5 border-2 border-stone-300/50 shadow-sm">
                     <button
                       onClick={() => setInputMode('pdf')}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                         inputMode === 'pdf'
-                          ? 'bg-gradient-to-r from-stone-700 to-amber-700 text-white shadow-lg'
-                          : 'text-stone-500 hover:text-stone-700 hover:bg-white/60'
+                          ? 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/40'
+                          : 'text-gray-700 hover:text-stone-900 bg-white hover:bg-stone-100 border-2 border-stone-200 hover:border-amber-200'
                       }`}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -704,10 +727,10 @@ export default function ContractRiskAnalysis() {
                     </button>
                     <button
                       onClick={() => setInputMode('text')}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-300 ${
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                         inputMode === 'text'
-                          ? 'bg-gradient-to-r from-stone-700 to-amber-700 text-white shadow-lg'
-                          : 'text-stone-500 hover:text-stone-700 hover:bg-white/60'
+                          ? 'bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/40'
+                          : 'text-gray-700 hover:text-stone-900 bg-white hover:bg-stone-100 border-2 border-stone-200 hover:border-amber-200'
                       }`}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -723,27 +746,27 @@ export default function ContractRiskAnalysis() {
                   {/* ── Text Input ──────────────────────────────────────── */}
                   {inputMode === 'text' && (
                     <div>
-                      <label className="block text-sm font-bold text-stone-700 mb-2">
-                        Contract Text
+                      <label className="block text-base font-bold text-stone-900 mb-4 tracking-tight">
+                        📋 Paste Your Contract
                       </label>
                       <textarea
                         value={contractText}
                         onChange={(e) => setContractText(e.target.value)}
-                        placeholder="Paste the full contract text here…&#10;&#10;Example:&#10;This Employment Agreement is entered into between ABC Company (Employer) and John Doe (Employee)…"
-                        rows={14}
-                        className="w-full px-4 py-3 border-2 border-stone-200 rounded-xl text-sm text-stone-700 leading-relaxed resize-y focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all placeholder:text-stone-400"
+                        placeholder="Paste the full contract text here…\n\nExample:\nThis Employment Agreement is entered into between ABC Company (Employer) and John Doe (Employee)…"
+                        rows={12}
+                        className="w-full px-6 py-4 border-2 border-stone-300 bg-stone-50 text-gray-800 text-sm leading-relaxed rounded-xl resize-y focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:border-opacity-100 transition-all placeholder:text-gray-600 font-medium shadow-sm hover:shadow-md hover:border-stone-400"
                       />
-                      <div className="flex justify-between items-center mt-3">
-                        <span className={`text-xs font-medium ${contractText.length < 50 ? 'text-stone-400' : 'text-green-600'}`}>
-                          {contractText.length} characters {contractText.length < 50 ? '(min 50)' : '✓'}
+                      <div className="flex justify-between items-center mt-5">
+                        <span className={`text-xs font-medium transition-colors ${ contractText.length < 50 ? 'text-gray-700' : 'text-green-700 font-bold'}`}>
+                          {contractText.length}/50 characters
                         </span>
                         <button
                           onClick={onSubmitText}
                           disabled={contractText.trim().length < 50}
-                          className={`px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
+                          className={`px-8 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 transform ${
                             contractText.trim().length < 50
-                              ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-xl hover:scale-[1.02] active:scale-100'
+                              ? 'bg-stone-400 text-white cursor-not-allowed font-bold'
+                              : 'bg-linear-to-r from-amber-500 to-orange-500 text-white hover:shadow-2xl hover:shadow-amber-500/50 hover:scale-105 active:scale-95'
                           }`}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -756,30 +779,32 @@ export default function ContractRiskAnalysis() {
                   )}
                 </div>
               </div>
-              <div>
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sticky top-20">
-                  <h3 className="font-semibold text-slate-900 mb-4 flex items-center text-base">
-                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    What You Get
+              {/* ── Quick Info Card ─────────────────────────────────────────────────────────────── */}
+              <div className="flex flex-col gap-6">
+                <div className="bg-linear-to-br from-stone-50 via-white to-stone-50 rounded-3xl shadow-lg shadow-stone-900/10 border border-stone-300/40 p-8 hover:shadow-xl transition-shadow duration-300">
+                  <h3 className="font-bold text-stone-900 mb-6 flex items-center text-lg gap-3 tracking-tight">
+                    <span className="text-2xl">⚡</span>
+                    Quick Features
                   </h3>
-                  <ul className="text-sm text-slate-600 space-y-2 list-none p-0">
+                  <ul className="text-sm text-gray-700 space-y-3 list-none p-0">
                     {[
-                      'Pattern-based risk detection',
-                      'Supporting case law',
-                      'Applicable legislation',
-                      'Missing provisions',
-                      'AI risk analysis'
+                      { icon: '🔍', text: 'Pattern Detection' },
+                      { icon: '📚', text: 'Case Law Support' },
+                      { icon: '📖', text: 'Legislation Lookup' },
+                      { icon: '⚠️', text: 'Risk Assessment' },
+                      { icon: '🤖', text: 'AI Summary' }
                     ].map((item, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        {item}
+                      <li key={i} className="flex items-center gap-3">
+                        <span className="text-lg">{item.icon}</span>
+                        <span>{item.text}</span>
                       </li>
                     ))}
                   </ul>
+                </div>
+                <div className="bg-linear-to-br from-amber-50 via-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
+                  <p className="text-sm text-orange-800 leading-relaxed font-medium">
+                    <strong className="text-orange-900">💡 Pro Tip:</strong> Larger contracts with more clauses may take 30-60 seconds to analyze thoroughly. Grab a coffee! ☕
+                  </p>
                 </div>
               </div>
             </div>
@@ -787,26 +812,37 @@ export default function ContractRiskAnalysis() {
 
           {/* ── Loading state ─────────────────────────────────────────── */}
           {loading && (
-            <div className="max-w-xl mx-auto text-center py-24">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full mb-6 shadow-xl animate-pulse">
-                <svg className="w-10 h-10 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <div className="max-w-2xl mx-auto text-center py-32">
+              <div className="inline-flex items-center justify-center w-28 h-28 bg-linear-to-br from-amber-400 via-orange-400 to-orange-500 rounded-full mb-10 shadow-2xl shadow-amber-500/50 animate-pulse">
+                <svg className="w-14 h-14 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-stone-800 mb-2">Analyzing Contract…</h3>
-              <p className="text-stone-500 mb-1">Running pattern detection, case retrieval and legislation search.</p>
-              <p className="text-stone-400 text-sm">This may take up to 60 seconds for large contracts.</p>
+              <h3 className="text-4xl font-bold text-stone-900 mb-4 tracking-tight">Analyzing Your Contract</h3>
+              <p className="text-gray-700 mb-6 text-lg font-medium">Running pattern detection, case law search and legislation lookup…</p>
+              <div className="w-full bg-stone-200 rounded-full h-3 mb-8 overflow-hidden shadow-sm">
+                <div className="h-full bg-linear-to-r from-amber-500 to-orange-500 rounded-full animate-pulse" style={{width: '75%'}}></div>
+              </div>
+              <p className="text-gray-700 text-sm font-bold">⏱️ This may take 30-60 seconds for large contracts</p>
             </div>
           )}
 
           {/* ── Error banner ──────────────────────────────────────────── */}
           {error && (
-            <div className="mb-8 bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-400 rounded-2xl p-6 shadow-lg">
-              <div className="flex gap-3 items-start">
-                <span className="text-2xl">❌</span>
-                <div>
-                  <p className="text-red-700 font-bold mb-1">Analysis Failed</p>
-                  <p className="text-red-600 text-sm">{error}</p>
+            <div className="mb-12 max-w-2xl mx-auto animate-in fade-in slide-in-from-top-4">
+              <div className="bg-linear-to-br from-red-50 to-rose-50 border-2 border-red-400 rounded-2xl p-8 shadow-lg shadow-red-500/20 backdrop-blur">
+                <div className="flex gap-4 items-start">
+                  <span className="text-4xl animate-bounce">⚠️</span>
+                  <div>
+                    <p className="text-red-900 font-bold text-lg mb-2">Analysis Error</p>
+                    <p className="text-red-800 text-base leading-relaxed mb-4 font-medium">{error}</p>
+                    <button
+                      onClick={() => setError('')}
+                      className="text-sm font-bold text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg"
+                    >
+                      Try Again
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -819,9 +855,9 @@ export default function ContractRiskAnalysis() {
               {/* ── SIDEBAR ───────────────────────────────────────────── */}
               <div className="lg:col-span-1 flex flex-col gap-6">
                 {/* Re-upload */}
-                <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-6">
-                  <h4 className="font-bold text-stone-800 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-linear-to-br from-stone-50 via-white to-stone-50 rounded-2xl shadow-md shadow-stone-900/10 border border-stone-300/40 p-6 hover:shadow-lg transition-shadow duration-300">
+                  <h4 className="font-bold text-stone-900 mb-4 flex items-center gap-2 tracking-tight">
+                    <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                     Analyze Another
@@ -830,98 +866,105 @@ export default function ContractRiskAnalysis() {
                   <div className="mt-3 text-center">
                     <button
                       onClick={() => { setResult(null); setError(''); setInputMode('text'); }}
-                      className="text-xs text-amber-700 font-semibold hover:underline"
+                      className="text-xs text-amber-400 font-semibold hover:text-amber-300"
                     >
-                      or paste contract text →
+                      or paste text →
                     </button>
                   </div>
                 </div>
 
-                {/* Contract info */}
-                <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-lg">
+                {/* Contract Info Card */}
+                <div className="bg-linear-to-br from-stone-50 via-white to-stone-50 border-2 border-amber-300 rounded-2xl p-6 shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all duration-300">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 bg-linear-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
                       <div>
-                        <p className="text-stone-600 text-sm font-semibold">Contract Type</p>
-                        <p className="text-xl font-bold text-amber-700">{(dataCoverage.label || preprocessing.contract_type || 'unknown').toUpperCase()}</p>
+                        <p className="text-gray-700 text-xs font-bold">Contract Type</p>
+                        <p className="text-xl font-bold text-amber-300">{(dataCoverage.label || preprocessing.contract_type || 'unknown').toUpperCase()}</p>
                       </div>
                     </div>
-                    <div className="pt-3 border-t border-amber-200 text-sm text-stone-600 space-y-1">
-                      <p><strong>Source:</strong> {result?.input_mode === 'text' ? '📝 Text Input' : `📄 ${filename}`}</p>
-                      <p><strong>Size:</strong> {(result.file_size / 1024).toFixed(1)} KB</p>
+                    <div className="pt-3 border-t border-stone-300 text-xs text-gray-800 space-y-1.5 font-medium">
+                      <p><strong className="text-stone-700">Source:</strong> {result?.input_mode === 'text' ? '📝 Text' : `📄 ${filename}`}</p>
+                      <p><strong className="text-stone-700">Size:</strong> {(result.file_size / 1024).toFixed(1)} KB</p>
                       {preprocessing.contract_confidence != null && (
-                        <p><strong>Confidence:</strong> {(preprocessing.contract_confidence * 100).toFixed(0)}%</p>
+                        <p><strong className="text-stone-700">Confidence:</strong> <span className="text-green-700 font-bold">{(preprocessing.contract_confidence * 100).toFixed(0)}%</span></p>
                       )}
                       {dataCoverage.supported && (
                         <p className="flex items-center gap-1">
-                          <strong>Data Coverage:</strong>
+                          <strong className="text-stone-700">Coverage:</strong>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
-                            dataCoverage.coverage_level === 'strong' ? 'bg-green-100 text-green-800' :
-                            dataCoverage.coverage_level === 'good' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
+                            dataCoverage.coverage_level === 'strong' ? 'bg-emerald-500/20 text-orange-700 border border-emerald-500/50' :
+                            dataCoverage.coverage_level === 'good' ? 'bg-cyan-500/20 text-amber-300 border border-amber-400/50' :
+                            'bg-yellow-400/30 text-yellow-800 border border-yellow-500'
                           }`}>
                             {dataCoverage.coverage_level === 'strong' ? '🟢' : dataCoverage.coverage_level === 'good' ? '🔵' : '🟡'} {dataCoverage.coverage_level?.toUpperCase()}
                           </span>
                         </p>
                       )}
                       {dataCoverage.supported && (
-                        <p className="text-xs text-stone-500">{dataCoverage.available_cases} cases, {dataCoverage.available_patterns} patterns available</p>
+                        <p className="text-gray-700 text-xs font-semibold">{dataCoverage.available_cases} cases • {dataCoverage.available_patterns} patterns</p>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Data Coverage Warning — unsupported contract type */}
+                {/* Data Coverage Warning */}
                 {dataCoverage.warning && (
-                  <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-2xl p-5 shadow-lg">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0 shadow">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
+                  <div className="bg-linear-to-br from-yellow-900/30 to-orange-900/30 border-2 border-yellow-500/40 rounded-xl p-4 shadow-lg">
+                    <div className="flex items-start gap-2">
+                      <span className="text-lg shrink-0">⚠️</span>
                       <div>
-                        <h4 className="text-sm font-bold text-yellow-800 mb-1">Limited Data Coverage</h4>
-                        <p className="text-xs text-yellow-700 leading-relaxed">{dataCoverage.warning}</p>
+                        <p className="text-xs font-bold text-yellow-800 mb-1">Limited Data</p>
+                        <p className="text-xs text-yellow-900 leading-relaxed font-medium">{dataCoverage.warning}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Summary stats */}
-                <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-6">
-                  <h4 className="text-base font-bold text-stone-800 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    Analysis Summary
+                {/* Summary Stats */}
+                <div className="bg-linear-to-br from-stone-50 via-white to-stone-50 rounded-2xl shadow-md shadow-stone-900/10 border border-stone-300/40 p-6 hover:shadow-lg transition-shadow duration-300">
+                  <h4 className="text-sm font-bold text-stone-900 mb-4 flex items-center gap-2 tracking-tight">
+                    <span className="text-lg">📊</span>
+                    Summary
                   </h4>
-                  <div className="space-y-3">
-                    <StatRow label="Total Clauses" value={summary.total_clauses} color="stone" />
-                    <StatRow label="Patterns Detected" value={summary.total_patterns_detected} color="orange" />
-                    <StatRow label="Unique Cases" value={summary.unique_cases} color="blue" />
-                    <StatRow label="Unique Acts" value={summary.unique_acts} color="purple" />
-                    <StatRow label="Processing Time" value={`${(summary.processing_time_ms / 1000).toFixed(1)}s`} color="stone" />
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-stone-50/50 border border-stone-200">
+                      <span className="text-xs text-gray-800 font-semibold">Clauses</span>
+                      <span className="text-sm font-bold text-gray-700">{summary.total_clauses}</span>
+                    </div>
+                    <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-stone-50/50 border border-stone-200">
+                      <span className="text-xs text-gray-800 font-semibold">Patterns</span>
+                      <span className="text-sm font-bold text-amber-700">{summary.total_patterns_detected}</span>
+                    </div>
+                    <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-stone-50/50 border border-stone-200">
+                      <span className="text-xs text-gray-800 font-semibold">Cases</span>
+                      <span className="text-sm font-bold text-blue-700">{summary.unique_cases}</span>
+                    </div>
+                    <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-stone-50/50 border border-stone-200">
+                      <span className="text-xs text-gray-800 font-semibold">Acts</span>
+                      <span className="text-sm font-bold text-purple-700">{summary.unique_acts}</span>
+                    </div>
+                    <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-stone-50/50 border border-stone-200">
+                      <span className="text-xs text-gray-800 font-semibold">Time</span>
+                      <span className="text-sm font-bold text-gray-700">{(summary.processing_time_ms / 1000).toFixed(1)}s</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Missing fields */}
+                {/* Missing Fields */}
                 {missingList.length > 0 && (
-                  <div className="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-300 rounded-2xl p-6 shadow-lg">
-                    <h4 className="text-base font-bold text-red-800 mb-3 flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Missing Provisions
+                  <div className="bg-linear-to-br from-red-900/20 to-orange-900/20 border-2 border-red-500/30 rounded-xl p-5 shadow-lg">
+                    <h4 className="text-sm font-bold text-red-700 mb-3 flex items-center gap-2">
+                      <span className="text-lg">🚨</span>
+                      Missing
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {missingList.map((f, i) => (
-                        <span key={i} className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold border border-red-200">
+                        <span key={i} className="bg-red-200 text-red-900 px-2 py-1 rounded-full text-xs font-bold border border-red-400">
                           {f.replace(/_/g, ' ')}
                         </span>
                       ))}
@@ -933,79 +976,144 @@ export default function ContractRiskAnalysis() {
               {/* ── MAIN CONTENT ───────────────────────────────────────── */}
               <div className="lg:col-span-3 space-y-8">
 
+                {/* ── Results Navigation ──────────────────────────────── */}
+                <ResultsOverviewNav 
+                  summary={summary} 
+                  simplifiedClauses={simplifiedClauses} 
+                  aggregatedResults={result.aggregated_results}
+                />
+
                 {/* ── Risk Summary Banner ──────────────────────────────── */}
-                {summary.total_patterns_detected > 0 && (
-                  <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-orange-50 border-2 border-orange-400 rounded-3xl p-8 shadow-xl">
-                    <div className="flex items-start gap-4 mb-6">
-                      <span className="text-4xl">🚨</span>
-                      <div>
-                        <h3 className="text-2xl font-bold text-orange-900">Risk Pattern Summary</h3>
-                        <p className="text-orange-700 font-medium mt-1">Pattern-based risk detections across your contract</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <SummaryCard label="Risk Patterns" value={summary.total_patterns_detected} emoji="🔍" borderColor="border-orange-300" />
-                      <SummaryCard label="Clauses at Risk" value={summary.clauses_with_patterns} emoji="⚠️" borderColor="border-red-300" />
-                      <SummaryCard label="Cases Found" value={summary.unique_cases} emoji="📚" borderColor="border-blue-300" />
-                      <SummaryCard label="Acts Found" value={summary.unique_acts} emoji="📖" borderColor="border-purple-300" />
-                    </div>
-                  </div>
-                )}
+                <RiskAlertsSummary summary={summary} />
 
                 {/* ── Simplified Contract View ───────────────────────── */}
+                <div id="simplified-contract"></div>
                 {simplifiedClauses.length > 0 && (
-                  <div className="bg-white rounded-2xl shadow-lg border-2 border-sky-200 overflow-hidden">
-                    <div className="bg-gradient-to-r from-sky-600 to-cyan-600 px-8 py-4 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold text-white">Simple English Version</h3>
-                        <p className="text-sky-100 text-xs">Quick plain-language view of detected clauses</p>
+                  <div className="bg-linear-to-br from-stone-50 to-white rounded-2xl shadow-xl border border-stone-300/50 overflow-hidden hover:shadow-2xl transition-all">
+                    {/* Header */}
+                    <div className="bg-linear-to-r from-purple-600 via-blue-600 to-purple-700 px-8 py-6 shadow-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur">
+                            <span className="text-2xl">📖</span>
+                          </div>
+                          <div>
+                            <h3 className="text-2xl font-bold text-white tracking-tight">Plain Language Summary</h3>
+                            <p className="text-blue-50 text-xs font-medium mt-1">
+                              BERT-Simplified • {simplifiedClauses.length} clauses • Easy-to-understand version of your contract
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => navigator.clipboard.writeText(simplifiedContractText)}
+                            className="px-6 py-3 bg-white text-purple-700 font-bold rounded-xl text-sm hover:bg-blue-50 transition-all shadow-lg hover:shadow-2xl hover:shadow-purple-500/40 transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                          >
+                            📋 Copy Full Summary
+                          </button>
+                          <button
+                            onClick={toggleSimplified}
+                            className="px-4 py-2 bg-purple-700 text-white rounded-md text-sm font-bold hover:bg-purple-600 transition-colors"
+                          >
+                            {simplifiedOpen ? 'Hide Summary' : 'Show Summary'}
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => navigator.clipboard.writeText(simplifiedContractText)}
-                        className="px-3 py-2 bg-white text-sky-700 rounded-lg text-xs font-bold hover:bg-sky-50 transition-colors"
-                      >
-                        Copy
-                      </button>
                     </div>
-                    <div className="px-8 py-6 bg-sky-50/40">
-                      <div className="max-h-80 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-stone-700 bg-white border border-sky-100 rounded-xl p-4">
-                        {simplifiedContractText}
+
+                    {simplifiedOpen ? (
+                      <div className="px-8 py-8 bg-linear-to-b from-white via-blue-50/20 to-white">
+                        <div className="space-y-4">
+                          {simplifiedClauses.map((clause, idx) => {
+                            const clauseId = clause?.clause_id || `C${idx + 1}`;
+                            const simplifiedText = String(clause?.simple_english || '').trim();
+                            const isOpen = simplifiedOpenClauses[clauseId];
+                            return (
+                              <div
+                                key={`simplified-${idx}`}
+                                className="bg-white border-l-4 border-purple-500 rounded-lg p-4 hover:shadow-lg hover:shadow-purple-200/50 transition-all"
+                              >
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <span className="inline-flex items-center justify-center w-8 h-8 bg-linear-to-br from-purple-500 to-blue-600 text-white rounded-full font-bold text-sm shrink-0">
+                                      {idx + 1}
+                                    </span>
+                                    <h4 className="text-sm font-bold text-purple-900">Clause {clauseId}</h4>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => toggleSimplifiedClause(clauseId)}
+                                      className="px-3 py-1 bg-linear-to-r from-purple-600 to-blue-600 text-white rounded-md text-xs font-bold hover:opacity-90 transition-opacity"
+                                    >
+                                      {isOpen ? 'Hide' : 'View'}
+                                    </button>
+                                    <button
+                                      onClick={() => navigator.clipboard.writeText(simplifiedText)}
+                                      className="px-3 py-1 bg-stone-100 text-stone-800 rounded-md text-xs font-bold hover:bg-stone-200 transition-colors"
+                                    >
+                                      Copy
+                                    </button>
+                                  </div>
+                                </div>
+                                {isOpen ? (
+                                  <p className="text-sm leading-relaxed text-gray-700 font-medium whitespace-pre-wrap">{simplifiedText}</p>
+                                ) : (
+                                  <p className="text-sm text-gray-500 italic">Click "View" to expand this clause's simplified text.</p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t-2 border-blue-200 flex items-start gap-3 bg-blue-50/50 rounded-xl p-5">
+                          <span className="text-lg mt-0.5">💡</span>
+                          <div>
+                            <p className="text-xs text-blue-900 font-medium leading-relaxed">
+                              <strong>What is this?</strong> This simplified version extracts key information from each clause to make it more approachable for non-lawyers. 
+                              {bertSupport?.simple_english?.available && !bertSupport?.simple_english?.error ? (
+                                <span> Uses BERT (Bidirectional Encoder Representations from Transformers), an advanced AI language model.</span>
+                              ) : (
+                                <span> Uses intelligent text extraction when advanced models aren't available.</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : null}
                   </div>
                 )}
 
                 {/* ── AI Risk Analysis Report ──────────────────────────── */}
                 {result.ai_risk_report && (
-                  <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-200 overflow-hidden">
+                  <div className="bg-linear-to-br from-stone-50 to-white rounded-2xl shadow-xl border border-stone-300/50 overflow-hidden hover:shadow-2xl transition-all">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-8 py-5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <span className="text-2xl">🤖</span>
+                    <div className="bg-linear-to-r from-amber-600 via-orange-600 to-amber-700 px-8 py-6 shadow-md\">
+                      <div className="flex items-center justify-between\">
+                        <div className="flex items-center gap-3\">
+                          <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur\">
+                            <span className="text-2xl\">🤖</span>
                           </div>
                           <div>
-                            <h3 className="text-xl font-bold text-white">AI Risk Analysis Report</h3>
-                            <p className="text-emerald-100 text-sm">
-                              Generated by {result.ai_risk_report.model || 'Gemini'} — synthesizing {summary.total_patterns_detected || 0} patterns, {summary.unique_cases || 0} cases, {summary.unique_acts || 0} acts
+                            <h3 className="text-2xl font-bold text-white tracking-tight\">AI Risk Analysis</h3>
+                            <p className="text-amber-50 text-xs font-medium mt-1\">
+                              {result.ai_risk_report.model || 'Gemini'} synthesis • {summary.total_patterns_detected || 0} patterns • {summary.unique_cases || 0} cases • {summary.unique_acts || 0} acts
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-col\">
                           {result.ai_risk_report.risk_score && (
-                            <span className={`px-4 py-2 rounded-lg text-sm font-bold shadow-lg ${
-                              result.ai_risk_report.risk_score === 'CRITICAL' ? 'bg-red-500 text-white' :
+                            <span className={`px-6 py-2 rounded-xl text-sm font-bold shadow-xl ${
+                              result.ai_risk_report.risk_score === 'CRITICAL' ? 'bg-red-600 text-white' :
                               result.ai_risk_report.risk_score === 'HIGH' ? 'bg-orange-500 text-white' :
-                              result.ai_risk_report.risk_score === 'MEDIUM' ? 'bg-yellow-400 text-stone-900' :
-                              'bg-green-400 text-stone-900'
+                              result.ai_risk_report.risk_score === 'MEDIUM' ? 'bg-yellow-500 text-slate-900' :
+                              'bg-emerald-500 text-white'
                             }`}>
                               {result.ai_risk_report.risk_score} RISK
                             </span>
                           )}
                           {result.ai_risk_report.generation_time_ms && (
-                            <span className="text-emerald-200 text-xs">
-                              {(result.ai_risk_report.generation_time_ms / 1000).toFixed(1)}s
+                            <span className="text-amber-50 text-xs font-bold">
+                              Generated in {(result.ai_risk_report.generation_time_ms / 1000).toFixed(1)}s
                             </span>
                           )}
                         </div>
@@ -1014,51 +1122,66 @@ export default function ContractRiskAnalysis() {
 
                     {/* Report Content */}
                     {(aiLoading || result.ai_risk_report.loading) ? (
-                      <div className="px-8 py-6">
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center gap-3">
-                          <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                          <div>
-                            <p className="text-emerald-900 text-sm font-semibold">Generating AI report in background...</p>
-                            <p className="text-emerald-700 text-xs">Core analysis is ready; Gemini synthesis will appear automatically.</p>
+                      <div className="px-8 py-8">
+                        <div className="bg-linear-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-6 flex items-center gap-4 shadow-md">
+                          <div className="w-6 h-6 border-3 border-amber-500 border-t-amber-700 rounded-full animate-spin shrink-0"></div>
+                          <div className="flex-1">
+                            <p className="text-amber-900 text-base font-bold">🔄 Generating AI Analysis...</p>
+                            <p className="text-amber-800 text-sm mt-1.5 font-medium">Our Gemini AI is synthesizing patterns, cases, and legislation into actionable insights.</p>
                           </div>
                         </div>
                       </div>
                     ) : result.ai_risk_report.risk_report ? (
-                      <div className="px-8 py-6">
-                        <SimpleMarkdown text={result.ai_risk_report.risk_report} />
+                      <div className="px-8 py-8 bg-linear-to-b from-white via-stone-50 to-white">
+                        {/* Main Report Section */}
+                        <div className="mb-8">
+                          <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-amber-200">
+                            <span className="text-3xl">📊</span>
+                            <h4 className="text-2xl font-bold text-stone-900 tracking-tight">Comprehensive Risk Summary</h4>
+                          </div>
+                          <div className="prose-sm text-gray-700 bg-white rounded-xl p-6 border border-stone-200 shadow-sm">
+                            <SimpleMarkdown text={result.ai_risk_report.risk_report} />
+                          </div>
+                        </div>
 
                         {(riskyClauses.length > 0 || missingProtections.length > 0 || referencedCases.length > 0) && (
-                          <div className="mt-8 space-y-6">
+                          <div className="mt-10 space-y-6">
                             {riskyClauses.length > 0 && (
-                              <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-xl p-5">
-                                <h4 className="text-base font-bold text-red-900 mb-3">Risky Clauses (Quick Jump)</h4>
+                              <div className="bg-linear-to-br from-red-50 to-orange-50 border-2 border-red-300 rounded-xl p-6 shadow-md">
+                                <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-red-200">
+                                  <span className="text-2xl">⚠️</span>
+                                  <div>
+                                    <h4 className="text-lg font-bold text-red-900">Critical Issues Found</h4>
+                                    <p className="text-red-700 text-xs font-medium">Jump to these clauses in the contract for quick review</p>
+                                  </div>
+                                </div>
                                 <div className="space-y-3">
                                   {riskyClauses.map((risk, idx) => (
-                                    <div key={`risk-clause-${idx}`} className="bg-white border border-red-100 rounded-lg p-3">
-                                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                                        <span className="text-xs font-bold bg-stone-900 text-white px-2 py-1 rounded">Risk #{risk.risk_number}</span>
+                                    <div key={`risk-clause-${idx}`} className="bg-white border-l-4 border-red-500 rounded-lg p-4 hover:shadow-md transition-all">
+                                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                                        <span className="text-xs font-bold bg-red-600 text-white px-3 py-1 rounded-full">Risk #{risk.risk_number}</span>
                                         {risk.severity && (
-                                          <span className={`text-xs font-bold px-2 py-1 rounded ${
+                                          <span className={`text-xs font-bold px-3 py-1 rounded-full ${
                                             risk.severity === 'CRITICAL' ? 'bg-red-600 text-white' :
-                                            risk.severity === 'HIGH' ? 'bg-orange-500 text-white' :
-                                            risk.severity === 'MEDIUM' ? 'bg-yellow-400 text-stone-900' :
-                                            'bg-blue-500 text-white'
+                                            risk.severity === 'HIGH' ? 'bg-orange-600 text-white' :
+                                            risk.severity === 'MEDIUM' ? 'bg-yellow-500 text-stone-900' :
+                                            'bg-blue-600 text-white'
                                           }`}>
                                             {risk.severity}
                                           </span>
                                         )}
-                                        <span className="text-sm font-semibold text-stone-800">{risk.risk_title}</span>
                                       </div>
-                                      <p className="text-xs text-stone-600 mb-2">{risk.affected_clause || 'Clause reference unavailable'}</p>
+                                      <p className="text-sm font-bold text-stone-900 mb-2">{risk.risk_title}</p>
+                                      <p className="text-xs text-stone-600 mb-3">{risk.affected_clause || 'See clause details below'}</p>
                                       {risk.clause_ids?.length > 0 && (
                                         <div className="flex flex-wrap gap-2">
                                           {risk.clause_ids.map((cid) => (
                                             <a
                                               key={`${risk.risk_number}-${cid}`}
                                               href={`#clause-${cid}`}
-                                              className="text-xs font-semibold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-1 rounded hover:bg-amber-200"
+                                              className="text-xs font-bold text-white bg-linear-to-r from-amber-600 to-orange-600 px-4 py-2 rounded-lg hover:shadow-lg transition-all transform hover:scale-105"
                                             >
-                                              Go to Clause {cid}
+                                              📍 View Clause {cid}
                                             </a>
                                           ))}
                                         </div>
@@ -1070,36 +1193,40 @@ export default function ContractRiskAnalysis() {
                             )}
 
                             {missingProtections.length > 0 && (
-                              <div className="bg-gradient-to-br from-amber-50 to-red-50 border border-amber-300 rounded-xl p-5">
-                                <h4 className="text-base font-bold text-amber-900 mb-3">Missing Protections</h4>
+                              <div className="bg-linear-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6 shadow-md">
+                                <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-yellow-200">
+                                  <span className="text-2xl">🛡️</span>
+                                  <div>
+                                    <h4 className="text-lg font-bold text-yellow-900">Missing Protections</h4>
+                                    <p className="text-yellow-700 text-xs font-medium">Critical clauses or protections that should be added</p>
+                                  </div>
+                                </div>
                                 <div className="space-y-3">
                                   {missingProtections.map((risk, idx) => (
-                                    <div key={`missing-protection-${idx}`} className="bg-white border border-amber-200 rounded-lg p-3">
-                                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                                        <span className="text-xs font-bold bg-stone-900 text-white px-2 py-1 rounded">Risk #{risk.risk_number}</span>
+                                    <div key={`missing-protection-${idx}`} className="bg-white border-l-4 border-yellow-500 rounded-lg p-4 hover:shadow-md transition-all">
+                                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                                        <span className="text-xs font-bold bg-yellow-600 text-white px-3 py-1 rounded-full">Protection #{risk.risk_number}</span>
                                         {risk.severity && (
-                                          <span className={`text-xs font-bold px-2 py-1 rounded ${
+                                          <span className={`text-xs font-bold px-3 py-1 rounded-full ${
                                             risk.severity === 'CRITICAL' ? 'bg-red-600 text-white' :
-                                            risk.severity === 'HIGH' ? 'bg-orange-500 text-white' :
-                                            risk.severity === 'MEDIUM' ? 'bg-yellow-400 text-stone-900' :
-                                            'bg-blue-500 text-white'
+                                            risk.severity === 'HIGH' ? 'bg-orange-600 text-white' :
+                                            risk.severity === 'MEDIUM' ? 'bg-yellow-500 text-stone-900' :
+                                            'bg-blue-600 text-white'
                                           }`}>
                                             {risk.severity}
                                           </span>
                                         )}
-                                        <span className="text-sm font-semibold text-stone-800">{risk.risk_title}</span>
                                       </div>
-
-                                      <p className="text-xs text-stone-700 mb-1">
-                                        {risk.affected_clause || 'Missing clause/protection (no clause reference)'}
-                                      </p>
-
+                                      <p className="text-sm font-bold text-stone-900 mb-2">{risk.risk_title}</p>
+                                      <p className="text-xs text-stone-700 mb-2 font-medium">📌 {risk.affected_clause || 'Missing protection'}</p>
                                       {risk.direct_issue && (
-                                        <p className="text-xs text-stone-600 mb-1"><strong>Issue:</strong> {risk.direct_issue}</p>
+                                        <p className="text-xs text-stone-700 mb-2"><strong>Why it matters:</strong> {risk.direct_issue}</p>
                                       )}
-
                                       {risk.recommended_fix && (
-                                        <p className="text-xs text-emerald-700"><strong>Recommended Fix:</strong> {risk.recommended_fix}</p>
+                                        <div className="bg-emerald-50 border border-emerald-200 rounded p-3 mt-2">
+                                          <p className="text-xs font-bold text-emerald-900">✅ Recommended Addition:</p>
+                                          <p className="text-xs text-emerald-800 mt-1">{risk.recommended_fix}</p>
+                                        </div>
                                       )}
                                     </div>
                                   ))}
@@ -1108,25 +1235,31 @@ export default function ContractRiskAnalysis() {
                             )}
 
                             {referencedCases.length > 0 && (
-                              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-5">
-                                <h4 className="text-base font-bold text-blue-900 mb-3">Referenced Cases (Open Source)</h4>
-                                <div className="space-y-2">
+                              <div className="bg-linear-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-6 shadow-md">
+                                <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-blue-200">
+                                  <span className="text-2xl">📚</span>
+                                  <div>
+                                    <h4 className="text-lg font-bold text-blue-900">Referenced Case Law</h4>
+                                    <p className="text-blue-700 text-xs font-medium">Sri Lankan case law supporting this analysis</p>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   {referencedCases.map((c, idx) => (
-                                    <div key={`ref-case-${idx}`} className="bg-white border border-blue-100 rounded-lg p-3 flex items-start justify-between gap-3">
-                                      <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-blue-900 break-words">{c.case_name}</p>
-                                        {c.raw_support_text && (
-                                          <p className="text-xs text-stone-600 mt-1 break-words">{c.raw_support_text}</p>
-                                        )}
+                                    <div key={`ref-case-${idx}`} className="bg-white border-l-4 border-blue-500 rounded-lg p-4 hover:shadow-md transition-all">
+                                      <div className="flex justify-between items-start gap-3 mb-2">
+                                        <p className="text-sm font-bold text-blue-900">{c.case_name}</p>
+                                        <a
+                                          href={getCaseSearchUrl(c.case_name)}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="shrink-0 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg transition-all"
+                                        >
+                                          🔗 Search
+                                        </a>
                                       </div>
-                                      <a
-                                        href={getCaseSearchUrl(c.case_name)}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="shrink-0 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded"
-                                      >
-                                        View Case
-                                      </a>
+                                      {c.raw_support_text && (
+                                        <p className="text-xs text-stone-700 leading-relaxed">{c.raw_support_text}</p>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
@@ -1135,18 +1268,20 @@ export default function ContractRiskAnalysis() {
                           </div>
                         )}
 
-                        <div className="mt-6 pt-4 border-t border-stone-200 flex items-center justify-between">
-                          <p className="text-xs text-stone-400 italic">
-                            This analysis is AI-generated based on pattern matching against Sri Lankan legal databases. 
-                            It should be reviewed by a qualified legal professional.
-                          </p>
+                        {/* Disclaimer and Actions */}
+                        <div className="mt-10 pt-6 border-t-2 border-stone-200">
+                          {/* <div className="bg-linear-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-5 mb-4">
+                            <p className="text-xs text-blue-900 font-medium leading-relaxed">
+                              <strong>📋 Important:</strong> This AI-generated analysis uses pattern matching against Sri Lankan legal databases. While comprehensive, it should be reviewed and validated by a qualified legal professional before making decisions.
+                            </p>
+                          </div> */}
                           <button
                             onClick={() => {
                               navigator.clipboard.writeText(result.ai_risk_report.risk_report);
                             }}
-                            className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-sm font-bold hover:shadow-lg transition-all flex items-center gap-2"
+                            className="w-full px-6 py-3 bg-linear-to-r from-amber-600 to-orange-600 text-white rounded-xl text-sm font-bold hover:shadow-2xl hover:shadow-orange-500/40 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                           >
-                            📋 Copy Report
+                            📋 Copy Full Report
                           </button>
                         </div>
                       </div>
@@ -1176,67 +1311,16 @@ export default function ContractRiskAnalysis() {
                   </div>
                 )}
 
-                {/* ── Top Cases Banner ──────────────────────────────────── */}
-                {result.aggregated_results?.top_cases?.length > 0 && (
-                  <details className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
-                    <summary className="cursor-pointer px-8 py-5 bg-gradient-to-r from-blue-50 to-cyan-50 font-bold text-blue-800 text-lg flex items-center gap-2 hover:bg-blue-100 transition-colors">
-                      📚 Top {Math.min(result.aggregated_results.top_cases.length, 10)} Most Relevant Cases (across all clauses)
-                    </summary>
-                    <div className="px-8 py-6 space-y-3">
-                      {result.aggregated_results.top_cases.slice(0, 10).map((c, i) => (
-                        <div key={i} className="flex justify-between items-start p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="flex-1">
-                            <p className="font-semibold text-blue-900 text-sm">{c.case_name}</p>
-                            <p className="text-xs text-stone-500">{c.year} · {c.category}</p>
-                          </div>
-                          <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold ml-3 whitespace-nowrap">
-                            {((c.similarity || 0) * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
-
-                {/* ── Top Acts Banner ──────────────────────────────────── */}
-                {result.aggregated_results?.top_acts?.length > 0 && (
-                  <details className="bg-white rounded-2xl shadow-lg border border-purple-100 overflow-hidden">
-                    <summary className="cursor-pointer px-8 py-5 bg-gradient-to-r from-purple-50 to-pink-50 font-bold text-purple-800 text-lg flex items-center gap-2 hover:bg-purple-100 transition-colors">
-                      📖 Top {Math.min(result.aggregated_results.top_acts.length, 10)} Most Relevant Acts (across all clauses)
-                    </summary>
-                    <div className="px-8 py-6 space-y-3">
-                      {result.aggregated_results.top_acts.slice(0, 10).map((act, i) => (
-                        <div key={i} className="flex justify-between items-start p-3 bg-purple-50 rounded-lg border border-purple-200">
-                          <div className="flex-1">
-                            <p className="font-semibold text-purple-900 text-sm">{act.act_name} {act.year ? `(${act.year})` : ''}</p>
-                            <p className="text-xs text-stone-500">Section {act.section_number} — {act.section_heading}</p>
-                          </div>
-                          <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold ml-3 whitespace-nowrap">
-                            {((act.similarity_score || 0) * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
+                {/* ── Top Cases & Acts ──────────────────────────────────── */}
+                <TopReferencesSection 
+                  topCases={result.aggregated_results?.top_cases || []}
+                  topActs={result.aggregated_results?.top_acts || []}
+                />
 
                 {/* ── Clause-by-Clause Section ─────────────────────────── */}
-                <div>
-                  <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-3xl font-bold text-stone-800 flex items-center gap-3">
-                      <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Clause-by-Clause Analysis
-                    </h2>
-                    <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white px-5 py-2 rounded-full font-bold shadow-lg">
-                      {summary.total_clauses} Clauses
-                    </span>
-                  </div>
-                  <p className="text-gray-500 mb-6">Click any clause to expand. Clauses with detected patterns are auto-expanded.</p>
-                  <div className="space-y-4">
-                    {(result.pattern_detection?.clauses_with_patterns || []).map(clause => renderClause(clause))}
-                  </div>
+                <ClauseAnalysisHeader summary={summary} />
+                <div className="space-y-4">
+                  {(result.pattern_detection?.clauses_with_patterns || []).map(clause => renderClause(clause))}
                 </div>
               </div>
             </div>
@@ -1251,22 +1335,22 @@ export default function ContractRiskAnalysis() {
 
 function TabButton({ active, color, disabled, onClick, children }) {
   const activeClass = {
-    stone:  'bg-slate-700 text-white',
-    orange: 'bg-orange-600 text-white',
-    blue:   'bg-blue-600 text-white',
-    purple: 'bg-purple-600 text-white',
+    stone:  'bg-linear-to-r from-stone-400 to-stone-300 text-white shadow-lg',
+    orange: 'bg-linear-to-r from-orange-600 to-orange-500 text-white shadow-lg',
+    blue:   'bg-linear-to-r from-blue-600 to-blue-500 text-white shadow-lg',
+    purple: 'bg-linear-to-r from-purple-600 to-purple-500 text-white shadow-lg',
   };
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+      className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
         active
           ? activeClass[color]
           : disabled
-            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            ? 'bg-stone-400 text-white cursor-not-allowed font-bold'
+            : 'bg-white text-gray-700 hover:bg-stone-100 hover:text-stone-900 border-2 border-stone-200 hover:border-stone-400'
       }`}
     >
       {children}
@@ -1276,22 +1360,22 @@ function TabButton({ active, color, disabled, onClick, children }) {
 
 function StatRow({ label, value }) {
   return (
-    <div className="flex justify-between items-center px-4 py-3 rounded-lg bg-slate-50 border border-slate-200">
-      <span className="text-sm text-slate-600 font-medium">{label}</span>
-      <span className="text-lg font-semibold text-slate-900">{value ?? '—'}</span>
+    <div className="flex justify-between items-center px-4 py-3.5 rounded-lg bg-linear-to-r from-stone-50 to-stone-100 border border-stone-300 hover:shadow-md transition-all">
+      <span className="text-sm text-gray-700 font-semibold">{label}</span>
+      <span className="text-lg font-bold text-stone-800">{value ?? '—'}</span>
     </div>
   );
 }
 
 function SummaryCard({ label, value, emoji }) {
   return (
-    <div className="bg-white rounded-lg p-4 shadow-sm border border-slate-200">
+    <div className="bg-linear-to-br from-stone-50 to-amber-50 rounded-xl p-5 shadow-md shadow-stone-900/10 border-2 border-amber-200 hover:shadow-lg hover:border-amber-300 transition-all">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-slate-600 font-medium text-xs mb-1">{label}</p>
-          <p className="text-2xl font-bold text-slate-900">{value ?? 0}</p>
+          <p className="text-gray-700 font-bold text-xs mb-2">{label}</p>
+          <p className="text-3xl font-bold text-gray-900">{value ?? 0}</p>
         </div>
-        <span className="text-2xl opacity-30">{emoji}</span>
+        <span className="text-3xl opacity-60">{emoji}</span>
       </div>
     </div>
   );
