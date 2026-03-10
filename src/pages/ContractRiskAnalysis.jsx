@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import FileUpload from '../components/FileUpload.jsx';
 import Header from '../components/Header.jsx';
-import { ContractAPI } from '../config/api.js';
+import { AnalysisAPI } from '../config/api.js';
 
 // ─── Lightweight Markdown Renderer ──────────────────────────────────────────────
 function SimpleMarkdown({ text }) {
@@ -149,17 +149,17 @@ function SimpleMarkdown({ text }) {
 
 // ─── Severity badge colors ─────────────────────────────────────────────────────
 const SEVERITY_STYLES = {
-  CRITICAL: 'bg-red-600 text-white',
-  HIGH:     'bg-orange-500 text-white',
-  MEDIUM:   'bg-yellow-500 text-stone-900',
-  LOW:      'bg-blue-400 text-white',
+  CRITICAL: 'bg-red-100 text-red-900',
+  HIGH:     'bg-orange-100 text-orange-900',
+  MEDIUM:   'bg-yellow-100 text-yellow-900',
+  LOW:      'bg-green-100 text-green-900',
 };
 
 const SEVERITY_BORDER = {
-  CRITICAL: 'border-red-500',
-  HIGH:     'border-orange-400',
-  MEDIUM:   'border-yellow-400',
-  LOW:      'border-blue-300',
+  CRITICAL: 'border-red-300',
+  HIGH:     'border-orange-300',
+  MEDIUM:   'border-yellow-300',
+  LOW:      'border-green-300',
 };
 
 // ─── Main Page Component ────────────────────────────────────────────────────────
@@ -217,7 +217,7 @@ export default function ContractRiskAnalysis() {
     });
 
     try {
-      const aiReport = await ContractAPI.generateAiRiskReport({
+      const aiReport = await AnalysisAPI.generateAiRiskReport({
         preprocessing: preprocessingPayload,
         pattern_data: baseData?.pattern_detection || {},
         case_data: baseData?.case_law || {},
@@ -271,7 +271,7 @@ export default function ContractRiskAnalysis() {
     setAiLoading(false);
 
     try {
-      const data = await ContractAPI.uploadContractComprehensive(file, {
+      const data = await AnalysisAPI.uploadContractWithCases(file, {
         include_ai_report: false,
         use_bert_support: false,
         use_simple_english: true,
@@ -300,7 +300,11 @@ export default function ContractRiskAnalysis() {
     setAiLoading(false);
 
     try {
-      const data = await ContractAPI.uploadContractComprehensive(contractText, {
+      // Convert text to a File object for API compatibility
+      const textBlob = new Blob([contractText], { type: 'text/plain' });
+      const textFile = new File([textBlob], 'contract.txt', { type: 'text/plain' });
+      
+      const data = await AnalysisAPI.uploadContractWithCases(textFile, {
         include_ai_report: false,
         use_bert_support: false,
         use_simple_english: true,
@@ -752,27 +756,27 @@ export default function ContractRiskAnalysis() {
                   )}
                 </div>
               </div>
-              <div className="lg:col-span-2">
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100 shadow-lg">
-                  <h4 className="font-bold text-blue-900 mb-4 flex items-center text-lg">
-                    <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div>
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sticky top-20">
+                  <h3 className="font-semibold text-slate-900 mb-4 flex items-center text-base">
+                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    What You'll Get:
-                  </h4>
-                  <ul className="text-sm text-blue-800 space-y-3 list-none p-0">
+                    What You Get
+                  </h3>
+                  <ul className="text-sm text-slate-600 space-y-2 list-none p-0">
                     {[
-                      ['Pattern-based risk detection', 'Risks matched against 200+ legal patterns from Sri Lankan case law'],
-                      ['Supporting case law', 'Cases linked via pattern + semantic hybrid search'],
-                      ['Applicable legislation', 'Relevant acts and sections from Sri Lankan law'],
-                      ['Missing provisions', 'Fields your contract should include'],
-                      ['Severity assessment', 'CRITICAL / HIGH / MEDIUM risk levels']
-                    ].map(([title, desc], i) => (
-                      <li key={i} className="flex items-start">
-                        <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      'Pattern-based risk detection',
+                      'Supporting case law',
+                      'Applicable legislation',
+                      'Missing provisions',
+                      'AI risk analysis'
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
-                        <span><strong>{title}</strong> — {desc}</span>
+                        {item}
                       </li>
                     ))}
                   </ul>
@@ -1247,22 +1251,22 @@ export default function ContractRiskAnalysis() {
 
 function TabButton({ active, color, disabled, onClick, children }) {
   const activeClass = {
-    stone:  'bg-gradient-to-r from-stone-700 to-amber-700 text-white shadow-lg',
-    orange: 'bg-orange-600 text-white shadow-lg',
-    blue:   'bg-blue-600 text-white shadow-lg',
-    purple: 'bg-purple-600 text-white shadow-lg',
+    stone:  'bg-slate-700 text-white',
+    orange: 'bg-orange-600 text-white',
+    blue:   'bg-blue-600 text-white',
+    purple: 'bg-purple-600 text-white',
   };
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
         active
           ? activeClass[color]
           : disabled
-            ? 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'
-            : 'bg-white text-stone-600 border-2 border-stone-200 hover:border-stone-400'
+            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
       }`}
     >
       {children}
@@ -1270,37 +1274,24 @@ function TabButton({ active, color, disabled, onClick, children }) {
   );
 }
 
-function StatRow({ label, value, color }) {
-  const border = {
-    stone:  'border-stone-700',
-    orange: 'border-orange-600',
-    blue:   'border-blue-600',
-    purple: 'border-purple-600',
-  };
-  const text = {
-    stone:  'text-stone-800',
-    orange: 'text-orange-700',
-    blue:   'text-blue-700',
-    purple: 'text-purple-700',
-  };
-
+function StatRow({ label, value }) {
   return (
-    <div className={`flex justify-between items-center p-3 rounded-xl border-l-4 ${border[color]} bg-gradient-to-r from-stone-50 to-amber-50`}>
-      <span className="text-sm text-stone-600 font-semibold">{label}</span>
-      <span className={`text-xl font-bold ${text[color]}`}>{value ?? '—'}</span>
+    <div className="flex justify-between items-center px-4 py-3 rounded-lg bg-slate-50 border border-slate-200">
+      <span className="text-sm text-slate-600 font-medium">{label}</span>
+      <span className="text-lg font-semibold text-slate-900">{value ?? '—'}</span>
     </div>
   );
 }
 
-function SummaryCard({ label, value, emoji, borderColor }) {
+function SummaryCard({ label, value, emoji }) {
   return (
-    <div className={`bg-white rounded-2xl p-5 shadow-lg border-2 ${borderColor}`}>
+    <div className="bg-white rounded-lg p-4 shadow-sm border border-slate-200">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-stone-600 font-semibold text-xs mb-1">{label}</p>
-          <p className="text-3xl font-bold text-stone-800">{value ?? 0}</p>
+          <p className="text-slate-600 font-medium text-xs mb-1">{label}</p>
+          <p className="text-2xl font-bold text-slate-900">{value ?? 0}</p>
         </div>
-        <span className="text-3xl opacity-30">{emoji}</span>
+        <span className="text-2xl opacity-30">{emoji}</span>
       </div>
     </div>
   );

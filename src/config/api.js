@@ -29,12 +29,27 @@ export const AnalysisAPI = {
 				formData.append(key, value);
 			});
 		}
-		const response = await fetch(`${BACKEND_BASE}/analyze/contract`, {
+		const response = await fetch(`${CONTRACT_API_URL}/upload-contract-comprehensive`, {
 			method: 'POST',
 			body: formData,
 		});
 		if (!response.ok) {
 			throw new Error('Failed to upload and analyze contract');
+		}
+		return response.json();
+	},
+
+	async generateAiRiskReport(analysisData) {
+		const response = await fetch(`${CONTRACT_API_URL}/generate-ai-risk-report`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(analysisData),
+		});
+		if (!response.ok) {
+			const error = await response.json().catch(() => ({}));
+			throw new Error(error.detail || 'Failed to generate AI risk report');
 		}
 		return response.json();
 	},
