@@ -8,8 +8,10 @@ const FR_SCREENER_PORT = 8016;
 export const FR_SCREENER_BASE = `${BACKEND_HOST}:${FR_SCREENER_PORT}`;
 
 // Pass Case Finder Backend (Scenario-Based Case Finder - port 5000)
-const CASE_FINDER_PORT = 5000;
-export const API_URL = `${BACKEND_HOST}:${CASE_FINDER_PORT}`;
+//const CASE_FINDER_PORT = 5000;
+//export const API_URL = `${BACKEND_HOST}:${CASE_FINDER_PORT}`;
+
+export const API_URL = 'http://152.42.202.102:5000';
 
 // Named export used by RAGResultsPage, CaseChatPanel, SearchInterface, etc.
 export const API = {
