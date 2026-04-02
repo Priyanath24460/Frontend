@@ -10,8 +10,8 @@ export const FR_SCREENER_BASE = `${BACKEND_HOST}:${FR_SCREENER_PORT}`;
 // Pass Case Finder Backend (Scenario-Based Case Finder - port 5000)
 //const CASE_FINDER_PORT = 5000;
 //export const API_URL = `${BACKEND_HOST}:${CASE_FINDER_PORT}`;
-
- export const API_URL = 'http://143.198.212.228:5000'; // Use this for DigitalOcean deployment
+ export const API_URL = "https://identify-functional-capital-behavioral.trycloudflare.com";
+ //export const API_URL = 'http://143.198.212.228:5000'; // Use this for DigitalOcean deployment
 
 // Named export used by RAGResultsPage, CaseChatPanel, SearchInterface, etc.
 export const API = {
