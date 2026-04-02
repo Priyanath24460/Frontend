@@ -11,7 +11,7 @@ export const FR_SCREENER_BASE = `${BACKEND_HOST}:${FR_SCREENER_PORT}`;
 //const CASE_FINDER_PORT = 5000;
 //export const API_URL = `${BACKEND_HOST}:${CASE_FINDER_PORT}`;
 
-export const API_URL = 'http://152.42.202.102:5000';
+ export const API_URL = 'http://143.198.212.228:5000'; // Use this for DigitalOcean deployment
 
 // Named export used by RAGResultsPage, CaseChatPanel, SearchInterface, etc.
 export const API = {
