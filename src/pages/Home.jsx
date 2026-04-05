@@ -97,7 +97,7 @@ const Home = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
               {/* Feature 1: Case Finder */}
-              <div className="group bg-white p-7 sm:p-8 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 border border-stone-200 hover:border-amber-200">
+              <Link to="/Scenario_Based_Case_Finder" className="group bg-linear-to-br from-stone-50 to-amber-50 p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100 cursor-pointer no-underline">
                 <div className="flex items-start gap-4 sm:gap-5">
                   <div className="shrink-0 w-14 h-14 bg-linear-to-br from-amber-400 to-orange-400 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
                     <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,10 +113,10 @@ const Home = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Feature 2: Case Summarizer */}
-              <div className="group bg-linear-to-br from-stone-50 to-amber-50 p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100">
+              <Link to="/case-summarizer" className="group bg-linear-to-br from-stone-50 to-amber-50 p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100 cursor-pointer no-underline">
                 <div className="flex items-start gap-4 sm:gap-5">
                   <div className="shrink-0 w-12 sm:w-14 h-12 sm:h-14 bg-linear-to-br from-amber-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform flex-shrink-0">
                     <svg className="w-6 sm:w-7 h-6 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,10 +132,10 @@ const Home = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Feature 3: Contract Manager */}
-              <div className="group bg-linear-to-br from-stone-50 to-amber-50 p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100">
+              <Link to="/contract-risk-analysis" className="group bg-linear-to-br from-stone-50 to-amber-50 p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100 cursor-pointer no-underline">
                 <div className="flex items-start gap-4 sm:gap-5">
                   <div className="shrink-0 w-12 sm:w-14 h-12 sm:h-14 bg-linear-to-br from-amber-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform flex-shrink-0">
                     <svg className="w-6 sm:w-7 h-6 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,10 +152,10 @@ const Home = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Feature 4: Rights Violation Screener */}
-              <div className="group bg-linear-to-br from-stone-50 to-amber-50 p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100">
+              <Link to="/fr-violation-screener" className="group bg-linear-to-br from-stone-50 to-amber-50 p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-amber-100 cursor-pointer no-underline">
                 <div className="flex items-start gap-4 sm:gap-5">
                   <div className="shrink-0 w-12 sm:w-14 h-12 sm:h-14 bg-linear-to-br from-amber-400 to-orange-400 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform flex-shrink-0">
                     <svg className="w-6 sm:w-7 h-6 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +171,7 @@ const Home = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </section>
