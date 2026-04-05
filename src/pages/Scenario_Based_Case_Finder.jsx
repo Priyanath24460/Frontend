@@ -11,9 +11,9 @@ const Search = () => {
   const [lastQuestion, setLastQuestion] = useState("");
 
   const exampleQueries = [
-    "What are the legal precedents for property disputes in Sri Lanka?",
-    "Explain the doctrine of precedent in Sri Lankan law",
-    "What are the requirements for a valid contract?",
+    "What evidence is needed to prove rape in Sri Lanka?",
+    "Does the High Court have to write reasons for cancelling bail according to Section 15?",
+    "Can a court cancel someone’s bail just because they committed another crime?",
     "Cases related to fundamental rights violations"
   ];
 
@@ -43,9 +43,9 @@ const Search = () => {
             <h1 className="text-4xl lg:text-5xl font-bold text-stone-800 mb-4">Scenario-Based Case Finder</h1>
             <div className="w-32 h-1 bg-linear-to-r from-amber-600 to-orange-500 mx-auto mb-4"></div>
             <p className="text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6">
-              Describe your legal issue in plain language and find relevant past cases from the New Law Reports database. 
-              Our AI understands your situation and matches it with similar precedent cases, helping you understand how 
-              courts have handled similar issues.
+              Describe your legal issue in plain language and find relevant past cases from the PassCase database. 
+              Our AI-powered semantic search matches your question with similar precedent cases from our uploaded document collection, 
+              helping you understand how courts have handled similar legal issues.
             </p>
             
             {/* Step-by-step guide */}
@@ -70,8 +70,29 @@ const Search = () => {
               </div>
             </div>
           </div>
+
+          {/* Important Database Limitation Notice */}
+          <div className="mt-12 max-w-4xl mx-auto">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-600 rounded-xl p-6 shadow-md">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 mt-0.5">
+                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-grow">
+                  <h3 className="text-lg font-bold text-amber-900 mb-2">⚠️ Important: Database Coverage & Accuracy</h3>
+                  <div className="space-y-2 text-amber-800 text-sm leading-relaxed">
+                    <p>Our system searches <strong>only within the PassCase database</strong>. If your question does not exactly match a case in the database, the system will still provide an answer based on the <strong>most relevant or similar cases available</strong>.</p>
+                    <p><strong>Exclusive PassCase Results:</strong> All results are drawn exclusively from PassCase and do <strong>not include information from other sources</strong>. This ensures you get accurate guidance from the cases we have in our database.</p>
+                    <p><strong>How It Works:</strong> When you ask a question, our AI-powered semantic search identifies cases with similar legal concepts, principles, and precedents from the PassCase database. The system ranks these matches and provides answers based on the strongest connections found.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 mt-8">
             {/* Search Section */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 sticky top-24 border-t-4 border-amber-500">
@@ -127,7 +148,7 @@ const Search = () => {
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Search Tips:
+                    Search Tips for Better Results:
                   </h4>
                   <ul className="text-xs text-amber-800 space-y-2 font-medium">
                     <li className="flex items-start">
@@ -145,6 +166,10 @@ const Search = () => {
                     <li className="flex items-start">
                       <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mr-2.5 mt-1.5 shrink-0"></span>
                       <span>Use legal terminology for more accurate results</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mr-2.5 mt-1.5 shrink-0"></span>
+                      <span><strong>📌 Note:</strong> Results are limited to PassCase database</span>
                     </li>
                   </ul>
                 </div>
