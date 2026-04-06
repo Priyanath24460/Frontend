@@ -5,7 +5,7 @@ export const BACKEND_BASE = `${BACKEND_HOST}:${BACKEND_PORT}`;
 const CONTRACT_API_URL = import.meta.env.VITE_CONTRACT_API_URL || 'http://localhost:8010';  // analyze-contract service
 // FR Violation Screener Backend (different port)
 const FR_SCREENER_PORT = 8016;
-export const FR_SCREENER_BASE = `${BACKEND_HOST}:${FR_SCREENER_PORT}`;
+export const FR_SCREENER_BASE = import.meta.env.VITE_FR_API_URL || `${BACKEND_HOST}:${FR_SCREENER_PORT}`;
 
 // Pass Case Finder Backend (Scenario-Based Case Finder - port 5000)
 const CASE_FINDER_PORT = 5000;
