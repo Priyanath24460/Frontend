@@ -8,7 +8,7 @@ import Register from "./pages/Register";
 import Scenario_Based_Case_Finder from "./pages/Scenario_Based_Case_Finder";
 import ComprehensiveAnalysis from "./pages/ComprehensiveAnalysis";
 import FR_Violation_Screener from "./pages/FR_Violation_Screener";
-// import CaseAnalysis from "./pages/summarizer/CaseAnalysis";
+import CaseAnalysis from "./pages/summarizer/CaseAnalysis";
 // import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -33,27 +33,11 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// ── Lazy imports to isolate crashes ────────────────────────────────────
-const Home = React.lazy(() => import("./pages/Home"));
-const Upload = React.lazy(() => import("./pages/Upload"));
-const ScenarioFinder = React.lazy(() => import("./pages/Scenario_Based_Case_Finder"));
-const ComprehensiveAnalysis = React.lazy(() => import("./pages/ComprehensiveAnalysis"));
-const CaseAnalysis = React.lazy(() => import("./pages/summarizer/CaseAnalysis"));
-const CaseDetailPage = React.lazy(() => import("./pages/summarizer/CaseDetailPage"));
-const RAGUploadPage = React.lazy(() => import("./pages/summarizer/RAGUploadPage"));
-
-const Fallback = () => (
-  <div style={{ padding: 32, textAlign: "center", color: "#888", fontFamily: "sans-serif" }}>
-    <div style={{ fontSize: 32 }}>⏳</div>
-    <p>Loading...</p>
-  </div>
-);
-
 export default function App() {
   return (
     <div className="App">
       <AuthProvider>
-        {/* <CaseAnalysisProvider> */}
+        <CaseAnalysisProvider>
           <Router>
             <Routes>
               {/* Public Routes */}
@@ -94,14 +78,14 @@ export default function App() {
                   </ProtectedRoute>
                 } 
               />
-              {/* <Route 
+              <Route 
                 path="/case-summarizer" 
                 element={
                   <ProtectedRoute>
-                    <CaseAnalysis />
+                    <CaseAnalysis lang="en" />
                   </ProtectedRoute>
                 } 
-              /> */}
+              />
               <Route 
                 path="/comprehensive_Analysis" 
                 element={
@@ -112,7 +96,7 @@ export default function App() {
               />
             </Routes>
           </Router>
-        {/* </CaseAnalysisProvider> */}
+        </CaseAnalysisProvider>
       </AuthProvider>
     </div>
   );

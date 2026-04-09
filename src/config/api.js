@@ -6,6 +6,11 @@ const FALLBACK_BACKEND_BASE =
 export const BACKEND_BASE =
 	import.meta.env.VITE_SUMMARIZER_API_URL || FALLBACK_BACKEND_BASE;
 
+// Legacy aliases used by older components.
+export const API_URL = BACKEND_BASE;
+export const SECONDARY_API_URL =
+	import.meta.env.VITE_FR_API_URL || BACKEND_BASE;
+
 // Named export used by RAGResultsPage, CaseChatPanel, SearchInterface, etc.
 export const API = {
 	RAG: `${BACKEND_BASE}/api/rag`,
