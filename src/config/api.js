@@ -1,7 +1,10 @@
-// API Configuration — centralised backend URL config
-const BACKEND_PORT = 8011;
-const BACKEND_HOST = 'http://localhost';
-export const BACKEND_BASE = `${BACKEND_HOST}:${BACKEND_PORT}`;
+// API Configuration - centralised backend URL config
+const FALLBACK_BACKEND_BASE =
+	typeof window !== 'undefined'
+		? `${window.location.protocol}//${window.location.hostname}:8011`
+		: 'http://localhost:8011';
+export const BACKEND_BASE =
+	import.meta.env.VITE_SUMMARIZER_API_URL || FALLBACK_BACKEND_BASE;
 
 // Named export used by RAGResultsPage, CaseChatPanel, SearchInterface, etc.
 export const API = {
