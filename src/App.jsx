@@ -11,8 +11,9 @@ import FR_Violation_Screener from "./pages/FR_Violation_Screener";
 import CaseAnalysis from "./pages/summarizer/CaseAnalysis";
 // import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import ContractRiskAnalysis from "./pages/ContractRiskAnalysis";
 import "./App.css";
 
 // ── Error Boundary ─────────────────────────────────────────────────────
@@ -40,6 +41,34 @@ export default function App() {
         <CaseAnalysisProvider>
           <Router>
             <Routes>
+// ── Lazy imports to isolate crashes ────────────────────────────────────
+const Home = React.lazy(() => import("./pages/Home"));
+const Login = React.lazy(() => import("./pages/Login"));
+const Register = React.lazy(() => import("./pages/Register"));
+const Upload = React.lazy(() => import("./pages/Upload"));
+const ScenarioFinder = React.lazy(() => import("./pages/Scenario_Based_Case_Finder"));
+const ComprehensiveAnalysis = React.lazy(() => import("./pages/ComprehensiveAnalysis"));
+const FRViolationScreener = React.lazy(() => import("./pages/FR_Violation_Screener"));
+const CaseAnalysis = React.lazy(() => import("./pages/summarizer/CaseAnalysis"));
+const CaseDetailPage = React.lazy(() => import("./pages/summarizer/CaseDetailPage"));
+const RAGUploadPage = React.lazy(() => import("./pages/summarizer/RAGUploadPage"));
+
+const Fallback = () => (
+  <div style={{ padding: 32, textAlign: "center", color: "#888", fontFamily: "sans-serif" }}>
+    <div style={{ fontSize: 32 }}>⏳</div>
+    <p>Loading...</p>
+  </div>
+);
+
+export default function App() {
+  return (
+    <div className="App">
+      <ErrorBoundary>
+        <AuthProvider>
+          <CaseAnalysisProvider>
+            <Router>
+              <React.Suspense fallback={<Fallback />}>
+                <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -58,7 +87,7 @@ export default function App() {
                 path="/Scenario_Based_Case_Finder" 
                 element={
                   <ProtectedRoute>
-                    <Scenario_Based_Case_Finder />
+                    <ScenarioFinder />
                   </ProtectedRoute>
                 } 
               />
@@ -74,11 +103,12 @@ export default function App() {
                 path="/fr-violation-screener" 
                 element={
                   <ProtectedRoute>
-                    <FR_Violation_Screener />
+                    <FRViolationScreener />
                   </ProtectedRoute>
                 } 
               />
               <Route 
+               <Route 
                 path="/case-summarizer" 
                 element={
                   <ProtectedRoute>
@@ -86,6 +116,7 @@ export default function App() {
                   </ProtectedRoute>
                 } 
               />
+              /> 
               <Route 
                 path="/comprehensive_Analysis" 
                 element={
@@ -94,10 +125,22 @@ export default function App() {
                   </ProtectedRoute>
                 } 
               />
-            </Routes>
+              <Route
+                path="/contract-risk-analysis"
+                element={
+                  <ProtectedRoute>
+                    <ContractRiskAnalysis />
+                  </ProtectedRoute>
+                }
+              />
+              </Routes>
+            </React.Suspense>
           </Router>
         </CaseAnalysisProvider>
       </AuthProvider>
+          </CaseAnalysisProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </div>
   );
 }

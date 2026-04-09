@@ -6,6 +6,7 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
@@ -27,15 +28,15 @@ const Header = () => {
         : 'bg-gradient-to-r from-stone-900 via-stone-900/95 to-amber-900/90 backdrop-blur-sm py-5'
     }`}>
       {/* Decorative top border */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400"></div>
+      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400 rounded-b-full"></div>
       
-      <div className="max-w-7xl mx-auto px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo Section */}
           <Link to="/" className="flex items-center group">
             {/* Brand Name */}
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight">
                 <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-amber-400 bg-clip-text text-transparent group-hover:from-amber-200 group-hover:via-orange-200 group-hover:to-amber-300 transition-all duration-300">
                   Law
                 </span>
@@ -63,11 +64,11 @@ const Header = () => {
                   </svg>
                   Home
                   {isActive('/') && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-orange-400"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full"></div>
                   )}
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link 
                   to="/upload" 
                   className={`relative px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 flex items-center ${
@@ -84,7 +85,7 @@ const Header = () => {
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-orange-400"></div>
                   )}
                 </Link>
-              </li>
+              </li> */}
               
               {/* Features Dropdown */}
               <li className="relative group" 
@@ -105,7 +106,7 @@ const Header = () => {
                 {/* Dropdown Menu */}
                 {featuresOpen && (
                   <div className="absolute top-full left-0 pt-2 w-80">
-                    <div className="bg-stone-900/98 backdrop-blur-lg rounded-xl shadow-2xl border border-amber-400/20 overflow-hidden">
+                    <div className="bg-stone-900/98 backdrop-blur-lg rounded-2xl shadow-lg border border-stone-700/50 overflow-hidden">
                       <div className="p-2">
                         <Link 
                           to="/Scenario_Based_Case_Finder" 
@@ -137,8 +138,8 @@ const Header = () => {
                           </div>
                         </Link>
                         
-                        <Link 
-                          to="/#contract-manager" 
+                        {/* <Link 
+                          to="/contract-analysis" 
                           className="flex items-start p-4 rounded-lg hover:bg-amber-400/10 transition-all duration-200 group"
                         >
                           <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-400 rounded-lg flex items-center justify-center mr-3">
@@ -147,8 +148,23 @@ const Header = () => {
                             </svg>
                           </div>
                           <div>
-                            <h3 className="text-white font-semibold text-sm group-hover:text-amber-300 transition-colors">Contract Lifecycle Manager</h3>
-                            <p className="text-stone-400 text-xs mt-1">Review and create contracts with AI</p>
+                            <h3 className="text-white font-semibold text-sm group-hover:text-amber-300 transition-colors">Contract Risk Analysis</h3>
+                            <p className="text-stone-400 text-xs mt-1">Analyze contracts and identify risks instantly</p>
+                          </div>
+                        </Link> */}
+                        
+                        <Link 
+                          to="/contract-risk-analysis" 
+                          className="flex items-start p-4 rounded-lg hover:bg-amber-400/10 transition-all duration-200 group"
+                        >
+                          <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-400 rounded-lg flex items-center justify-center mr-3">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-white font-semibold text-sm group-hover:text-amber-300 transition-colors">Pattern-Based Risk Analysis</h3>
+                            <p className="text-stone-400 text-xs mt-1">Detect risks with case-law pattern matching</p>
                           </div>
                         </Link>
                         
@@ -186,7 +202,7 @@ const Header = () => {
                   </svg>
                   About
                   {isActive('/about') && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-orange-400"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full"></div>
                   )}
                 </Link>
               </li>
@@ -212,7 +228,7 @@ const Header = () => {
                   {/* User Dropdown */}
                   {userMenuOpen && (
                     <div className="absolute top-full right-0 pt-2 w-56">
-                      <div className="bg-stone-900/98 backdrop-blur-lg rounded-xl shadow-2xl border border-amber-400/20 overflow-hidden">
+                      <div className="bg-stone-900/98 backdrop-blur-lg rounded-2xl shadow-lg border border-stone-700/50 overflow-hidden">
                         <div className="p-2">
                           <div className="px-4 py-3 border-b border-stone-700">
                             <p className="text-sm text-stone-400">Signed in as</p>
@@ -260,7 +276,7 @@ const Header = () => {
                   <li>
                     <Link 
                       to="/register" 
-                      className="bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 px-6 py-2.5 rounded-lg font-bold text-sm hover:from-amber-300 hover:to-orange-300 transition-all duration-300 shadow-lg hover:shadow-amber-400/50 hover:-translate-y-0.5 flex items-center"
+                      className="bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 px-6 py-2.5 rounded-xl font-bold text-sm hover:from-amber-300 hover:to-orange-300 transition-all duration-300 shadow-lg hover:shadow-lg hover:-translate-y-0.5 flex items-center"
                     >
                       Get Started
                     </Link>
@@ -271,12 +287,166 @@ const Header = () => {
           </nav>
 
           {/* Mobile Menu Button */}
-          <button className="md:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <svg 
+              className={`w-6 h-6 transition-transform duration-300 ${mobileMenuOpen ? 'rotate-90' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              )}
             </svg>
           </button>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute left-0 right-0 top-full bg-stone-900/98 backdrop-blur-lg border-b border-stone-700/50 shadow-lg mt-0 z-40">
+            <nav className="px-4 py-4 space-y-2">
+              {/* Home Link */}
+              <Link 
+                to="/" 
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-4 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                  isActive('/') 
+                    ? 'text-amber-400 bg-amber-400/10' 
+                    : 'text-stone-50 hover:text-amber-300 hover:bg-white/10'
+                }`}
+              >
+                Home
+              </Link>
+
+              {/* Features Submenu */}
+              <div>
+                <button
+                  onClick={() => setFeaturesOpen(!featuresOpen)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg font-semibold text-sm text-stone-50 hover:text-amber-300 hover:bg-white/10 transition-all duration-300"
+                >
+                  <span>Our Features</span>
+                  <svg 
+                    className={`w-4 h-4 transition-transform duration-200 ${featuresOpen ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {featuresOpen && (
+                  <div className="pl-4 space-y-2 mt-2">
+                    <Link 
+                      to="/Scenario_Based_Case_Finder"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setFeaturesOpen(false);
+                      }}
+                      className="block px-4 py-3 rounded-lg hover:bg-amber-400/10 transition-all duration-200 text-white text-sm"
+                    >
+                      Scenario-Based Case Finder
+                    </Link>
+                    <Link 
+                      to="/case-summarizer"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setFeaturesOpen(false);
+                      }}
+                      className="block px-4 py-3 rounded-lg hover:bg-amber-400/10 transition-all duration-200 text-white text-sm"
+                    >
+                      AI Case Summarizer
+                    </Link>
+                    <Link 
+                      to="/contract-risk-analysis"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setFeaturesOpen(false);
+                      }}
+                      className="block px-4 py-3 rounded-lg hover:bg-amber-400/10 transition-all duration-200 text-white text-sm"
+                    >
+                      Contract Risk Analysis
+                    </Link>
+                    <Link 
+                      to="/fr-violation-screener"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setFeaturesOpen(false);
+                      }}
+                      className="block px-4 py-3 rounded-lg hover:bg-amber-400/10 transition-all duration-200 text-white text-sm"
+                    >
+                      Rights Violation Screener
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* About Link */}
+              <Link 
+                to="/about" 
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-4 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                  isActive('/about') 
+                    ? 'text-amber-400 bg-amber-400/10' 
+                    : 'text-stone-50 hover:text-amber-300 hover:bg-white/10'
+                }`}
+              >
+                About
+              </Link>
+
+              {/* Auth Section */}
+              <div className="border-t border-stone-700 pt-4 mt-4 space-y-2">
+                {currentUser ? (
+                  <>
+                    <div className="px-4 py-3 text-sm">
+                      <p className="text-stone-400">Signed in as</p>
+                      <p className="text-white font-medium truncate">{currentUser.email}</p>
+                    </div>
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-4 py-3 rounded-lg hover:bg-amber-400/10 transition-all duration-200 text-white font-semibold text-sm"
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={async () => {
+                        await logout();
+                        navigate('/');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 rounded-lg hover:bg-red-500/10 transition-all duration-200 text-red-400 font-semibold text-sm"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link 
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-4 py-3 rounded-lg text-stone-50 hover:text-amber-300 hover:bg-white/10 transition-all duration-300 font-semibold text-sm"
+                    >
+                      Sign In
+                    </Link>
+                    <Link 
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 px-4 py-3 rounded-lg font-bold text-sm hover:from-amber-300 hover:to-orange-300 transition-all duration-300 text-center"
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                )}
+              </div>
+            </nav>
+          </div>
+        )}
       </div>
 
       {/* Decorative Bottom Shadow */}
