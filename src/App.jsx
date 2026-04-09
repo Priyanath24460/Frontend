@@ -1,5 +1,15 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
+import Home from "./pages/Home";
+import Upload from "./pages/Upload";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Scenario_Based_Case_Finder from "./pages/Scenario_Based_Case_Finder";
+import ComprehensiveAnalysis from "./pages/ComprehensiveAnalysis";
+import FR_Violation_Screener from "./pages/FR_Violation_Screener";
+import CaseAnalysis from "./pages/summarizer/CaseAnalysis";
+// import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -24,6 +34,13 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+export default function App() {
+  return (
+    <div className="App">
+      <AuthProvider>
+        <CaseAnalysisProvider>
+          <Router>
+            <Routes>
 // ── Lazy imports to isolate crashes ────────────────────────────────────
 const Home = React.lazy(() => import("./pages/Home"));
 const Login = React.lazy(() => import("./pages/Login"));
@@ -90,13 +107,15 @@ export default function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route 
                <Route 
                 path="/case-summarizer" 
                 element={
                   <ProtectedRoute>
-                    <CaseAnalysis />
+                    <CaseAnalysis lang="en" />
                   </ProtectedRoute>
                 } 
+              />
               /> 
               <Route 
                 path="/comprehensive_Analysis" 
@@ -117,6 +136,8 @@ export default function App() {
               </Routes>
             </React.Suspense>
           </Router>
+        </CaseAnalysisProvider>
+      </AuthProvider>
           </CaseAnalysisProvider>
         </AuthProvider>
       </ErrorBoundary>

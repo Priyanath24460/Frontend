@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+// @ts-ignore - CSS side-effect import in this standalone page file
 import './CaseDetailPage.css';
 import Header from "./components/Header";
+import { BACKEND_BASE } from './config/api';
 
 interface CaseData {
   document_id: number;
@@ -214,7 +216,7 @@ const CaseDetailPage: React.FC = () => {
           <div className="case-text-content">
             {isPDF && caseData.file_path ? (
               <iframe
-                src={`http://localhost:8011${caseData.file_path}`}
+                src={`${BACKEND_BASE}${caseData.file_path}`}
 
                 className="pdf-viewer"
                 title="Case PDF"
