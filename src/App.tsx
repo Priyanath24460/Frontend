@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+// @ts-ignore - CSS side-effect import in this standalone page file
 import './CaseDetailPage.css';
 import Header from "./components/Header";
 import { BACKEND_BASE } from './config/api';
