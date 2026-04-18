@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PAST_CASE_API_URL as API_URL } from "../config/api";
+import { PAST_CASE_API_URL } from "../config/api";
 
 export default function UploadWithPreview({ onUpload }) {
   const [file, setFile] = useState(null);

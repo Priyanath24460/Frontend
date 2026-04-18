@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { PAST_CASE_API_URL as API_URL } from "../config/api";
+import { PAST_CASE_API_URL } from "../config/api";
 import { LightBulbIcon, ExclamationCircleIcon, SparklesIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { validateQuestion, validateQuestionRealTime, getValidationMessage } from "../utils/questionValidator";
 
