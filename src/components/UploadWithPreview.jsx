@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { API_URL } from "../config/api";
+import { PAST_CASE_API_URL } from "../config/api";
 
 export default function UploadWithPreview({ onUpload }) {
   const [file, setFile] = useState(null);
@@ -32,13 +32,13 @@ export default function UploadWithPreview({ onUpload }) {
         formData.append("pdf", file);
         
         setLoadingMessage("Extracting text and metadata...");
-        res = await fetch(`${API_URL}/api/cases/preview`, {
+        res = await fetch(`${PAST_CASE_API_URL}/api/cases/preview`, {
           method: "POST",
           body: formData,
         });
       } else {
         setLoadingMessage("Analyzing pasted text and extracting metadata...");
-        res = await fetch(`${API_URL}/api/cases/preview-text`, {
+        res = await fetch(`${PAST_CASE_API_URL}/api/cases/preview-text`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -109,7 +109,7 @@ export default function UploadWithPreview({ onUpload }) {
         requestBody.isTextInput = false;
       }
 
-      const res = await fetch(`${API_URL}/api/cases/confirm`, {
+      const res = await fetch(`${PAST_CASE_API_URL}/api/cases/confirm`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

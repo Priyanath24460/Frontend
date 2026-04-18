@@ -1,17 +1,27 @@
-// API Configuration — centralised backend URL config
-const BACKEND_PORT = 8011;
-const BACKEND_HOST = 'http://localhost';
-export const BACKEND_BASE = `${BACKEND_HOST}:${BACKEND_PORT}`;
+// API Configuration - centralised backend URL config
+const FALLBACK_BACKEND_BASE =
+	typeof window !== 'undefined'
+		? `${window.location.protocol}//${window.location.hostname}:8011`
+		: 'http://localhost:8011';
+export const BACKEND_BASE =
+	import.meta.env.VITE_SUMMARIZER_API_URL || FALLBACK_BACKEND_BASE;
+
+// Legacy aliases used by older components.
+export const API_URL = BACKEND_BASE;
+export const SECONDARY_API_URL =
+	import.meta.env.VITE_FR_API_URL || BACKEND_BASE;
+
 const CONTRACT_API_URL = import.meta.env.VITE_CONTRACT_API_URL || 'http://localhost:8010';  // analyze-contract service
+
 // FR Violation Screener Backend (different port)
+const BACKEND_HOST = 'http://localhost';
 const FR_SCREENER_PORT = 8016;
 export const FR_SCREENER_BASE = import.meta.env.VITE_FR_API_URL || `${BACKEND_HOST}:${FR_SCREENER_PORT}`;
 
-// Pass Case Finder Backend (Scenario-Based Case Finder - port 5000)
-//const CASE_FINDER_PORT = 5000;
-//export const API_URL = `${BACKEND_HOST}:${CASE_FINDER_PORT}`;
- export const API_URL = "https://identify-functional-capital-behavioral.trycloudflare.com";
- //export const API_URL = 'http://143.198.212.228:5000'; // Use this for DigitalOcean deployment
+// Pass Case Finder Backend (Scenario-Based Case Finder - DigitalOcean domain)
+export const PAST_CASE_API_URL = "https://www.pastcasebackend.me";
+// Fallback: https://identify-functional-capital-behavioral.trycloudflare.com
+// Local dev: http://localhost:5000
 
 // Named export used by RAGResultsPage, CaseChatPanel, SearchInterface, etc.
 export const API = {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { API_URL } from "../config/api";
+import { PAST_CASE_API_URL } from "../config/api";
 import { LightBulbIcon, ExclamationCircleIcon, SparklesIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { validateQuestion, validateQuestionRealTime, getValidationMessage } from "../utils/questionValidator";
 
@@ -57,7 +57,7 @@ export default function QuestionForm({ onAsk, setIsLoading, setError, selectedQu
     lastRewriteTimeRef.current = now;
 
     try {
-      const res = await fetch(`${API_URL}/api/query/rewrite`, {
+      const res = await fetch(`${PAST_CASE_API_URL}/api/query/rewrite`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: question.trim() }),
@@ -168,7 +168,7 @@ export default function QuestionForm({ onAsk, setIsLoading, setError, selectedQu
     }
     
     try {
-      const res = await fetch(`${API_URL}/api/query`, {
+      const res = await fetch(`${PAST_CASE_API_URL}/api/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: validation.sanitizedQuestion }),

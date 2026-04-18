@@ -54,69 +54,69 @@ export default function App() {
             <Router>
               <React.Suspense fallback={<Fallback />}>
                 <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              
-              {/* Protected Routes - Require Authentication */}
-              <Route 
-                path="/upload" 
-                element={
-                  <ProtectedRoute>
-                    <Upload />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/Scenario_Based_Case_Finder" 
-                element={
-                  <ProtectedRoute>
-                    <ScenarioFinder />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/analysis" 
-                element={
-                  <ProtectedRoute>
-                    <ComprehensiveAnalysis />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/fr-violation-screener" 
-                element={
-                  <ProtectedRoute>
-                    <FRViolationScreener />
-                  </ProtectedRoute>
-                } 
-              />
-               <Route 
-                path="/case-summarizer" 
-                element={
-                  <ProtectedRoute>
-                    <CaseAnalysis />
-                  </ProtectedRoute>
-                } 
-              /> 
-              <Route 
-                path="/comprehensive_Analysis" 
-                element={
-                  <ProtectedRoute>
-                    <ComprehensiveAnalysis />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route
-                path="/contract-risk-analysis"
-                element={
-                  <ProtectedRoute>
-                    <ContractRiskAnalysis />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
+                  {/* Public Routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  
+                  {/* Protected Routes - Require Authentication */}
+                  <Route 
+                    path="/upload" 
+                    element={
+                      <ProtectedRoute>
+                        <Upload />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/Scenario_Based_Case_Finder" 
+                    element={
+                      <ProtectedRoute>
+                        <ScenarioFinder />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/analysis" 
+                    element={
+                      <ProtectedRoute>
+                        <ComprehensiveAnalysis />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/fr-violation-screener" 
+                    element={
+                      <ProtectedRoute>
+                        <FRViolationScreener />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/case-summarizer" 
+                    element={
+                      <ProtectedRoute>
+                        <CaseAnalysis lang="en" />
+                      </ProtectedRoute>
+                    } 
+                  /> 
+                  <Route 
+                    path="/comprehensive_Analysis" 
+                    element={
+                      <ProtectedRoute>
+                        <ComprehensiveAnalysis />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route
+                    path="/contract-risk-analysis"
+                    element={
+                      <ProtectedRoute>
+                        <ContractRiskAnalysis />
+                      </ProtectedRoute>
+                    }
+                  />
+                <Route
                 path="/contract-risk-retest"
                 element={
                   <ProtectedRoute>
@@ -125,8 +125,8 @@ export default function App() {
                 }
               />
               </Routes>
-            </React.Suspense>
-          </Router>
+              </React.Suspense>
+            </Router>
           </CaseAnalysisProvider>
         </AuthProvider>
       </ErrorBoundary>
