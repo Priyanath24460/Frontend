@@ -145,9 +145,9 @@ const Home = () => {
                   <div className="flex-1">
                     <h3 className="text-lg sm:text-xl font-bold text-stone-800 mb-3">Legal Contract Analyzer</h3>
                     <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                      Upload employment contracts and instantly get intelligent analysis. 
+                      Upload contracts and instantly get intelligent analysis. 
                       Our system automatically extracts clauses, identifies legal risks, finds related court precedents, 
-                      and shows relevant legislation - all backed by real Sri Lankan employment law cases and regulations. 
+                      and shows relevant legislation - all backed by Sri Lankan legal cases and regulations. 
                       Perfect for understanding contract terms, spotting problems, and making informed legal decisions.
                     </p>
                   </div>

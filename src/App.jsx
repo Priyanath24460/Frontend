@@ -4,6 +4,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ContractRiskAnalysis from "./pages/ContractRiskAnalysis";
+
 import "./App.css";
 
 // ── Error Boundary ─────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ const FRViolationScreener = React.lazy(() => import("./pages/FR_Violation_Screen
 const CaseAnalysis = React.lazy(() => import("./pages/summarizer/CaseAnalysis"));
 const CaseDetailPage = React.lazy(() => import("./pages/summarizer/CaseDetailPage"));
 const RAGUploadPage = React.lazy(() => import("./pages/summarizer/RAGUploadPage"));
+const ContractRiskRetestPage = React.lazy(() => import("./pages/ContractRiskRetestPage"));
 
 const Fallback = () => (
   <div style={{ padding: 32, textAlign: "center", color: "#888", fontFamily: "sans-serif" }}>
@@ -111,6 +113,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <ContractRiskAnalysis />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/contract-risk-retest"
+                element={
+                  <ProtectedRoute>
+                    <ContractRiskRetestPage />
                   </ProtectedRoute>
                 }
               />

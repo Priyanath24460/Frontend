@@ -1,7 +1,7 @@
 import { useMemo, useReducer, useState, useRef, useCallback } from 'react'
 import Header from '../components/Header'
 
-// ─── Simple markdown renderer (no external deps) ──────────────────────────────
+// ─── Simple markdown renderer ────────────────────────────────────────────────
 function renderMarkdown(text) {
   if (!text) return []
   const lines = String(text).split('\n')
@@ -21,7 +21,6 @@ function renderMarkdown(text) {
 }
 
 function inlineParse(text) {
-  // bold **text** and *italic*
   const parts = []
   const re = /(\*\*(.+?)\*\*|\*(.+?)\*)/g
   let last = 0, m
@@ -61,7 +60,7 @@ function MarkdownReport({ text }) {
   )
 }
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+// ─── Config ──────────────────────────────────────────────────────────────────
 const defaultAnalyzeBase = import.meta.env.DEV ? '/api/analyze' : 'https://analyze-api.pasindi.me'
 const API_BASE = import.meta.env.VITE_ANALYZE_API_BASE || defaultAnalyzeBase
 const serviceEndpoints = {
@@ -93,18 +92,23 @@ const defaultFormFlags = {
   use_simple_english: false,
 }
 
+// Internal constants — not exposed to user
+const TOP_K_CASES = 10
+const TOP_K_ACTS = 5
+const PATTERN_THRESHOLD = 0.5
+const TOP_K_PATTERNS = 5
+
 const riskFilters = ['all', 'high', 'medium', 'low']
 const DIRECT_ANALYZE_BASE = 'https://analyze-api.pasindi.me'
 const ANALYSIS_STEPS = ['clauses', 'patterns', 'cases', 'acts', 'report']
 
-// Tab config — user-facing labels
 const TAB_CONFIG = [
-  { id: 'summary',    label: 'Summary',          icon: '⚡', step: null,       desc: 'Your risk overview' },
-  { id: 'clauses',    label: 'Clause Details',   icon: '📄', step: 'clauses',  desc: 'Each contract clause' },
-  { id: 'patterns',   label: 'Risk Patterns',    icon: '🔍', step: 'patterns', desc: 'Detected risk signals' },
-  { id: 'cases',      label: 'Similar Cases',    icon: '⚖️', step: 'cases',    desc: 'Matching court cases' },
-  { id: 'acts',       label: 'Relevant Laws',    icon: '📋', step: 'acts',     desc: 'Applicable legislation' },
-  { id: 'ai',         label: 'Full AI Report',   icon: '🤖', step: 'report',   desc: 'Complete AI analysis' },
+  { id: 'summary', label: 'Summary', icon: '⚡', step: null, desc: 'Your risk overview' },
+  { id: 'clauses', label: 'Clause Details', icon: '📄', step: 'clauses', desc: 'Each contract clause' },
+  { id: 'patterns', label: 'Risk Patterns', icon: '🔍', step: 'patterns', desc: 'Detected risk signals' },
+  { id: 'cases', label: 'Similar Cases', icon: '⚖️', step: 'cases', desc: 'Matching court cases' },
+  { id: 'acts', label: 'Relevant Laws', icon: '📋', step: 'acts', desc: 'Applicable legislation' },
+  { id: 'ai', label: 'Full AI Report', icon: '🤖', step: 'report', desc: 'Complete AI analysis' },
 ]
 
 // ─── Pure logic helpers ───────────────────────────────────────────────────────
@@ -121,20 +125,20 @@ function inferSeverity(risk) {
 
 function mergeByClauseId(payload) {
   const map = new Map()
-  ;(payload?.pattern_detection?.clauses_with_patterns || []).forEach((item) => {
-    const id = item?.clause_id || `P-${map.size + 1}`
-    map.set(id, { clause_id: id, clause_type: item?.clause_type || 'unknown', clause_text: item?.clause_text || item?.text_preview || '', risks: item?.detections || item?.identified_risks || [], cases: [], acts: [] })
-  })
-  ;(payload?.case_law?.clauses_with_cases || []).forEach((item) => {
-    const id = item?.clause_id || `C-${map.size + 1}`
-    const e = map.get(id)
-    map.set(id, { clause_id: id, clause_type: item?.clause_type || e?.clause_type || 'unknown', clause_text: e?.clause_text || item?.clause_text || item?.text_preview || '', risks: e?.risks || item?.identified_risks || [], cases: item?.supporting_cases || [], acts: e?.acts || [] })
-  })
-  ;(payload?.acts_law?.clauses_with_acts || []).forEach((item) => {
-    const id = item?.clause_id || `A-${map.size + 1}`
-    const e = map.get(id)
-    map.set(id, { clause_id: id, clause_type: item?.clause_type || e?.clause_type || 'unknown', clause_text: e?.clause_text || item?.clause_text || item?.text_preview || '', risks: e?.risks || [], cases: e?.cases || [], acts: item?.supporting_acts || item?.acts || item?.sections || [] })
-  })
+    ; (payload?.pattern_detection?.clauses_with_patterns || []).forEach((item) => {
+      const id = item?.clause_id || `P-${map.size + 1}`
+      map.set(id, { clause_id: id, clause_type: item?.clause_type || 'unknown', clause_text: item?.clause_text || item?.text_preview || '', risks: item?.detections || item?.identified_risks || [], cases: [], acts: [] })
+    })
+    ; (payload?.case_law?.clauses_with_cases || []).forEach((item) => {
+      const id = item?.clause_id || `C-${map.size + 1}`
+      const e = map.get(id)
+      map.set(id, { clause_id: id, clause_type: item?.clause_type || e?.clause_type || 'unknown', clause_text: e?.clause_text || item?.clause_text || item?.text_preview || '', risks: e?.risks || item?.identified_risks || [], cases: item?.supporting_cases || [], acts: e?.acts || [] })
+    })
+    ; (payload?.acts_law?.clauses_with_acts || []).forEach((item) => {
+      const id = item?.clause_id || `A-${map.size + 1}`
+      const e = map.get(id)
+      map.set(id, { clause_id: id, clause_type: item?.clause_type || e?.clause_type || 'unknown', clause_text: e?.clause_text || item?.clause_text || item?.text_preview || '', risks: e?.risks || [], cases: e?.cases || [], acts: item?.supporting_acts || item?.acts || item?.sections || [] })
+    })
   return Array.from(map.values())
 }
 
@@ -152,11 +156,11 @@ function analysisReducer(state, action) {
     case 'STEP_LOADING': return { ...state, status: { ...state.status, [action.step]: 'loading' } }
     case 'STEP_DONE': {
       const n = { ...state, status: { ...state.status, [action.step]: 'done' }, errors: { ...state.errors, [action.step]: undefined } }
-      if (action.step === 'clauses')  n.clausesPayload = action.payload
+      if (action.step === 'clauses') n.clausesPayload = action.payload
       if (action.step === 'patterns') n.patternPayload = action.payload
-      if (action.step === 'cases')    n.casePayload    = action.payload
-      if (action.step === 'acts')     n.actsPayload    = action.payload
-      if (action.step === 'report')   n.reportPayload  = action.payload
+      if (action.step === 'cases') n.casePayload = action.payload
+      if (action.step === 'acts') n.actsPayload = action.payload
+      if (action.step === 'report') n.reportPayload = action.payload
       return n
     }
     case 'STEP_ERROR': return { ...state, status: { ...state.status, [action.step]: 'error' }, errors: { ...state.errors, [action.step]: action.error || 'Unknown error' } }
@@ -189,16 +193,16 @@ async function fetchWithProxyFallback(url, options) {
 
 // ─── Severity config ──────────────────────────────────────────────────────────
 const SEV = {
-  high:   { chip: 'bg-red-50 text-red-700 ring-1 ring-red-200',     dot: 'bg-red-500',     bar: 'bg-red-400',     badge: 'bg-red-50 border-red-200 text-red-700',     label: 'High Risk',   meaning: 'Clause may violate your legal rights or expose you to significant financial/legal harm.' },
-  medium: { chip: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200', dot: 'bg-amber-500', bar: 'bg-amber-400',   badge: 'bg-amber-50 border-amber-200 text-amber-700', label: 'Medium Risk', meaning: 'Clause is unfair or unusual — review carefully before signing.' },
-  low:    { chip: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200', dot: 'bg-emerald-500', bar: 'bg-emerald-400', badge: 'bg-emerald-50 border-emerald-200 text-emerald-700', label: 'Low Risk', meaning: 'Clause is slightly unusual but unlikely to cause significant harm.' },
+  high: { chip: 'bg-red-50 text-red-700 ring-1 ring-red-200', dot: 'bg-red-500', bar: 'bg-red-400', badge: 'bg-red-50 border-red-200 text-red-700', label: 'High Risk', meaning: 'Clause may violate your legal rights or expose you to significant financial/legal harm.' },
+  medium: { chip: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200', dot: 'bg-amber-500', bar: 'bg-amber-400', badge: 'bg-amber-50 border-amber-200 text-amber-700', label: 'Medium Risk', meaning: 'Clause is unfair or unusual — review carefully before signing.' },
+  low: { chip: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200', dot: 'bg-emerald-500', bar: 'bg-emerald-400', badge: 'bg-emerald-50 border-emerald-200 text-emerald-700', label: 'Low Risk', meaning: 'Clause is slightly unusual but unlikely to cause significant harm.' },
 }
 
 // ─── Micro-components ─────────────────────────────────────────────────────────
 function StatusDot({ status }) {
-  if (status === 'done')    return <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+  if (status === 'done') return <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
   if (status === 'loading') return <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
-  if (status === 'error')   return <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+  if (status === 'error') return <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
   return <span className="inline-block w-1.5 h-1.5 rounded-full bg-stone-300 flex-shrink-0" />
 }
 
@@ -277,28 +281,25 @@ function PdfPreviewModal({ file, onClose }) {
   )
 }
 
-// ─── Summary Tab (post-analysis landing) ─────────────────────────────────────
+// ─── Summary Tab ──────────────────────────────────────────────────────────────
 function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, response, stepStatus, hasRun, onNavigate }) {
   if (!hasRun) return (
     <EmptyState icon="🔍" title="No contract analysed yet"
-      body="Paste your contract text or upload a PDF, then click Run Risk Analysis to get started." />
+      body="Paste your contract text or upload a PDF, then click Analyse My Contract to get started." />
   )
 
   const contractType = response?.preprocessing?.contract_type
   const topRisks = mergedClauses.flatMap((c) => (c.risks || []).map((r) => ({ ...r, clause_id: c.clause_id, clause_type: c.clause_type, clause_text: c.clause_text }))).filter((r) => inferSeverity(r) === 'high').slice(0, 3)
-
-  const allDone = ANALYSIS_STEPS.every((s) => stepStatus[s] === 'done' || stepStatus[s] === 'error')
   const overallSev = summary.high > 0 ? 'high' : summary.medium > 0 ? 'medium' : 'low'
   const overallLabel = summary.high > 0 ? 'HIGH RISK' : summary.medium > 0 ? 'MEDIUM RISK' : 'LOW RISK'
   const overallDesc = summary.high > 0
     ? 'This contract contains clauses that may significantly harm your rights. Do not sign without legal review.'
     : summary.medium > 0
-    ? 'Some clauses are unusual or unfair. Consider negotiating these before signing.'
-    : 'No major red flags detected. Still review carefully before signing.'
+      ? 'Some clauses are unusual or unfair. Consider negotiating these before signing.'
+      : 'No major red flags detected. Still review carefully before signing.'
 
   return (
     <div className="space-y-5">
-      {/* Overall verdict banner */}
       <div className={`rounded-xl border-2 p-5 ${overallSev === 'high' ? 'border-red-200 bg-red-50' : overallSev === 'medium' ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
         <div className="flex items-start gap-4 flex-wrap">
           <div className={`text-3xl flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${overallSev === 'high' ? 'bg-red-100' : overallSev === 'medium' ? 'bg-amber-100' : 'bg-emerald-100'}`}>
@@ -315,7 +316,6 @@ function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, respons
         </div>
       </div>
 
-      {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard label="Clauses analysed" value={summary.clauses} color="text-stone-800" loading={stepStatus.clauses === 'loading'} sub="contract sections" />
         <StatCard label="Risk signals" value={summary.patterns} color="text-amber-700" loading={stepStatus.patterns === 'loading'} sub="patterns matched" />
@@ -323,7 +323,6 @@ function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, respons
         <StatCard label="Laws referenced" value={summary.acts} color="text-amber-800" loading={stepStatus.acts === 'loading'} sub="Act sections" />
       </div>
 
-      {/* Risk breakdown */}
       <div className="bg-white rounded-xl border border-stone-100 p-5">
         <h3 className="text-sm font-bold text-stone-800 mb-3">Risk Breakdown</h3>
         <div className="grid grid-cols-3 gap-3 mb-4">
@@ -342,16 +341,15 @@ function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, respons
         {(summary.high + summary.medium + summary.low > 0) && (
           <>
             <div className="flex h-2 rounded-full overflow-hidden gap-px">
-              {summary.high   > 0 && <div className="bg-red-400 transition-all rounded-l-full" style={{ flex: summary.high }} />}
+              {summary.high > 0 && <div className="bg-red-400 transition-all rounded-l-full" style={{ flex: summary.high }} />}
               {summary.medium > 0 && <div className="bg-amber-400 transition-all" style={{ flex: summary.medium }} />}
-              {summary.low    > 0 && <div className="bg-emerald-400 transition-all rounded-r-full" style={{ flex: summary.low }} />}
+              {summary.low > 0 && <div className="bg-emerald-400 transition-all rounded-r-full" style={{ flex: summary.low }} />}
             </div>
-            <p className="text-[10px] text-stone-400 mt-1.5">{summary.high + summary.medium + summary.low} total risk signals detected across {summary.clauses} clauses</p>
+            <p className="text-[10px] text-stone-400 mt-1.5">{summary.high + summary.medium + summary.low} total risk signals across {summary.clauses} clauses</p>
           </>
         )}
       </div>
 
-      {/* Top urgent risks */}
       {topRisks.length > 0 && (
         <div className="bg-white rounded-xl border border-red-100 p-5">
           <h3 className="text-sm font-bold text-red-800 mb-1 flex items-center gap-2">⚠️ Immediate Concerns</h3>
@@ -372,13 +370,12 @@ function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, respons
         </div>
       )}
 
-      {/* Quick navigation to deeper tabs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {[
           { id: 'patterns', icon: '🔍', label: 'Risk Patterns', count: summary.patterns, color: 'text-amber-700' },
-          { id: 'cases',    icon: '⚖️', label: 'Court Cases',   count: summary.cases,    color: 'text-orange-700' },
-          { id: 'acts',     icon: '📋', label: 'Relevant Laws', count: summary.acts,     color: 'text-amber-800' },
-          { id: 'ai',       icon: '🤖', label: 'Full AI Report',count: null,             color: 'text-stone-700' },
+          { id: 'cases', icon: '⚖️', label: 'Court Cases', count: summary.cases, color: 'text-orange-700' },
+          { id: 'acts', icon: '📋', label: 'Relevant Laws', count: summary.acts, color: 'text-amber-800' },
+          { id: 'ai', icon: '🤖', label: 'Full AI Report', count: null, color: 'text-stone-700' },
         ].map(({ id, icon, label, count, color }) => (
           <button key={id} onClick={() => onNavigate(id)} className="flex items-center gap-2 p-3 rounded-xl border border-stone-100 bg-white hover:border-amber-200 hover:bg-amber-50/50 transition-all text-left group">
             <span className="text-base flex-shrink-0">{icon}</span>
@@ -390,7 +387,6 @@ function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, respons
         ))}
       </div>
 
-      {/* Disclaimer */}
       <div className="flex gap-2.5 p-3 rounded-xl bg-stone-50 border border-stone-200">
         <span className="text-base flex-shrink-0 mt-0.5">ℹ️</span>
         <p className="text-[11px] text-stone-500 leading-relaxed">
@@ -404,14 +400,9 @@ function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, respons
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function ContractRiskRetestPage() {
   const [mode, setMode] = useState('text')
-  const [apiBase, setApiBase] = useState(serviceEndpoints.analyze)
   const [contractText, setContractText] = useState(defaultContractText)
   const [file, setFile] = useState(null)
   const [flags, setFlags] = useState(defaultFormFlags)
-  const [topKCases, setTopKCases] = useState(10)
-  const [topKActs, setTopKActs] = useState(5)
-  const [patternThreshold, setPatternThreshold] = useState(0.5)
-  const [topKPatterns, setTopKPatterns] = useState(5)
   const [activeTab, setActiveTab] = useState('summary')
   const [riskFilter, setRiskFilter] = useState('all')
   const [expandedClauseIds, setExpandedClauseIds] = useState({})
@@ -421,19 +412,19 @@ export default function ContractRiskRetestPage() {
   const [analysisState, dispatchAnalysis] = useReducer(analysisReducer, undefined, createInitialAnalysisState)
   const [simplifyPayload, setSimplifyPayload] = useState(null)
   const [copyStatus, setCopyStatus] = useState('')
-  const [showAdvanced, setShowAdvanced] = useState(false)
   const [hasRun, setHasRun] = useState(false)
   const [showPdfPreview, setShowPdfPreview] = useState(false)
   const [analysedAt, setAnalysedAt] = useState(null)
   const fileInputRef = useRef(null)
   const dragRef = useRef(null)
 
-  const clausesUrl  = useMemo(() => `${apiBase.replace(/\/$/, '')}/analyze-clauses`, [apiBase])
+  const apiBase = serviceEndpoints.analyze
+  const clausesUrl = useMemo(() => `${apiBase.replace(/\/$/, '')}/analyze-clauses`, [apiBase])
   const aiReportUrl = useMemo(() => `${apiBase.replace(/\/$/, '')}/generate-ai-risk-report`, [apiBase])
   const simplifyUrl = useMemo(() => `${apiBase.replace(/\/$/, '')}/simplify-contract`, [apiBase])
-  const patternUrl  = useMemo(() => `${apiBase.replace(/\/$/, '')}/proxy/pattern-batch`, [apiBase])
-  const caseUrl     = useMemo(() => `${apiBase.replace(/\/$/, '')}/proxy/case-similar`, [apiBase])
-  const actsUrl     = useMemo(() => `${apiBase.replace(/\/$/, '')}/proxy/acts-search`, [apiBase])
+  const patternUrl = useMemo(() => `${apiBase.replace(/\/$/, '')}/proxy/pattern-batch`, [apiBase])
+  const caseUrl = useMemo(() => `${apiBase.replace(/\/$/, '')}/proxy/case-similar`, [apiBase])
+  const actsUrl = useMemo(() => `${apiBase.replace(/\/$/, '')}/proxy/acts-search`, [apiBase])
 
   const response = useMemo(() => {
     const cp = analysisState?.clausesPayload
@@ -452,8 +443,8 @@ export default function ContractRiskRetestPage() {
   }, [analysisState, simplifyPayload])
 
   const analysisProgress = useMemo(() => progressPercent(analysisState.status), [analysisState.status])
-  const mergedClauses    = useMemo(() => mergeByClauseId(response || {}), [response])
-  const filteredClauses  = useMemo(() => riskFilter === 'all' ? mergedClauses : mergedClauses.filter((c) => (c?.risks || []).some((r) => inferSeverity(r) === riskFilter)), [mergedClauses, riskFilter])
+  const mergedClauses = useMemo(() => mergeByClauseId(response || {}), [response])
+  const filteredClauses = useMemo(() => riskFilter === 'all' ? mergedClauses : mergedClauses.filter((c) => (c?.risks || []).some((r) => inferSeverity(r) === riskFilter)), [mergedClauses, riskFilter])
 
   const summary = useMemo(() => {
     const src = response?.summary || {}
@@ -462,9 +453,9 @@ export default function ContractRiskRetestPage() {
     return { clauses: src.total_clauses ?? mergedClauses.length, patterns: src.total_patterns_detected ?? 0, cases: src.total_cases_retrieved ?? 0, acts: src.total_acts_retrieved ?? 0, ...rc }
   }, [response, mergedClauses])
 
-  const aiReport     = useMemo(() => response?.ai_risk_report || null, [response])
+  const aiReport = useMemo(() => response?.ai_risk_report || null, [response])
   const aiReportText = useMemo(() => extractAiReportText(aiReport), [aiReport])
-  const aiRiskLevel  = useMemo(() => extractAiRiskLevel(aiReport), [aiReport])
+  const aiRiskLevel = useMemo(() => extractAiRiskLevel(aiReport), [aiReport])
 
   const simplifiedClauses = useMemo(() => (response?.experimental_bert_support?.clauses || []).filter((i) => String(i?.simple_english || '').trim()).map((i) => ({ clause_id: i?.clause_id || 'unknown', simple_english: String(i?.simple_english || '').trim() })), [response])
   const simplifiedContractText = useMemo(() => { const w = String(response?.simplified_contract_text || '').trim(); return w || simplifiedClauses.map((i) => i.simple_english).join('\n\n') }, [response, simplifiedClauses])
@@ -489,7 +480,6 @@ export default function ContractRiskRetestPage() {
 
   const stepStatus = analysisState.status
 
-  // Drag and drop handlers
   const handleDragOver = useCallback((e) => { e.preventDefault(); dragRef.current?.classList.add('border-amber-400', 'bg-amber-50') }, [])
   const handleDragLeave = useCallback(() => { dragRef.current?.classList.remove('border-amber-400', 'bg-amber-50') }, [])
   const handleDrop = useCallback((e) => {
@@ -544,77 +534,75 @@ export default function ContractRiskRetestPage() {
       dispatchAnalysis({ type: 'STEP_LOADING', step: 'cases' })
       dispatchAnalysis({ type: 'STEP_LOADING', step: 'acts' })
 
-      const patternPromise = (async () => { try { const res = await fetchWithProxyFallback(patternUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clauses: clauses.map((i) => ({ clause_id: i?.clause_id, clause_text: i?.clause_text || '' })), contract_context: ctx, top_patterns: topKPatterns, min_context_score: patternThreshold }) }); const raw = await tryParseJson(res); if (!res.ok) throw new Error(raw?.detail || 'Pattern API failed'); const n = normalizePatternPayload(raw, clauseLookup); dispatchAnalysis({ type: 'STEP_DONE', step: 'patterns', payload: n }); return n } catch (err) { dispatchAnalysis({ type: 'STEP_ERROR', step: 'patterns', error: err?.message }); return null } })()
+      const patternPromise = (async () => {
+        try {
+          const res = await fetchWithProxyFallback(patternUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clauses: clauses.map((i) => ({ clause_id: i?.clause_id, clause_text: i?.clause_text || '' })), contract_context: ctx, top_patterns: TOP_K_PATTERNS, min_context_score: PATTERN_THRESHOLD }) })
+          const raw = await tryParseJson(res)
+          if (!res.ok) throw new Error(raw?.detail || 'Pattern API failed')
+          const n = normalizePatternPayload(raw, clauseLookup)
+          dispatchAnalysis({ type: 'STEP_DONE', step: 'patterns', payload: n })
+          return n
+        } catch (err) { dispatchAnalysis({ type: 'STEP_ERROR', step: 'patterns', error: err?.message }); return null }
+      })()
+
       const casePromise = (async () => {
         try {
-          const normalizedContractType = clausesPayload?.contract_type || 'unknown'
-          const contractBodyText = String(contractText || '').trim() || clauses.map((c) => c?.clause_text || '').join('\n\n')
-          const caseRes = await fetchWithProxyFallback(caseUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              text: contractBodyText,
-              top_k: topKCases,
-              contract_type: normalizedContractType,
-              clauses: clauses.map((c) => ({ clause_id: c?.clause_id, clause_text: c?.clause_text || '' })),
-            }),
-          })
+          const contractBodyText = mode === 'file' ? clauses.map((c) => c?.clause_text || '').join('\n\n') : String(contractText || '').trim()
+          const caseRes = await fetchWithProxyFallback(caseUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: contractBodyText, top_k: TOP_K_CASES, contract_type: clausesPayload?.contract_type || 'unknown', clauses: clauses.map((c) => ({ clause_id: c?.clause_id, clause_text: c?.clause_text || '' })) }) })
           const casePayload = await tryParseJson(caseRes)
           if (!caseRes.ok) throw new Error(casePayload?.detail || `Case API failed (${caseRes.status})`)
-          const enrichedCases = (casePayload?.cases || []).map((c) => ({
-            case_id: c?.case_id,
-            case_name: c?.case_name || c?.title,
-            year: c?.year,
-            category: c?.category,
-            similarity: c?.similarity ?? c?.similarity_score ?? null,
-            relevance: c?.relevance ?? null,
-            snippet: c?.snippet || c?.text_snippet || '',
-            full_case: c?.full_case || null,
-            matching_clauses: c?.matching_clauses || [],
-          }))
+          const enrichedCases = (casePayload?.cases || []).map((c) => ({ case_id: c?.case_id, case_name: c?.case_name || c?.title, year: c?.year, category: c?.category, similarity: c?.similarity ?? c?.similarity_score ?? null, relevance: c?.relevance ?? null, snippet: c?.snippet || c?.text_snippet || '', full_case: c?.full_case || null, matching_clauses: c?.matching_clauses || [] }))
           const normalizedCases = { total_cases_retrieved: enrichedCases.length, cases: enrichedCases }
           dispatchAnalysis({ type: 'STEP_DONE', step: 'cases', payload: normalizedCases })
           return normalizedCases
-        } catch (err) {
-          dispatchAnalysis({ type: 'STEP_ERROR', step: 'cases', error: err?.message || 'Case step failed' })
-          return null
-        }
+        } catch (err) { dispatchAnalysis({ type: 'STEP_ERROR', step: 'cases', error: err?.message || 'Case step failed' }); return null }
       })()
+
       const actsPromise = (async () => {
         try {
-          const domain = clausesPayload?.contract_type || 'unknown'
-          const contractBodyText = String(contractText || '').trim() || clauses.map((c) => c?.clause_text || '').join('\n\n')
-          const actsRes = await fetchWithProxyFallback(actsUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query_text: contractBodyText, domain, top_k: topKActs }),
-          })
+          const contractBodyText = mode === 'file' ? clauses.map((c) => c?.clause_text || '').join('\n\n') : String(contractText || '').trim()
+          const actsRes = await fetchWithProxyFallback(actsUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query_text: contractBodyText, domain: clausesPayload?.contract_type || 'unknown', top_k: TOP_K_ACTS }) })
           const actsPayload = await tryParseJson(actsRes)
           if (!actsRes.ok) return { total_acts_retrieved: 0, sections: [] }
-          const normalizedActs = {
-            total_acts_retrieved: actsPayload?.total_results || (actsPayload?.sections || []).length,
-            sections: actsPayload?.sections || [],
-          }
+          const normalizedActs = { total_acts_retrieved: actsPayload?.total_results || (actsPayload?.sections || []).length, sections: actsPayload?.sections || [] }
           dispatchAnalysis({ type: 'STEP_DONE', step: 'acts', payload: normalizedActs })
           return normalizedActs
-        } catch (err) {
-          dispatchAnalysis({ type: 'STEP_ERROR', step: 'acts', error: err?.message || 'Acts step failed' })
-          return null
-        }
+        } catch (err) { dispatchAnalysis({ type: 'STEP_ERROR', step: 'acts', error: err?.message || 'Acts step failed' }); return null }
       })()
-      const simplifyPromise = flags.use_simple_english ? (async () => { try { const sfd = new FormData(); if (mode === 'file' && file) sfd.append('file', file); else sfd.append('text', contractText); sfd.append('mask_pii', String(flags.mask_pii)); sfd.append('simplify_model_id', 'google/flan-t5-small'); sfd.append('simplify_max_new_tokens', '640'); const res = await fetchWithProxyFallback(simplifyUrl, { method: 'POST', body: sfd }); const data = await tryParseJson(res); if (!res.ok) return null; setSimplifyPayload(data); return data } catch { return null } })() : Promise.resolve(null)
+
+      const simplifyPromise = flags.use_simple_english
+        ? (async () => {
+          try {
+            const sfd = new FormData()
+            if (mode === 'file' && file) sfd.append('file', file); else sfd.append('text', contractText)
+            sfd.append('mask_pii', String(flags.mask_pii))
+            sfd.append('simplify_model_id', 'google/flan-t5-small')
+            sfd.append('simplify_max_new_tokens', '640')
+            const res = await fetchWithProxyFallback(simplifyUrl, { method: 'POST', body: sfd })
+            const data = await tryParseJson(res)
+            if (!res.ok) return null
+            setSimplifyPayload(data)
+            return data
+          } catch { return null }
+        })()
+        : Promise.resolve(null)
 
       const settled = await Promise.allSettled([patternPromise, casePromise, actsPromise, simplifyPromise])
       const patternData = settled[0]?.status === 'fulfilled' ? settled[0].value : null
-      const caseData    = settled[1]?.status === 'fulfilled' ? settled[1].value : null
-      const actsData    = settled[2]?.status === 'fulfilled' ? settled[2].value : null
+      const caseData = settled[1]?.status === 'fulfilled' ? settled[1].value : null
+      const actsData = settled[2]?.status === 'fulfilled' ? settled[2].value : null
 
       if (flags.include_ai_report) {
         setLoadingStep('Generating AI report…')
         dispatchAnalysis({ type: 'STEP_LOADING', step: 'report' })
-        try { const rRes = await fetchWithProxyFallback(aiReportUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ preprocessing: { contract_type: clausesPayload?.contract_type || 'unknown', total_clauses: clauses.length }, pattern_data: patternData, case_data: caseData, acts_data: actsData, data_coverage: {} }) }); const rp = await tryParseJson(rRes); if (!rRes.ok) throw new Error(rp?.detail || 'AI report failed'); dispatchAnalysis({ type: 'STEP_DONE', step: 'report', payload: rp }) }
-        catch (err) { dispatchAnalysis({ type: 'STEP_ERROR', step: 'report', error: err?.message }) }
+        try {
+          const rRes = await fetchWithProxyFallback(aiReportUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ preprocessing: { contract_type: clausesPayload?.contract_type || 'unknown', total_clauses: clauses.length }, pattern_data: patternData, case_data: caseData, acts_data: actsData, data_coverage: {} }) })
+          const rp = await tryParseJson(rRes)
+          if (!rRes.ok) throw new Error(rp?.detail || 'AI report failed')
+          dispatchAnalysis({ type: 'STEP_DONE', step: 'report', payload: rp })
+        } catch (err) { dispatchAnalysis({ type: 'STEP_ERROR', step: 'report', error: err?.message }) }
       }
+
       setLoadingStep('Complete')
       setAnalysedAt(new Date())
     } catch (err) { setError(err?.message || 'Analysis failed.'); setLoadingStep('Failed') }
@@ -633,10 +621,8 @@ export default function ContractRiskRetestPage() {
     <div className="min-h-screen bg-stone-50">
       <Header />
 
-      {/* PDF Preview Modal */}
       {showPdfPreview && file && <PdfPreviewModal file={file} onClose={() => setShowPdfPreview(false)} />}
 
-      {/* Global progress bar */}
       <div className="fixed top-0 left-0 right-0 z-50 h-0.5">
         {loading && <div className="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 transition-all duration-700" style={{ width: `${analysisProgress}%` }} />}
       </div>
@@ -644,7 +630,6 @@ export default function ContractRiskRetestPage() {
       <main className="pt-20 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Page header */}
           <div className="pt-8 pb-5 border-b border-stone-200 mb-6">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
               <div>
@@ -654,13 +639,11 @@ export default function ContractRiskRetestPage() {
                   Know your risks before you sign — powered by Sri Lankan law, court precedents, and risk pattern analysis.
                 </p>
               </div>
-
-              {/* Post-analysis status — plain and clean */}
               {hasRun && (
                 <div className="flex-shrink-0">
                   {loading ? (
                     <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">
-                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
                       {loadingStep}
                     </div>
                   ) : (
@@ -680,109 +663,106 @@ export default function ContractRiskRetestPage() {
             <div className="lg:col-span-4 xl:col-span-3">
               <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden sticky top-24">
 
-                <div className="px-5 py-4 bg-gradient-to-r from-amber-500 to-orange-500">
+                <div className="px-5 py-4 bg-gradient-to-r from-amber-600 to-orange-500">
+                  <p className="text-[10px] font-bold text-amber-100 uppercase tracking-widest mb-0.5">LawKnow</p>
                   <h2 className="text-sm font-bold text-white">Your Contract</h2>
                   <p className="text-[11px] text-amber-100 mt-0.5">Paste text or upload a PDF</p>
                 </div>
 
-                <div className="p-5 space-y-4">
+                <div className="p-5 space-y-5">
 
-                  {/* Mode toggle */}
                   <div className="flex rounded-lg border border-stone-200 overflow-hidden bg-stone-50">
                     {[['text', '✏️ Paste Text'], ['file', '📎 Upload PDF']].map(([m, lbl]) => (
-                      <button key={m} type="button" onClick={() => setMode(m)} className={`flex-1 py-2 text-xs font-semibold transition-colors ${mode === m ? 'bg-amber-500 text-white' : 'text-stone-500 hover:text-stone-700'}`}>{lbl}</button>
+                      <button key={m} type="button" onClick={() => setMode(m)}
+                        className={`flex-1 py-2 text-xs font-semibold transition-colors ${mode === m ? 'bg-amber-500 text-white' : 'text-stone-500 hover:text-stone-700'}`}>
+                        {lbl}
+                      </button>
                     ))}
                   </div>
 
-                  {/* Input area */}
                   {mode === 'text' ? (
                     <textarea
                       rows={11}
-                      placeholder="Paste your contract text here…"
+                      placeholder="Paste your employment contract here…"
                       className="w-full text-xs px-3 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-stone-700 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition resize-none leading-relaxed"
                       value={contractText}
                       onChange={(e) => setContractText(e.target.value)}
                     />
                   ) : (
                     <div>
-                      <div
-                        ref={dragRef}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
+                      <div ref={dragRef} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        className="block border-2 border-dashed border-stone-200 rounded-xl p-5 text-center hover:border-amber-300 transition-colors cursor-pointer"
-                      >
+                        className="block border-2 border-dashed border-stone-200 rounded-xl p-5 text-center hover:border-amber-300 transition-colors cursor-pointer">
                         <div className="text-2xl mb-1.5">{file ? '📄' : '📎'}</div>
                         <p className="text-xs text-stone-400 mb-1">{file ? 'Click to change file' : 'Click to browse or drag & drop'}</p>
-                        <input ref={fileInputRef} type="file" accept="application/pdf,text/plain" className="sr-only" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                        <input ref={fileInputRef} type="file" accept="application/pdf,text/plain" className="sr-only"
+                          onChange={(e) => setFile(e.target.files?.[0] || null)} />
                         {file
                           ? <p className="text-xs text-amber-700 font-bold truncate mt-1">{file.name}</p>
                           : <p className="text-[10px] text-stone-400">PDF or TXT · max 10 MB</p>}
                       </div>
-                      {/* PDF preview button */}
                       {file && file.type === 'application/pdf' && (
-                        <button onClick={() => setShowPdfPreview(true)} className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg py-2 hover:bg-amber-100 transition">
-                          <span>👁️</span> Preview PDF in this page
+                        <button onClick={() => setShowPdfPreview(true)}
+                          className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg py-2 hover:bg-amber-100 transition">
+                          <span>👁️</span> Preview PDF
                         </button>
                       )}
                     </div>
                   )}
 
-                  {/* Analysis options */}
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">What to check</p>
-                    {[
-                      ['mask_pii',                   '🔒 Hide personal info',       'Redacts names & identifiers'],
-                      ['include_pattern_detection',   '🔍 Risk pattern matching',    '169 known risk patterns'],
-                      ['include_case_law',             '⚖️ Similar court cases',     '198 Sri Lankan cases'],
-                      ['include_acts',                 '📋 Relevant laws',           'Acts and ordinances'],
-                      ['include_ai_report',            '🤖 AI risk summary',         'Plain-language risk report'],
-                    ].map(([key, lbl, desc]) => (
-                      <div key={key} className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all ${flags[key] ? 'border-amber-200 bg-amber-50/60' : 'border-stone-100 bg-white'}`}>
-                        <div className="min-w-0 mr-3">
-                          <p className={`text-xs font-semibold leading-tight ${flags[key] ? 'text-amber-800' : 'text-stone-600'}`}>{lbl}</p>
-                          <p className="text-[10px] text-stone-400 mt-0.5">{desc}</p>
+                  <div>
+                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3">What we check</p>
+                    <div className="space-y-2">
+                      {[
+                        { key: 'include_pattern_detection', icon: '🔍', label: 'Risk pattern matching', desc: '169 known harmful clause patterns' },
+                        { key: 'include_case_law', icon: '⚖️', label: 'Similar court cases', desc: '1,040 Sri Lankan legal cases' },
+                        { key: 'include_acts', icon: '📋', label: 'Relevant laws & acts', desc: 'Sri Lankan employment legislation' },
+                        { key: 'include_ai_report', icon: '🤖', label: 'AI risk summary', desc: 'Plain-language explanation of risks' },
+                      ].map(({ key, icon, label, desc }) => (
+                        <div key={key}
+                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all ${flags[key] ? 'border-amber-200 bg-amber-50/60' : 'border-stone-100 bg-white'}`}>
+                          <div className="flex items-center gap-3 min-w-0 mr-3">
+                            <div className="w-8 h-8 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-sm flex-shrink-0">
+                              {icon}
+                            </div>
+                            <div className="min-w-0">
+                              <p className={`text-xs font-semibold leading-tight ${flags[key] ? 'text-amber-800' : 'text-stone-600'}`}>{label}</p>
+                              <p className="text-[10px] text-stone-400 mt-0.5">{desc}</p>
+                            </div>
+                          </div>
+                          <Toggle
+                            checked={!!flags[key]}
+                            onChange={(v) => setFlags((p) => ({ ...p, [key]: v }))}
+                          />
                         </div>
-                        <Toggle checked={flags[key]} onChange={(v) => setFlags((p) => ({ ...p, [key]: v }))} />
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Advanced */}
-                  <button type="button" onClick={() => setShowAdvanced((v) => !v)} className="flex items-center gap-1.5 text-[11px] font-semibold text-stone-400 hover:text-amber-600 transition-colors w-full pt-1">
-                    <svg className={`w-3 h-3 transition-transform flex-shrink-0 ${showAdvanced ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                    Advanced settings
-                  </button>
-
-                  {showAdvanced && (
-                    <div className="space-y-3 pt-1 border-t border-stone-100">
-                      <div>
-                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">API Base URL</p>
-                        <input className="w-full text-[11px] px-2.5 py-1.5 rounded-lg border border-stone-200 bg-stone-50 text-stone-600 focus:outline-none focus:border-amber-400 transition font-mono" value={apiBase} onChange={(e) => setApiBase(e.target.value)} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-1">
-                        {[['use_bert_support', 'BERT support'], ['use_simple_english', 'Simplify text']].map(([key, lbl]) => (
-                          <label key={key} className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border cursor-pointer text-[11px] transition-all ${flags[key] ? 'border-amber-200 bg-amber-50 text-amber-800 font-semibold' : 'border-stone-100 text-stone-500'}`}>
-                            <input type="checkbox" className="w-3 h-3 accent-amber-500" checked={flags[key]} onChange={(e) => setFlags((p) => ({ ...p, [key]: e.target.checked }))} />{lbl}
-                          </label>
-                        ))}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[['top_k_cases', topKCases, setTopKCases, 1], ['top_k_acts', topKActs, setTopKActs, 1], ['threshold', patternThreshold, setPatternThreshold, 0.01], ['top_k_patterns', topKPatterns, setTopKPatterns, 1]].map(([lbl, val, set, step]) => (
-                          <div key={lbl}><p className="text-[10px] text-stone-400 mb-0.5">{lbl}</p><input type="number" min="0" step={step} value={val} onChange={(e) => set(Number(e.target.value))} className="w-full text-xs px-2 py-1.5 rounded-lg border border-stone-200 bg-stone-50 text-stone-700 focus:outline-none focus:border-amber-400 transition" /></div>
-                        ))}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Services</p>
-                        {[['Analyze', serviceEndpoints.analyze, 'text-amber-700'], ['Pattern', serviceEndpoints.pattern, 'text-orange-700'], ['Cases', serviceEndpoints.caseService, 'text-yellow-700'], ['Acts', serviceEndpoints.acts, 'text-stone-600']].map(([lbl, url, c]) => (
-                          <div key={lbl} className="flex items-center justify-between text-[10px] px-2.5 py-1.5 rounded-lg bg-stone-50 border border-stone-100"><span className={`font-bold ${c}`}>{lbl}</span><code className="text-stone-400 truncate max-w-[140px]">{url}</code></div>
-                        ))}
-                      </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3">How it works</p>
+                    <div className="space-y-0">
+                      {[
+                        { step: '1', title: 'Your contract is read & split into clauses', desc: 'Each clause is assessed separately for accuracy' },
+                        { step: '2', title: 'Matched against patterns, cases & laws', desc: 'All three run in parallel for speed' },
+                        { step: '3', title: 'AI generates a plain-language risk report', desc: 'Highlights what to negotiate before signing' },
+                      ].map(({ step, title, desc }, idx, arr) => (
+                        <div key={step} className="flex gap-3 items-start">
+                          <div className="flex flex-col items-center flex-shrink-0">
+                            <div className="w-6 h-6 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">
+                              {step}
+                            </div>
+                            {idx < arr.length - 1 && <div className="w-px h-5 bg-stone-200 my-0.5" />}
+                          </div>
+                          <div className={idx < arr.length - 1 ? 'pb-2' : ''}>
+                            <p className="text-xs font-semibold text-stone-700 leading-snug pt-0.5">{title}</p>
+                            <p className="text-[10px] text-stone-400 mt-0.5 leading-relaxed">{desc}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </div>
 
-                  {/* Error */}
                   {error && (
                     <div className="flex items-start gap-2.5 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5">
                       <span className="text-base flex-shrink-0">⚠️</span>
@@ -790,11 +770,11 @@ export default function ContractRiskRetestPage() {
                     </div>
                   )}
 
-                  {/* CTA */}
-                  <button onClick={submitAnalysis} disabled={loading} className={`w-full py-3 rounded-xl text-sm font-bold tracking-wide transition-all ${loading ? 'bg-stone-100 text-stone-400 cursor-not-allowed' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-md hover:shadow-lg active:scale-[0.98]'}`}>
+                  <button onClick={submitAnalysis} disabled={loading}
+                    className={`w-full py-3 rounded-xl text-sm font-bold tracking-wide transition-all ${loading ? 'bg-stone-100 text-stone-400 cursor-not-allowed' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-md hover:shadow-lg active:scale-[0.98]'}`}>
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
                         {loadingStep}
                       </span>
                     ) : hasRun ? '🔄 Re-run Analysis' : '🔍 Analyse My Contract'}
@@ -802,26 +782,31 @@ export default function ContractRiskRetestPage() {
 
                   {loading && (
                     <div>
-                      <div className="flex justify-between text-[10px] text-stone-400 mb-1"><span>{loadingStep}</span><span>{analysisProgress}%</span></div>
-                      <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all duration-700" style={{ width: `${analysisProgress}%` }} /></div>
-                      <p className="text-[10px] text-stone-400 mt-1 text-center">This usually takes 15–30 seconds</p>
+                      <div className="flex justify-between text-[10px] text-stone-400 mb-1">
+                        <span>{loadingStep}</span><span>{analysisProgress}%</span>
+                      </div>
+                      <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all duration-700" style={{ width: `${analysisProgress}%` }} />
+                      </div>
+                      <p className="text-[10px] text-stone-400 mt-1 text-center">Usually takes 15–30 seconds</p>
                     </div>
                   )}
 
-                  {/* Disclaimer */}
-                  <p className="text-[10px] text-stone-400 leading-relaxed text-center pt-1">
-                    AI-assisted · Not legal advice · Sri Lankan law
-                  </p>
+                  <div className="flex gap-2.5 p-3 rounded-xl bg-stone-50 border border-stone-100">
+                    <span className="text-sm flex-shrink-0 mt-0.5">ℹ️</span>
+                    <p className="text-[10px] text-stone-500 leading-relaxed">
+                      <strong className="text-stone-600">Not legal advice.</strong> LawKnow helps you understand your contract — for any high-risk clause, consult a qualified lawyer before signing.
+                    </p>
+                  </div>
+
                 </div>
               </div>
             </div>
 
             {/* ════ RIGHT: Results ════ */}
             <div className="lg:col-span-8 xl:col-span-9 space-y-5">
-
-              {/* Tabbed results */}
               <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
-                {/* Tab bar */}
+
                 <div className="flex border-b border-stone-100 overflow-x-auto bg-stone-50/60 px-1 scrollbar-none">
                   {visibleTabs.map(({ id, label, icon, step, desc }) => {
                     const active = activeTab === id
@@ -839,97 +824,95 @@ export default function ContractRiskRetestPage() {
 
                 <div className="p-5">
 
-                  {/* ── Summary ── */}
                   {activeTab === 'summary' && (
-                    <SummaryTab
-                      summary={summary} aiRiskLevel={aiRiskLevel} aiReportText={aiReportText}
+                    <SummaryTab summary={summary} aiRiskLevel={aiRiskLevel} aiReportText={aiReportText}
                       mergedClauses={mergedClauses} response={response} stepStatus={stepStatus}
-                      hasRun={hasRun} onNavigate={setActiveTab}
-                    />
+                      hasRun={hasRun} onNavigate={setActiveTab} />
                   )}
 
-                  {/* ── Clause Details ── */}
                   {activeTab === 'clauses' && (
                     <div className="space-y-3">
                       {stepStatus.clauses === 'loading'
                         ? <div className="space-y-3"><SkeletonCard /><SkeletonCard /><SkeletonCard /></div>
                         : stepStatus.clauses === 'error'
-                        ? <EmptyState icon="⚠️" title="Clause extraction failed" body={analysisState.errors.clauses} />
-                        : !hasRun
-                        ? <EmptyState icon="📄" title="No contract analysed yet" body="Paste or upload a contract and click Analyse My Contract." />
-                        : mergedClauses.length === 0
-                        ? <EmptyState icon="📄" title="No clauses found" body="The contract may be empty or unrecognised." />
-                        : (
-                          <>
-                            <div className="flex items-center gap-2 flex-wrap pb-1">
-                              <span className="text-[11px] text-stone-500 font-bold">Show:</span>
-                              {riskFilters.map((f) => (
-                                <button key={f} onClick={() => setRiskFilter(f)} className={`text-[11px] px-3 py-1 rounded-full font-semibold capitalize transition-all ${riskFilter === f ? 'bg-amber-500 text-white' : 'bg-stone-100 text-stone-500 hover:bg-amber-50 hover:text-amber-700'}`}>{f === 'all' ? 'All clauses' : `${f} risk only`}</button>
-                              ))}
-                              <span className="ml-auto text-[11px] text-stone-400">{filteredClauses.length} clause{filteredClauses.length !== 1 ? 's' : ''}</span>
-                              {copyStatus && <span className="text-[11px] text-emerald-600 font-bold">{copyStatus}</span>}
-                            </div>
-                            <p className="text-[11px] text-stone-400">Hover the risk badge to understand what it means.</p>
-                            {filteredClauses.length === 0
-                              ? <p className="text-center text-sm text-stone-400 py-8">No clauses match this filter.</p>
+                          ? <EmptyState icon="⚠️" title="Clause extraction failed" body={analysisState.errors.clauses} />
+                          : !hasRun
+                            ? <EmptyState icon="📄" title="No contract analysed yet" body="Paste or upload a contract and click Analyse My Contract." />
+                            : mergedClauses.length === 0
+                              ? <EmptyState icon="📄" title="No clauses found" body="The contract may be empty or unrecognised." />
                               : (
-                                <div className="space-y-2">
-                                  {filteredClauses.map((clause) => {
-                                    const risks = clause?.risks || []
-                                    const exp = !!expandedClauseIds[clause.clause_id]
-                                    const topSev = risks.length ? inferSeverity(risks[0]) : null
-                                    return (
-                                      <article key={clause.clause_id} className={`rounded-xl border overflow-hidden transition-all ${topSev === 'high' ? 'border-red-100' : 'border-stone-100'}`}>
-                                        <button onClick={() => toggleClause(clause.clause_id)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 transition-colors">
-                                          <span className={`w-0.5 h-8 rounded-full flex-shrink-0 ${topSev === 'high' ? 'bg-red-400' : topSev === 'medium' ? 'bg-amber-400' : topSev === 'low' ? 'bg-emerald-400' : 'bg-stone-200'}`} />
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                              <span className="text-xs font-bold text-stone-700 capitalize">{(clause.clause_type || 'Clause').replace(/_/g, ' ')}</span>
-                                              <span className="text-[10px] font-mono text-stone-300">{clause.clause_id}</span>
-                                            </div>
-                                            {!exp && clause.clause_text && <p className="text-[11px] text-stone-400 truncate mt-0.5">"{clause.clause_text.slice(0, 80)}…"</p>}
-                                          </div>
-                                          <div className="flex items-center gap-2 flex-shrink-0">
-                                            {topSev && <SeverityTooltip level={topSev} />}
-                                            {risks.length > 0 && <span className="text-[11px] text-stone-400 font-medium">{risks.length} risk{risks.length !== 1 ? 's' : ''}</span>}
-                                            <svg className={`w-3.5 h-3.5 text-stone-300 transition-transform ${exp ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                                          </div>
-                                        </button>
-                                        {exp && (
-                                          <div className="border-t border-stone-100 bg-stone-50 px-4 py-4 space-y-4">
-                                            <div>
-                                              <div className="flex items-center justify-between mb-2">
-                                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Clause text</p>
-                                                <button onClick={() => handleCopy(clause.clause_text)} className="text-[11px] px-2.5 py-1 rounded-lg border border-amber-200 text-amber-600 hover:bg-amber-50 transition font-semibold">📋 Copy</button>
-                                              </div>
-                                              <p className="text-xs text-stone-600 leading-relaxed bg-white border border-stone-100 rounded-lg px-3 py-2.5 whitespace-pre-wrap">{clause.clause_text || 'Clause text unavailable.'}</p>
-                                            </div>
-                                            {risks.length > 0 && (
-                                              <div>
-                                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">What was flagged</p>
-                                                <div className="space-y-1.5">
-                                                  {risks.map((risk, idx) => (
-                                                    <div key={idx} className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-white border border-stone-100 gap-3">
-                                                      <span className="text-stone-700 font-medium truncate">{String(risk?.risk || risk?.title || risk?.pattern_title || 'Risk detected')}</span>
-                                                      <SeverityTooltip level={inferSeverity(risk)} />
-                                                    </div>
-                                                  ))}
+                                <>
+                                  <div className="flex items-center gap-2 flex-wrap pb-1">
+                                    <span className="text-[11px] text-stone-500 font-bold">Show:</span>
+                                    {riskFilters.map((f) => (
+                                      <button key={f} onClick={() => setRiskFilter(f)}
+                                        className={`text-[11px] px-3 py-1 rounded-full font-semibold capitalize transition-all ${riskFilter === f ? 'bg-amber-500 text-white' : 'bg-stone-100 text-stone-500 hover:bg-amber-50 hover:text-amber-700'}`}>
+                                        {f === 'all' ? 'All clauses' : `${f} risk only`}
+                                      </button>
+                                    ))}
+                                    <span className="ml-auto text-[11px] text-stone-400">{filteredClauses.length} clause{filteredClauses.length !== 1 ? 's' : ''}</span>
+                                    {copyStatus && <span className="text-[11px] text-emerald-600 font-bold">{copyStatus}</span>}
+                                  </div>
+                                  <p className="text-[11px] text-stone-400">Hover the risk badge to understand what it means.</p>
+                                  {filteredClauses.length === 0
+                                    ? <p className="text-center text-sm text-stone-400 py-8">No clauses match this filter.</p>
+                                    : (
+                                      <div className="space-y-2">
+                                        {filteredClauses.map((clause) => {
+                                          const risks = clause?.risks || []
+                                          const exp = !!expandedClauseIds[clause.clause_id]
+                                          const topSev = risks.length ? inferSeverity(risks[0]) : null
+                                          return (
+                                            <article key={clause.clause_id} className={`rounded-xl border overflow-hidden transition-all ${topSev === 'high' ? 'border-red-100' : 'border-stone-100'}`}>
+                                              <button onClick={() => toggleClause(clause.clause_id)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 transition-colors">
+                                                <span className={`w-0.5 h-8 rounded-full flex-shrink-0 ${topSev === 'high' ? 'bg-red-400' : topSev === 'medium' ? 'bg-amber-400' : topSev === 'low' ? 'bg-emerald-400' : 'bg-stone-200'}`} />
+                                                <div className="flex-1 min-w-0">
+                                                  <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-xs font-bold text-stone-700 capitalize">{(clause.clause_type || 'Clause').replace(/_/g, ' ')}</span>
+                                                    <span className="text-[10px] font-mono text-stone-300">{clause.clause_id}</span>
+                                                  </div>
+                                                  {!exp && clause.clause_text && <p className="text-[11px] text-stone-400 truncate mt-0.5">"{clause.clause_text.slice(0, 80)}…"</p>}
                                                 </div>
-                                              </div>
-                                            )}
-                                          </div>
-                                        )}
-                                      </article>
-                                    )
-                                  })}
-                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                  {topSev && <SeverityTooltip level={topSev} />}
+                                                  {risks.length > 0 && <span className="text-[11px] text-stone-400 font-medium">{risks.length} risk{risks.length !== 1 ? 's' : ''}</span>}
+                                                  <svg className={`w-3.5 h-3.5 text-stone-300 transition-transform ${exp ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                                                </div>
+                                              </button>
+                                              {exp && (
+                                                <div className="border-t border-stone-100 bg-stone-50 px-4 py-4 space-y-4">
+                                                  <div>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                      <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Clause text</p>
+                                                      <button onClick={() => handleCopy(clause.clause_text)} className="text-[11px] px-2.5 py-1 rounded-lg border border-amber-200 text-amber-600 hover:bg-amber-50 transition font-semibold">📋 Copy</button>
+                                                    </div>
+                                                    <p className="text-xs text-stone-600 leading-relaxed bg-white border border-stone-100 rounded-lg px-3 py-2.5 whitespace-pre-wrap">{clause.clause_text || 'Clause text unavailable.'}</p>
+                                                  </div>
+                                                  {risks.length > 0 && (
+                                                    <div>
+                                                      <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">What was flagged</p>
+                                                      <div className="space-y-1.5">
+                                                        {risks.map((risk, idx) => (
+                                                          <div key={idx} className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-white border border-stone-100 gap-3">
+                                                            <span className="text-stone-700 font-medium truncate">{String(risk?.risk || risk?.title || risk?.pattern_title || 'Risk detected')}</span>
+                                                            <SeverityTooltip level={inferSeverity(risk)} />
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </article>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
+                                </>
                               )}
-                          </>
-                        )}
                     </div>
                   )}
 
-                  {/* ── Risk Patterns ── */}
                   {activeTab === 'patterns' && (
                     <div className="space-y-4">
                       <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
@@ -939,46 +922,45 @@ export default function ContractRiskRetestPage() {
                       {stepStatus.patterns === 'loading'
                         ? <div className="space-y-3"><SkeletonCard /><SkeletonCard /></div>
                         : stepStatus.patterns === 'error'
-                        ? <EmptyState icon="⚠️" title="Pattern detection failed" body={analysisState.errors.patterns} />
-                        : !hasRun
-                        ? <EmptyState icon="🔍" title="Run an analysis to see risk patterns" />
-                        : (response?.pattern_detection?.clauses_with_patterns || []).length === 0
-                        ? <EmptyState icon="✅" title="No risk patterns detected" body="No clauses matched the 169-pattern library above the confidence threshold." />
-                        : (response?.pattern_detection?.clauses_with_patterns || []).map((item) => (
-                          <div key={item?.clause_id} className="border border-stone-100 rounded-xl overflow-hidden">
-                            <div className="px-4 py-3 bg-stone-50 border-b border-stone-100 flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-bold text-stone-700 capitalize">{(item?.clause_type || 'Clause').replace(/_/g, ' ')}</span>
-                              <span className="text-[10px] font-mono text-stone-300">{item?.clause_id}</span>
-                              <span className="ml-auto text-[10px] text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{item?.patterns_detected} pattern{item?.patterns_detected !== 1 ? 's' : ''} found</span>
-                            </div>
-                            {item?.clause_text && <p className="px-4 pt-2.5 text-[11px] text-stone-400 italic">"{item.clause_text.slice(0, 100)}{item.clause_text.length > 100 ? '…' : ''}"</p>}
-                            <div className="p-3 space-y-2">
-                              {(item?.detections || []).map((det, i) => (
-                                <div key={i} className="px-3 py-3 rounded-lg bg-white border border-stone-100 text-xs space-y-1.5">
-                                  <div className="flex items-start justify-between gap-3">
-                                    <p className="font-bold text-stone-800">{det?.pattern_title || 'Risk Pattern'}</p>
-                                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                      <SeverityTooltip level={inferSeverity(det)} />
-                                      <span className="text-[10px] text-stone-400">{(det?.confidence * 100).toFixed(0)}% confidence</span>
-                                    </div>
+                          ? <EmptyState icon="⚠️" title="Pattern detection failed" body={analysisState.errors.patterns} />
+                          : !hasRun
+                            ? <EmptyState icon="🔍" title="Run an analysis to see risk patterns" />
+                            : (response?.pattern_detection?.clauses_with_patterns || []).length === 0
+                              ? <EmptyState icon="✅" title="No risk patterns detected" body="No clauses matched the 169-pattern library above the confidence threshold." />
+                              : (response?.pattern_detection?.clauses_with_patterns || []).map((item) => (
+                                <div key={item?.clause_id} className="border border-stone-100 rounded-xl overflow-hidden">
+                                  <div className="px-4 py-3 bg-stone-50 border-b border-stone-100 flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs font-bold text-stone-700 capitalize">{(item?.clause_type || 'Clause').replace(/_/g, ' ')}</span>
+                                    <span className="text-[10px] font-mono text-stone-300">{item?.clause_id}</span>
+                                    <span className="ml-auto text-[10px] text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{item?.patterns_detected} pattern{item?.patterns_detected !== 1 ? 's' : ''} found</span>
                                   </div>
-                                  {det?.description && <p className="text-stone-500 leading-relaxed text-[11px]">{det.description}</p>}
-                                  {det?.consequences && <p className="text-red-600 text-[11px] font-medium">⚠️ Risk: {det.consequences}</p>}
-                                  {det?.safer_clause && (
-                                    <div className="bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-2 mt-1">
-                                      <p className="text-[10px] font-bold text-emerald-800 mb-0.5">✅ Safer alternative</p>
-                                      <p className="text-[11px] text-emerald-700 leading-relaxed">{det.safer_clause}</p>
-                                    </div>
-                                  )}
+                                  {item?.clause_text && <p className="px-4 pt-2.5 text-[11px] text-stone-400 italic">"{item.clause_text.slice(0, 100)}{item.clause_text.length > 100 ? '…' : ''}"</p>}
+                                  <div className="p-3 space-y-2">
+                                    {(item?.detections || []).map((det, i) => (
+                                      <div key={i} className="px-3 py-3 rounded-lg bg-white border border-stone-100 text-xs space-y-1.5">
+                                        <div className="flex items-start justify-between gap-3">
+                                          <p className="font-bold text-stone-800">{det?.pattern_title || 'Risk Pattern'}</p>
+                                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                            <SeverityTooltip level={inferSeverity(det)} />
+                                            <span className="text-[10px] text-stone-400">{(det?.confidence * 100).toFixed(0)}% confidence</span>
+                                          </div>
+                                        </div>
+                                        {det?.description && <p className="text-stone-500 leading-relaxed text-[11px]">{det.description}</p>}
+                                        {det?.consequences && <p className="text-red-600 text-[11px] font-medium">⚠️ Risk: {det.consequences}</p>}
+                                        {det?.safer_clause && (
+                                          <div className="bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-2 mt-1">
+                                            <p className="text-[10px] font-bold text-emerald-800 mb-0.5">✅ Safer alternative</p>
+                                            <p className="text-[11px] text-emerald-700 leading-relaxed">{det.safer_clause}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               ))}
-                            </div>
-                          </div>
-                        ))}
                     </div>
                   )}
 
-                  {/* ── Similar Cases ── */}
                   {activeTab === 'cases' && (
                     <div className="space-y-4">
                       <div className="bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">
@@ -988,59 +970,58 @@ export default function ContractRiskRetestPage() {
                       {stepStatus.cases === 'loading'
                         ? <div className="space-y-3"><SkeletonCard /><SkeletonCard /><SkeletonCard /></div>
                         : stepStatus.cases === 'error'
-                        ? <EmptyState icon="⚠️" title="Case retrieval failed" body={analysisState.errors.cases} />
-                        : !hasRun
-                        ? <EmptyState icon="⚖️" title="Run an analysis to see similar cases" />
-                        : flatCaseList.length === 0
-                        ? <EmptyState icon="✅" title="No similar cases found" body="No court cases matched closely enough to include." />
-                        : flatCaseList.map((singleCase, idx) => (
-                          <div key={`case-${singleCase?.case_id || idx}`} className="border border-stone-100 rounded-xl overflow-hidden">
-                            <div className="px-4 py-3 bg-stone-50 border-b border-stone-100 flex items-start gap-3">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-bold text-stone-800 leading-snug">{singleCase?.case_name || singleCase?.title || 'Case'}</h4>
-                                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                  {singleCase?.year && <span className="text-[10px] text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded font-mono">{singleCase.year}</span>}
-                                  {singleCase?.category && <span className="text-[10px] text-stone-500">{singleCase.category}</span>}
-                                </div>
-                              </div>
-                              {(singleCase?.similarity || singleCase?.similarity_score) && (
-                                <div className="text-right flex-shrink-0">
-                                  <p className="text-[10px] text-stone-400">Similarity</p>
-                                  <p className="text-lg font-black text-amber-700">{Math.round((singleCase.similarity || singleCase.similarity_score) * 100)}%</p>
-                                </div>
-                              )}
-                            </div>
-                            {singleCase?.snippet && (
-                              <div className="px-4 pt-3 pb-1">
-                                <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wide mb-1">Case excerpt</p>
-                                <p className="text-xs text-stone-600 italic leading-relaxed">"{String(singleCase.snippet).slice(0, 240)}{singleCase.snippet.length > 240 ? '…' : ''}"</p>
-                              </div>
-                            )}
-                            <div className="p-3 space-y-2">
-                              {singleCase?.matching_clauses && singleCase.matching_clauses.length > 0 && (
-                                <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                                  <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-1.5">Matching clauses in your contract</p>
-                                  <div className="space-y-1.5">
-                                    {singleCase.matching_clauses.map((clause, cidx) => (
-                                      <div key={cidx} className="text-[11px] text-stone-600 leading-relaxed">
-                                        <span className="font-bold text-amber-700">{clause?.clause_id ? `Clause ${clause.clause_id}` : 'Clause'}:</span>{' '}
-                                        {String(clause?.clause_text || clause?.text || '').slice(0, 100)}{(clause?.clause_text || '').length > 100 ? '…' : ''}
-                                        {clause?.why_matches && <span className="block text-stone-400 mt-0.5 italic">Why: {clause.why_matches}</span>}
+                          ? <EmptyState icon="⚠️" title="Case retrieval failed" body={analysisState.errors.cases} />
+                          : !hasRun
+                            ? <EmptyState icon="⚖️" title="Run an analysis to see similar cases" />
+                            : flatCaseList.length === 0
+                              ? <EmptyState icon="✅" title="No similar cases found" body="No court cases matched closely enough to include." />
+                              : flatCaseList.map((singleCase, idx) => (
+                                <div key={`case-${singleCase?.case_id || idx}`} className="border border-stone-100 rounded-xl overflow-hidden">
+                                  <div className="px-4 py-3 bg-stone-50 border-b border-stone-100 flex items-start gap-3">
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="text-sm font-bold text-stone-800 leading-snug">{singleCase?.case_name || singleCase?.title || 'Case'}</h4>
+                                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                        {singleCase?.year && <span className="text-[10px] text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded font-mono">{singleCase.year}</span>}
+                                        {singleCase?.category && <span className="text-[10px] text-stone-500">{singleCase.category}</span>}
                                       </div>
-                                    ))}
+                                    </div>
+                                    {(singleCase?.similarity || singleCase?.similarity_score) && (
+                                      <div className="text-right flex-shrink-0">
+                                        <p className="text-[10px] text-stone-400">Similarity</p>
+                                        <p className="text-lg font-black text-amber-700">{Math.round((singleCase.similarity || singleCase.similarity_score) * 100)}%</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {singleCase?.snippet && (
+                                    <div className="px-4 pt-3 pb-1">
+                                      <p className="text-[11px] text-stone-400 font-bold uppercase tracking-wide mb-1">Case excerpt</p>
+                                      <p className="text-xs text-stone-600 italic leading-relaxed">"{String(singleCase.snippet).slice(0, 240)}{singleCase.snippet.length > 240 ? '…' : ''}"</p>
+                                    </div>
+                                  )}
+                                  <div className="p-3 space-y-2">
+                                    {singleCase?.matching_clauses && singleCase.matching_clauses.length > 0 && (
+                                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                                        <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wide mb-1.5">Matching clauses in your contract</p>
+                                        <div className="space-y-1.5">
+                                          {singleCase.matching_clauses.map((clause, cidx) => (
+                                            <div key={cidx} className="text-[11px] text-stone-600 leading-relaxed">
+                                              <span className="font-bold text-amber-700">{clause?.clause_id ? `Clause ${clause.clause_id}` : 'Clause'}:</span>{' '}
+                                              {String(clause?.clause_text || clause?.text || '').slice(0, 100)}{(clause?.clause_text || '').length > 100 ? '…' : ''}
+                                              {clause?.why_matches && <span className="block text-stone-400 mt-0.5 italic">Why: {clause.why_matches}</span>}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    <button onClick={() => viewFullCase(singleCase)} className="text-[11px] px-3 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-50 transition font-semibold flex items-center gap-1.5">
+                                      📄 View full case
+                                    </button>
                                   </div>
                                 </div>
-                              )}
-                              <button onClick={() => viewFullCase(singleCase)} className="text-[11px] px-3 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-50 transition font-semibold flex items-center gap-1.5">
-                                📄 View full case
-                              </button>
-                            </div>
-                          </div>
-                        ))}
+                              ))}
                     </div>
                   )}
 
-                  {/* ── Relevant Laws ── */}
                   {activeTab === 'acts' && (
                     <div className="space-y-4">
                       <div className="bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
@@ -1050,38 +1031,37 @@ export default function ContractRiskRetestPage() {
                       {stepStatus.acts === 'loading'
                         ? <div className="space-y-3"><SkeletonCard /><SkeletonCard /></div>
                         : stepStatus.acts === 'error'
-                        ? <EmptyState icon="⚠️" title="Legislation retrieval failed" body={analysisState.errors.acts} />
-                        : !hasRun
-                        ? <EmptyState icon="📋" title="Run an analysis to see relevant laws" />
-                        : flatActsList.length === 0
-                        ? <EmptyState icon="✅" title="No legislation matched" body="No specific Acts were matched to this contract's clauses." />
-                        : (
-                          <div className="space-y-2">
-                            {flatActsList.map((act, idx) => (
-                              <div key={`act-${idx}`} className="flex items-start gap-3 px-4 py-3 rounded-xl bg-white border border-stone-100 hover:border-amber-200 transition-colors">
-                                <span className="text-base flex-shrink-0 mt-0.5">📋</span>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-bold text-stone-800">{act?.act_name || act?.law_name || act?.title || 'Act'}</p>
-                                  {act?.section_title && <p className="text-[11px] text-stone-500 mt-0.5">{act.section_title}</p>}
-                                  {act?.section_text && <p className="text-[11px] text-stone-400 mt-1 leading-relaxed line-clamp-2">{act.section_text}</p>}
+                          ? <EmptyState icon="⚠️" title="Legislation retrieval failed" body={analysisState.errors.acts} />
+                          : !hasRun
+                            ? <EmptyState icon="📋" title="Run an analysis to see relevant laws" />
+                            : flatActsList.length === 0
+                              ? <EmptyState icon="✅" title="No legislation matched" body="No specific Acts were matched to this contract's clauses." />
+                              : (
+                                <div className="space-y-2">
+                                  {flatActsList.map((act, idx) => (
+                                    <div key={`act-${idx}`} className="flex items-start gap-3 px-4 py-3 rounded-xl bg-white border border-stone-100 hover:border-amber-200 transition-colors">
+                                      <span className="text-base flex-shrink-0 mt-0.5">📋</span>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-stone-800">{act?.act_name || act?.law_name || act?.title || 'Act'}</p>
+                                        {act?.section_title && <p className="text-[11px] text-stone-500 mt-0.5">{act.section_title}</p>}
+                                        {act?.section_text && <p className="text-[11px] text-stone-400 mt-1 leading-relaxed line-clamp-2">{act.section_text}</p>}
+                                      </div>
+                                      {(act?.section || act?.section_number) && (
+                                        <span className="text-amber-700 font-mono text-[11px] font-bold bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md flex-shrink-0 mt-0.5">§{act?.section || act?.section_number}</span>
+                                      )}
+                                    </div>
+                                  ))}
                                 </div>
-                                {(act?.section || act?.section_number) && (
-                                  <span className="text-amber-700 font-mono text-[11px] font-bold bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md flex-shrink-0 mt-0.5">§{act?.section || act?.section_number}</span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                              )}
                     </div>
                   )}
 
-                  {/* ── Full AI Report ── */}
                   {activeTab === 'ai' && (
                     <div className="space-y-4">
                       {stepStatus.report === 'loading' ? (
                         <div className="space-y-3">
                           <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100">
-                            <svg className="w-5 h-5 text-amber-500 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                            <svg className="w-5 h-5 text-amber-500 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
                             <div><p className="text-xs font-bold text-amber-800">Generating AI report…</p><p className="text-[10px] text-amber-600 mt-0.5">Synthesising all findings into a plain-language risk assessment</p></div>
                           </div>
                           <SkeletonCard /><SkeletonCard />
@@ -1089,7 +1069,7 @@ export default function ContractRiskRetestPage() {
                       ) : stepStatus.report === 'error' ? (
                         <EmptyState icon="⚠️" title="AI report failed" body={analysisState.errors.report} />
                       ) : !hasRun ? (
-                        <EmptyState icon="🤖" title="AI report not generated yet" body="Run an analysis with 'AI risk summary' enabled." />
+                        <EmptyState icon="🤖" title="AI report not generated yet" body="Run an analysis with AI risk summary enabled." />
                       ) : aiReportText ? (
                         <>
                           <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -1108,11 +1088,9 @@ export default function ContractRiskRetestPage() {
                               </button>
                             </div>
                           </div>
-                          {/* Rendered markdown — no more raw monospace */}
                           <div className="bg-stone-50 border border-stone-100 rounded-xl p-5">
                             <MarkdownReport text={aiReportText} />
                           </div>
-                          {/* Lawyer note */}
                           <div className="flex gap-2.5 p-3 rounded-xl bg-blue-50 border border-blue-100">
                             <span className="text-base flex-shrink-0">⚖️</span>
                             <p className="text-[11px] text-blue-700 leading-relaxed">
@@ -1126,7 +1104,6 @@ export default function ContractRiskRetestPage() {
                     </div>
                   )}
 
-                  {/* ── Plain English ── */}
                   {activeTab === 'simplified' && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -1142,13 +1119,14 @@ export default function ContractRiskRetestPage() {
                       </div>
                       {simplifiedContractText
                         ? <div className="bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{simplifiedContractText}</div>
-                        : <EmptyState icon="🌐" title="No simplified text" body="Enable 'Simplify text' in advanced settings and re-run." />}
+                        : <EmptyState icon="🌐" title="No simplified text" body="Enable 'Simplify text' and re-run the analysis." />}
                     </div>
                   )}
 
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </main>

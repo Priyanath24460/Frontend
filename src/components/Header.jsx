@@ -153,7 +153,7 @@ const Header = () => {
                           </div>
                         </Link> */}
                         
-                        <Link 
+                        {/* <Link 
                           to="/contract-risk-analysis" 
                           className="flex items-start p-4 rounded-lg hover:bg-amber-400/10 transition-all duration-200 group"
                         >
@@ -165,6 +165,36 @@ const Header = () => {
                           <div>
                             <h3 className="text-white font-semibold text-sm group-hover:text-amber-300 transition-colors">Pattern-Based Risk Analysis</h3>
                             <p className="text-stone-400 text-xs mt-1">Detect risks with case-law pattern matching</p>
+                          </div>
+                        </Link> */}
+                        
+                        {/* <Link 
+                          to="/contract-risk-retest" 
+                          className="flex items-start p-4 rounded-lg hover:bg-amber-400/10 transition-all duration-200 group"
+                        >
+                          <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-400 rounded-lg flex items-center justify-center mr-3">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-white font-semibold text-sm group-hover:text-amber-300 transition-colors">AI Contract Analyzer</h3>
+                            <p className="text-stone-400 text-xs mt-1">Analyze contracts and identify risks instantly</p>
+                          </div>
+                        </Link> */}
+
+                        <Link 
+                          to="/contract-risk-retest" 
+                          className="flex items-start p-4 rounded-lg hover:bg-amber-400/10 transition-all duration-200 group"
+                        >
+                          <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-400 rounded-lg flex items-center justify-center mr-3">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-white font-semibold text-sm group-hover:text-amber-300 transition-colors">Contract Risk Retest</h3>
+                            <p className="text-stone-400 text-xs mt-1">Open the updated contract risk review page</p>
                           </div>
                         </Link>
                         
@@ -362,7 +392,7 @@ const Header = () => {
                     >
                       AI Case Summarizer
                     </Link>
-                    <Link 
+                    {/* <Link 
                       to="/contract-risk-analysis"
                       onClick={() => {
                         setMobileMenuOpen(false);
@@ -371,6 +401,26 @@ const Header = () => {
                       className="block px-4 py-3 rounded-lg hover:bg-amber-400/10 transition-all duration-200 text-white text-sm"
                     >
                       Contract Risk Analysis
+                    </Link> */}
+                    {/* <Link 
+                      to="/contract-risk-retest"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setFeaturesOpen(false);
+                      }}
+                      className="block px-4 py-3 rounded-lg hover:bg-amber-400/10 transition-all duration-200 text-white text-sm"
+                    >
+                      AI Contract Analyzer
+                    </Link> */}
+                    <Link 
+                      to="/contract-risk-retest"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setFeaturesOpen(false);
+                      }}
+                      className="block px-4 py-3 rounded-lg hover:bg-amber-400/10 transition-all duration-200 text-white text-sm"
+                    >
+                      Contract Risk Retest
                     </Link>
                     <Link 
                       to="/fr-violation-screener"

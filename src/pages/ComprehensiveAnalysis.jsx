@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import FileUpload from '../components/FileUpload.jsx';
 import Header from '../components/Header.jsx';
 
+const ANALYZE_API_BASE =
+  (import.meta.env?.VITE_ANALYZE_API_BASE || (import.meta.env?.DEV ? '/api/analyze' : 'https://analyze-api.pasindi.me')).replace(/\/$/, '');
+
 export default function ComprehensiveAnalysis(){
   const [clauses, setClauses] = useState([]);
   const [contractType, setContractType] = useState(null);
@@ -33,12 +36,12 @@ export default function ComprehensiveAnalysis(){
       const result = await response.json();
       const extractedClauses = result.clauses || [];
       
-      // Capture contract type and check if employment
+      // Capture contract type and show a generic notice for unsupported domains.
       const contractTypeValue = result.contract_type?.toLowerCase() || 'unknown';
       setContractType(contractTypeValue);
       
-      if (contractTypeValue !== 'employment') {
-        setWarning(`⚠️ Limited Analysis: This is a ${result.contract_type || 'Non-Employment'} contract. Our system is optimized for employment contracts. You may see fewer related cases and specialized signals.`);
+      if (!['employment', 'lease', 'loan', 'service', 'trust', 'sales'].includes(contractTypeValue)) {
+        setWarning(`⚠️ Limited Analysis: This appears to be a ${result.contract_type || 'specialized'} contract. Coverage may be limited for this domain.`);
       } else {
         setWarning('');
       }
@@ -149,13 +152,13 @@ export default function ComprehensiveAnalysis(){
         console.log(`Searching cases for clause ${clause.clause_id}:`, clause_text.substring(0, 100) + '...');
         
         try {
-          const response = await fetch('http://localhost:8008/api/v1/search', {
+          const response = await fetch(`${ANALYZE_API_BASE}/proxy/case-similar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              clause_text: clause_text.substring(0, 500),  // Limit query size
-              signals: signals,
-              problem_type: problem_type,  // NEW: Send problem type for targeted search
+              text: clause_text.substring(0, 500),  // Limit query size
+              contract_type: contractType || 'unknown',
+              clauses: [{ clause_id: clause.clause_id, clause_text }],
               top_k: 10 
             })
           });
@@ -216,11 +219,12 @@ export default function ComprehensiveAnalysis(){
         console.log(`Searching acts for clause ${clause.clause_id}:`, query_text.substring(0, 100) + '...');
         
         try {
-          const response = await fetch('http://localhost:8009/api/v1/search', {
+          const response = await fetch(`${ANALYZE_API_BASE}/proxy/acts-search`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               query_text: query_text.substring(0, 500),  // Limit query size
+              domain: contractType || 'unknown',
               signals: signals,
               problem_type: problem_type,  // NEW: Send problem type for targeted search
               top_k: 10 
@@ -521,7 +525,7 @@ export default function ComprehensiveAnalysis(){
                           <div className="flex justify-between items-start mb-2">
                             <strong className="text-blue-800 text-sm">{caseItem.case_name}</strong>
                             <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">
-                              {(caseItem.similarity_score * 100).toFixed(0)}% match
+                              {Math.round((Number(caseItem.similarity_score ?? caseItem.similarity ?? 0)) * 100)}% match
                             </span>
                           </div>
                           {caseItem.main_category && <p className="m-0 mb-1 text-xs text-stone-600"><strong>Category:</strong> {caseItem.main_category}</p>}
@@ -563,7 +567,7 @@ export default function ComprehensiveAnalysis(){
                           <div className="flex justify-between items-start mb-2">
                             <strong className="text-purple-900 text-sm">{act.act_name} {act.year && `(${act.year})`}</strong>
                             <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold">
-                              {(act.similarity_score * 100).toFixed(0)}% match
+                              {Math.round((Number(act.similarity_score ?? act.similarity ?? 0)) * 100)}% match
                             </span>
                           </div>
                           {act.section_number && <p className="m-0 mb-1 text-xs text-stone-600"><strong>Section:</strong> {act.section_number}</p>}
