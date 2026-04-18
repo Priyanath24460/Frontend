@@ -1,15 +1,5 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
-import Home from "./pages/Home";
-import Upload from "./pages/Upload";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Scenario_Based_Case_Finder from "./pages/Scenario_Based_Case_Finder";
-import ComprehensiveAnalysis from "./pages/ComprehensiveAnalysis";
-import FR_Violation_Screener from "./pages/FR_Violation_Screener";
-import CaseAnalysis from "./pages/summarizer/CaseAnalysis";
-// import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CaseAnalysisProvider } from "./contexts/CaseAnalysisContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -34,13 +24,6 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-export default function App() {
-  return (
-    <div className="App">
-      <AuthProvider>
-        <CaseAnalysisProvider>
-          <Router>
-            <Routes>
 // ── Lazy imports to isolate crashes ────────────────────────────────────
 const Home = React.lazy(() => import("./pages/Home"));
 const Login = React.lazy(() => import("./pages/Login"));
@@ -69,75 +52,71 @@ export default function App() {
             <Router>
               <React.Suspense fallback={<Fallback />}>
                 <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              
-              {/* Protected Routes - Require Authentication */}
-              <Route 
-                path="/upload" 
-                element={
-                  <ProtectedRoute>
-                    <Upload />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/Scenario_Based_Case_Finder" 
-                element={
-                  <ProtectedRoute>
-                    <ScenarioFinder />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/analysis" 
-                element={
-                  <ProtectedRoute>
-                    <ComprehensiveAnalysis />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/fr-violation-screener" 
-                element={
-                  <ProtectedRoute>
-                    <FRViolationScreener />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-               <Route 
-                path="/case-summarizer" 
-                element={
-                  <ProtectedRoute>
-                    <CaseAnalysis lang="en" />
-                  </ProtectedRoute>
-                } 
-              />
-              /> 
-              <Route 
-                path="/comprehensive_Analysis" 
-                element={
-                  <ProtectedRoute>
-                    <ComprehensiveAnalysis />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route
-                path="/contract-risk-analysis"
-                element={
-                  <ProtectedRoute>
-                    <ContractRiskAnalysis />
-                  </ProtectedRoute>
-                }
-              />
-              </Routes>
-            </React.Suspense>
-          </Router>
-        </CaseAnalysisProvider>
-      </AuthProvider>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  
+                  {/* Protected Routes - Require Authentication */}
+                  <Route 
+                    path="/upload" 
+                    element={
+                      <ProtectedRoute>
+                        <Upload />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/Scenario_Based_Case_Finder" 
+                    element={
+                      <ProtectedRoute>
+                        <ScenarioFinder />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/analysis" 
+                    element={
+                      <ProtectedRoute>
+                        <ComprehensiveAnalysis />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/fr-violation-screener" 
+                    element={
+                      <ProtectedRoute>
+                        <FRViolationScreener />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/case-summarizer" 
+                    element={
+                      <ProtectedRoute>
+                        <CaseAnalysis lang="en" />
+                      </ProtectedRoute>
+                    } 
+                  /> 
+                  <Route 
+                    path="/comprehensive_Analysis" 
+                    element={
+                      <ProtectedRoute>
+                        <ComprehensiveAnalysis />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route
+                    path="/contract-risk-analysis"
+                    element={
+                      <ProtectedRoute>
+                        <ContractRiskAnalysis />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </React.Suspense>
+            </Router>
           </CaseAnalysisProvider>
         </AuthProvider>
       </ErrorBoundary>
