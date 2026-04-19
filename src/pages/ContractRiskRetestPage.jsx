@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState, useRef, useCallback } from 'react'
+import { useMemo, useReducer, useState, useRef, useCallback, useEffect } from 'react'
 import Header from '../components/Header'
 
 // ─── Simple markdown renderer ────────────────────────────────────────────────
@@ -260,6 +260,261 @@ function Toggle({ checked, onChange }) {
   )
 }
 
+// ─── Knowledge Insights Panel ─────────────────────────────────────────────────
+function KnowledgeInsightsPanel({ mergedClauses, response, stepStatus }) {
+  const [activeInsight, setActiveInsight] = useState(0)
+  const [expandedInsight, setExpandedInsight] = useState(null)
+  const [isPaused, setIsPaused] = useState(false)
+
+  // ── Dynamically compute insights from actual analysis data ──
+  const insights = useMemo(() => {
+    const items = []
+
+    // 1. Most impactful cases (highest similarity, most relevant)
+    const allCases = mergedClauses.flatMap((c) => (c.cases || []).map((cs) => ({ ...cs, clause_id: c.clause_id, clause_type: c.clause_type })))
+    const topCases = [...allCases].sort((a, b) => (b.similarity || b.relevance || 0) - (a.similarity || a.relevance || 0)).slice(0, 3)
+    if (topCases.length > 0) {
+      items.push({
+        id: 'top-cases',
+        icon: '⚖️',
+        accentColor: 'amber',
+        title: 'Most Relevant Court Precedents',
+        subtitle: `${allCases.length} cases analysed · Top ${topCases.length} by relevance`,
+        content: topCases.map((c) => ({
+          primary: c.case_name || c.title || 'Court Case',
+          secondary: `${c.year || 'N/A'} · ${((c.similarity || c.relevance || 0) * 100).toFixed(0)}% match`,
+          detail: c.snippet || c.summary || c.outcome || null,
+          badge: c.category || c.clause_type || null,
+        })),
+        factoid: topCases[0]?.year ? `The most relevant precedent dates back to ${topCases[0].year}` : 'Court precedents ground every risk finding in real case law',
+      })
+    }
+
+    // 2. Risk pattern category breakdown
+    const allDetections = mergedClauses.flatMap((c) => c.risks || [])
+    const categoryCounts = {}
+    allDetections.forEach((d) => {
+      const cat = d.category || d.risk_category || 'General'
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1
+    })
+    const sortedCats = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])
+    if (sortedCats.length > 0) {
+      const totalDet = allDetections.length
+      items.push({
+        id: 'pattern-categories',
+        icon: '🔬',
+        accentColor: 'orange',
+        title: 'Risk Pattern Distribution',
+        subtitle: `${totalDet} patterns across ${sortedCats.length} categories`,
+        content: sortedCats.slice(0, 5).map(([cat, count]) => ({
+          primary: cat.replace(/_/g, ' '),
+          secondary: `${count} pattern${count > 1 ? 's' : ''} · ${((count / totalDet) * 100).toFixed(0)}% of total`,
+          barPercent: Math.round((count / sortedCats[0][1]) * 100),
+        })),
+        factoid: `"${sortedCats[0][0].replace(/_/g, ' ')}" is the dominant risk category in this contract`,
+      })
+    }
+
+    // 3. Severity distribution insight
+    const sevCounts = { high: 0, medium: 0, low: 0 }
+    allDetections.forEach((d) => { const s = inferSeverity(d); sevCounts[s]++ })
+    const totalRisks = sevCounts.high + sevCounts.medium + sevCounts.low
+    if (totalRisks > 0) {
+      const highPct = ((sevCounts.high / totalRisks) * 100).toFixed(0)
+      items.push({
+        id: 'severity-insight',
+        icon: '📊',
+        accentColor: sevCounts.high > 0 ? 'red' : sevCounts.medium > 0 ? 'amber' : 'emerald',
+        title: 'Severity Analysis',
+        subtitle: `${totalRisks} total risk signals detected`,
+        content: [
+          { primary: 'Critical / High Risk', secondary: `${sevCounts.high} signals`, barPercent: totalRisks > 0 ? Math.round((sevCounts.high / totalRisks) * 100) : 0, barColor: 'bg-red-400' },
+          { primary: 'Medium Risk', secondary: `${sevCounts.medium} signals`, barPercent: totalRisks > 0 ? Math.round((sevCounts.medium / totalRisks) * 100) : 0, barColor: 'bg-amber-400' },
+          { primary: 'Low Risk', secondary: `${sevCounts.low} signals`, barPercent: totalRisks > 0 ? Math.round((sevCounts.low / totalRisks) * 100) : 0, barColor: 'bg-emerald-400' },
+        ],
+        factoid: sevCounts.high > 0 ? `${highPct}% of detected risks are high severity — prioritise these clauses` : 'No high-severity risks detected — a positive signal',
+      })
+    }
+
+    // 4. Acts & legislation insight
+    const allActs = mergedClauses.flatMap((c) => c.acts || [])
+    const actNames = {}
+    allActs.forEach((a) => {
+      const name = a.act_name || a.title || 'Unknown Act'
+      actNames[name] = (actNames[name] || 0) + 1
+    })
+    const sortedActs = Object.entries(actNames).sort((a, b) => b[1] - a[1])
+    if (sortedActs.length > 0) {
+      items.push({
+        id: 'legislation',
+        icon: '📜',
+        accentColor: 'amber',
+        title: 'Applicable Legislation',
+        subtitle: `${allActs.length} statutory sections referenced`,
+        content: sortedActs.slice(0, 4).map(([name, count]) => ({
+          primary: name,
+          secondary: `Referenced ${count} time${count > 1 ? 's' : ''}`,
+        })),
+        factoid: `"${sortedActs[0][0]}" is the most frequently referenced statute for this contract`,
+      })
+    }
+
+    // 5. Clause vulnerability map
+    const clauseRiskCounts = mergedClauses.map((c) => ({ id: c.clause_id, type: c.clause_type, riskCount: (c.risks || []).length, caseCount: (c.cases || []).length })).filter((c) => c.riskCount > 0).sort((a, b) => b.riskCount - a.riskCount)
+    if (clauseRiskCounts.length > 0) {
+      items.push({
+        id: 'clause-vuln',
+        icon: '🎯',
+        accentColor: 'orange',
+        title: 'Clause Vulnerability Map',
+        subtitle: `${clauseRiskCounts.length} of ${mergedClauses.length} clauses flagged`,
+        content: clauseRiskCounts.slice(0, 5).map((c) => ({
+          primary: `Clause ${c.id} — ${(c.type || 'general').replace(/_/g, ' ')}`,
+          secondary: `${c.riskCount} risk${c.riskCount > 1 ? 's' : ''} · ${c.caseCount} supporting case${c.caseCount !== 1 ? 's' : ''}`,
+          barPercent: Math.round((c.riskCount / clauseRiskCounts[0].riskCount) * 100),
+        })),
+        factoid: `Clause ${clauseRiskCounts[0].id} has the highest risk concentration (${clauseRiskCounts[0].riskCount} patterns)`,
+      })
+    }
+
+    // 6. Static corpus knowledge (always shown)
+    items.push({
+      id: 'corpus-stats',
+      icon: '🏛️',
+      accentColor: 'stone',
+      title: 'LawKnow Knowledge Base',
+      subtitle: 'Powered by 151 years of Sri Lankan jurisprudence',
+      content: [
+        { primary: '1,040 Court Cases', secondary: 'Supreme Court, Court of Appeal, High Court & more' },
+        { primary: '946 Risk Patterns', secondary: 'Curated clause-level risk indicators with case support' },
+        { primary: '10 Legal Domains', secondary: 'Employment, Commercial, Lease, Property, Debt & others' },
+        { primary: '1874 – 2025', secondary: '151-year span of legal precedent coverage' },
+      ],
+      factoid: 'Every risk finding is traceable to a real Sri Lankan court decision',
+    })
+
+    return items
+  }, [mergedClauses, response])
+
+  // Auto-rotate insights
+  useEffect(() => {
+    if (isPaused || insights.length <= 1) return
+    const timer = setInterval(() => {
+      setActiveInsight((prev) => (prev + 1) % insights.length)
+    }, 6000)
+    return () => clearInterval(timer)
+  }, [isPaused, insights.length])
+
+  if (insights.length === 0) return null
+
+  const current = insights[activeInsight] || insights[0]
+  const accentMap = {
+    amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', subtext: 'text-amber-600', dot: 'bg-amber-500', barBg: 'bg-amber-100', bar: 'bg-amber-500', factBg: 'bg-amber-50', factBorder: 'border-amber-100', factText: 'text-amber-700', iconBg: 'bg-amber-100', activeDot: 'bg-amber-500' },
+    orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', subtext: 'text-orange-600', dot: 'bg-orange-500', barBg: 'bg-orange-100', bar: 'bg-orange-500', factBg: 'bg-orange-50', factBorder: 'border-orange-100', factText: 'text-orange-700', iconBg: 'bg-orange-100', activeDot: 'bg-orange-500' },
+    red: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', subtext: 'text-red-600', dot: 'bg-red-500', barBg: 'bg-red-100', bar: 'bg-red-400', factBg: 'bg-red-50', factBorder: 'border-red-100', factText: 'text-red-700', iconBg: 'bg-red-100', activeDot: 'bg-red-500' },
+    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', subtext: 'text-emerald-600', dot: 'bg-emerald-500', barBg: 'bg-emerald-100', bar: 'bg-emerald-500', factBg: 'bg-emerald-50', factBorder: 'border-emerald-100', factText: 'text-emerald-700', iconBg: 'bg-emerald-100', activeDot: 'bg-emerald-500' },
+    stone: { bg: 'bg-stone-50', border: 'border-stone-200', text: 'text-stone-800', subtext: 'text-stone-600', dot: 'bg-stone-500', barBg: 'bg-stone-100', bar: 'bg-stone-500', factBg: 'bg-stone-100', factBorder: 'border-stone-200', factText: 'text-stone-700', iconBg: 'bg-stone-100', activeDot: 'bg-stone-500' },
+  }
+  const colors = accentMap[current.accentColor] || accentMap.amber
+  const isExpanded = expandedInsight === current.id
+
+  return (
+    <div className="rounded-2xl border border-stone-200 overflow-hidden bg-white shadow-sm"
+      onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
+
+      {/* Header */}
+      <div className="px-5 py-3 bg-gradient-to-r from-stone-800 to-stone-700 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-base">💡</span>
+          <div>
+            <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Knowledge Insights</p>
+            <p className="text-[10px] text-stone-400">Research-backed intelligence from your analysis</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {insights.map((_, idx) => (
+            <button key={idx} onClick={() => { setActiveInsight(idx); setExpandedInsight(null) }}
+              className={`transition-all duration-300 rounded-full ${idx === activeInsight ? `w-5 h-1.5 ${colors.activeDot}` : 'w-1.5 h-1.5 bg-stone-500 hover:bg-stone-400'}`}
+              aria-label={`Insight ${idx + 1}`} />
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-5" key={current.id}>
+        <div className="flex items-start gap-3 mb-4">
+          <div className={`w-10 h-10 rounded-xl ${colors.iconBg} flex items-center justify-center text-lg flex-shrink-0`}>
+            {current.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className={`text-sm font-bold ${colors.text}`}>{current.title}</h4>
+            <p className={`text-[11px] ${colors.subtext} mt-0.5`}>{current.subtitle}</p>
+          </div>
+          <button onClick={() => setExpandedInsight(isExpanded ? null : current.id)}
+            className="text-[10px] text-stone-400 hover:text-stone-600 transition flex-shrink-0 px-2 py-1 rounded-lg hover:bg-stone-50">
+            {isExpanded ? '▲ Less' : '▼ More'}
+          </button>
+        </div>
+
+        {/* Items list */}
+        <div className="space-y-2">
+          {(isExpanded ? current.content : current.content.slice(0, 3)).map((item, idx) => (
+            <div key={idx}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all hover:shadow-sm ${colors.bg} ${colors.border}`}
+              style={{ animationDelay: `${idx * 80}ms` }}>
+              <span className={`w-5 h-5 rounded-full ${colors.iconBg} text-[10px] font-bold flex items-center justify-center flex-shrink-0 ${colors.text}`}>
+                {idx + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className={`text-xs font-semibold ${colors.text} leading-tight`}>{item.primary}</p>
+                <p className="text-[10px] text-stone-500 mt-0.5 leading-snug">{item.secondary}</p>
+                {isExpanded && item.detail && <p className="text-[10px] text-stone-400 mt-1 leading-relaxed italic">"{String(item.detail).slice(0, 120)}{String(item.detail).length > 120 ? '…' : ''}"</p>}
+              </div>
+              {item.barPercent !== undefined && (
+                <div className="w-16 flex-shrink-0">
+                  <div className={`h-1.5 rounded-full ${colors.barBg} overflow-hidden`}>
+                    <div className={`h-full rounded-full transition-all duration-700 ${item.barColor || colors.bar}`}
+                      style={{ width: `${item.barPercent}%` }} />
+                  </div>
+                  <p className="text-[9px] text-stone-400 text-right mt-0.5">{item.barPercent}%</p>
+                </div>
+              )}
+              {item.badge && (
+                <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-white border border-stone-200 text-stone-500 capitalize flex-shrink-0">
+                  {item.badge.replace(/_/g, ' ')}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Factoid ticker */}
+        {current.factoid && (
+          <div className={`mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl border ${colors.factBg} ${colors.factBorder}`}>
+            <span className="text-sm flex-shrink-0">🔎</span>
+            <p className={`text-[11px] ${colors.factText} leading-relaxed font-medium italic`}>
+              {current.factoid}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer nav */}
+      <div className="px-5 py-2.5 bg-stone-50 border-t border-stone-100 flex items-center justify-between">
+        <button onClick={() => { setActiveInsight((prev) => (prev - 1 + insights.length) % insights.length); setExpandedInsight(null) }}
+          className="text-[10px] font-semibold text-stone-400 hover:text-stone-600 transition flex items-center gap-1">
+          ← Previous
+        </button>
+        <span className="text-[10px] text-stone-400 font-mono">{activeInsight + 1} / {insights.length}</span>
+        <button onClick={() => { setActiveInsight((prev) => (prev + 1) % insights.length); setExpandedInsight(null) }}
+          className="text-[10px] font-semibold text-stone-400 hover:text-stone-600 transition flex items-center gap-1">
+          Next →
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── PDF Preview Modal ────────────────────────────────────────────────────────
 function PdfPreviewModal({ file, onClose }) {
   const url = useMemo(() => file ? URL.createObjectURL(file) : null, [file])
@@ -282,11 +537,160 @@ function PdfPreviewModal({ file, onClose }) {
 }
 
 // ─── Summary Tab ──────────────────────────────────────────────────────────────
-function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, response, stepStatus, hasRun, onNavigate }) {
-  if (!hasRun) return (
-    <EmptyState icon="🔍" title="No contract analysed yet"
-      body="Paste your contract text or upload a PDF, then click Analyse My Contract to get started." />
-  )
+function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, response, stepStatus, hasRun, onNavigate, allMergedClauses }) {
+  const [openFaq, setOpenFaq] = useState(null)
+  const [activeKbCard, setActiveKbCard] = useState(0)
+
+  // Pre-analysis: show knowledge & awareness content
+  if (!hasRun) {
+    const knowledgeCards = [
+      { icon: '⚖️', stat: '1,040', label: 'Court Cases', desc: 'Supreme Court, Court of Appeal, High Court, Privy Council & more — indexed for instant retrieval', color: 'amber' },
+      { icon: '🔍', stat: '946', label: 'Risk Patterns', desc: 'Curated clause-level risk indicators extracted from real court disputes', color: 'orange' },
+      { icon: '📜', stat: '10', label: 'Legal Domains', desc: 'Employment, Commercial, Lease, Property, Debt Recovery, Procurement & more', color: 'amber' },
+      { icon: '🕰️', stat: '151', label: 'Years of Law', desc: 'Spanning 1874 to 2025 — the most comprehensive digital Sri Lankan legal corpus', color: 'stone' },
+    ]
+
+    const landmarkInsights = [
+      { title: 'Trust & Property', cases: 426, pct: '41%', icon: '🏠', desc: 'Land transfers, inheritance, and trust disputes form the largest category', highlight: 'Most property disputes involve unregistered agreements' },
+      { title: 'Commercial Contracts', cases: 196, pct: '19%', icon: '🏢', desc: 'Sale of goods, service agreements, and business partnerships', highlight: 'Breach of implied warranties is the most common dispute type' },
+      { title: 'Debt Recovery', cases: 158, pct: '15%', icon: '💰', desc: 'Loan defaults, guarantor liability, and recovery proceedings', highlight: 'Courts consistently enforce penalty clause limitations' },
+      { title: 'Employment Law', cases: 87, pct: '8%', icon: '👔', desc: 'Wrongful termination, probation disputes, and compensation claims', highlight: 'Termination without cause is the #1 employment risk pattern' },
+      { title: 'Lease & Tenancy', cases: 56, pct: '5%', icon: '🔑', desc: 'Rent disputes, eviction proceedings, and tenancy protections', highlight: 'The Rent Act provides strong tenant protections often missed' },
+      { title: 'Public Procurement', cases: 56, pct: '5%', icon: '📋', desc: 'Government contracts, bidding disputes, and compliance requirements', highlight: 'Procedural non-compliance invalidates many public contracts' },
+    ]
+
+    const faqItems = [
+      { q: 'How does LawKnow detect risks?', a: 'Your contract is split into individual clauses. Each clause is matched against 946 known risk patterns using AI sentence embeddings. Matching court cases and statutory provisions are retrieved in parallel to provide evidence-backed risk assessments.' },
+      { q: 'What makes a clause "high risk"?', a: 'A clause is flagged as high risk when it matches patterns from court cases where similar language led to unfavourable outcomes — such as unlawful termination, unenforceable penalty clauses, or missing statutory protections.' },
+      { q: 'Is this based on real Sri Lankan law?', a: 'Yes. Every risk finding is traceable to a real court decision from Sri Lankan courts spanning 1874-2025, plus relevant statutory acts like the Shop and Office Employees Act, Termination of Employment Act, and more.' },
+      { q: 'Can I trust the AI risk report?', a: 'The AI report synthesises findings from pattern detection, case law, and legislation using Google\'s Gemini model. Our research shows that AI-explained risks increase user agreement by 40x compared to unexplained labels (Cohen\'s kappa: 0.327 vs 0.008).' },
+      { q: 'What contract types are supported?', a: 'Employment contracts, commercial agreements, lease/tenancy contracts, loan agreements, service contracts, and property transfers. The system auto-detects your contract type using a Legal-BERT classifier.' },
+    ]
+
+    return (
+      <div className="space-y-6">
+        {/* Welcome hero */}
+        <div className="rounded-2xl bg-gradient-to-br from-stone-800 via-stone-800 to-stone-700 p-6 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-2xl" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-500/10 rounded-full translate-y-1/2 -translate-x-1/4 blur-2xl" />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-2xl">💡</span>
+              <p className="text-[10px] font-bold text-amber-400 uppercase tracking-[0.2em]">Before You Begin</p>
+            </div>
+            <h2 className="text-xl font-bold mb-2 leading-tight">Know What's Behind Your Analysis</h2>
+            <p className="text-sm text-stone-300 leading-relaxed max-w-lg">
+              LawKnow analyses contracts against <strong className="text-amber-400">151 years</strong> of Sri Lankan court precedents.
+              Explore the legal knowledge powering your risk assessment below.
+            </p>
+          </div>
+        </div>
+
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {knowledgeCards.map((card, idx) => (
+            <div key={idx}
+              className={`group relative rounded-xl border p-4 transition-all duration-300 cursor-default hover:shadow-md ${activeKbCard === idx ? 'border-amber-300 bg-amber-50 shadow-sm' : 'border-stone-200 bg-white hover:border-amber-200'}`}
+              onMouseEnter={() => setActiveKbCard(idx)}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">{card.icon}</span>
+                <p className={`text-2xl font-black ${activeKbCard === idx ? 'text-amber-700' : 'text-stone-800'} transition-colors`}>{card.stat}</p>
+              </div>
+              <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${activeKbCard === idx ? 'text-amber-600' : 'text-stone-400'} transition-colors`}>{card.label}</p>
+              <p className="text-[10px] text-stone-500 leading-relaxed">{card.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Legal domain breakdown */}
+        <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
+          <div className="px-5 py-3 border-b border-stone-100 bg-stone-50/60 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🏛️</span>
+              <div>
+                <p className="text-xs font-bold text-stone-800">Legal Domain Coverage</p>
+                <p className="text-[10px] text-stone-400">Court cases indexed by legal category</p>
+              </div>
+            </div>
+            <span className="text-[10px] text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full font-medium">1,040 total cases</span>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {landmarkInsights.map((item, idx) => (
+              <div key={idx}
+                className="group flex gap-3 p-3 rounded-xl border border-stone-100 hover:border-amber-200 hover:bg-amber-50/40 transition-all cursor-default">
+                <div className="w-10 h-10 rounded-lg bg-stone-50 group-hover:bg-amber-100 flex items-center justify-center text-base flex-shrink-0 transition-colors">
+                  {item.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-xs font-bold text-stone-800 group-hover:text-amber-800 transition-colors">{item.title}</p>
+                    <span className="text-[9px] font-semibold text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded-full">{item.cases} cases · {item.pct}</span>
+                  </div>
+                  <p className="text-[10px] text-stone-500 leading-relaxed">{item.desc}</p>
+                  <p className="text-[10px] text-amber-600 mt-1 font-medium italic opacity-0 group-hover:opacity-100 transition-opacity">💡 {item.highlight}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Research-backed facts ticker */}
+        <div className="rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-base">🔬</span>
+            <p className="text-xs font-bold text-amber-800">Research-Backed Facts</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { stat: '97.8%', label: 'Classification accuracy', desc: 'F1 score on held-out test data with calibrated ensemble', icon: '🎯' },
+              { stat: '40×', label: 'Agreement improvement', desc: 'Inter-rater reliability increase with AI explanations', icon: '🤝' },
+              { stat: '0.0%', label: 'Cross-domain false positives', desc: 'Domain-filtered search eliminates irrelevant cases', icon: '🛡️' },
+            ].map((fact, idx) => (
+              <div key={idx} className="flex items-start gap-2.5 bg-white/60 rounded-lg px-3 py-2.5 border border-amber-100">
+                <span className="text-base flex-shrink-0">{fact.icon}</span>
+                <div>
+                  <p className="text-lg font-black text-amber-800 leading-none">{fact.stat}</p>
+                  <p className="text-[10px] font-bold text-amber-700 mt-0.5 uppercase tracking-wide">{fact.label}</p>
+                  <p className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">{fact.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* FAQ accordion */}
+        <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
+          <div className="px-5 py-3 border-b border-stone-100 bg-stone-50/60 flex items-center gap-2">
+            <span className="text-base">❓</span>
+            <p className="text-xs font-bold text-stone-800">Frequently Asked Questions</p>
+          </div>
+          <div className="divide-y divide-stone-100">
+            {faqItems.map((item, idx) => (
+              <div key={idx}>
+                <button onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-stone-50/50 transition-colors">
+                  <p className={`text-xs font-semibold transition-colors ${openFaq === idx ? 'text-amber-700' : 'text-stone-700'}`}>{item.q}</p>
+                  <span className={`text-stone-400 text-xs transition-transform duration-200 ${openFaq === idx ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {openFaq === idx && (
+                  <div className="px-5 pb-3">
+                    <p className="text-[11px] text-stone-500 leading-relaxed bg-stone-50 rounded-lg px-3 py-2.5 border border-stone-100">{item.a}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="flex flex-col items-center text-center py-4">
+          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-xl mb-3">📄</div>
+          <p className="text-sm font-bold text-stone-700">Ready to analyse your contract?</p>
+          <p className="text-xs text-stone-400 mt-1 max-w-sm">Paste your contract text or upload a PDF on the left panel, then click <strong className="text-amber-700">Analyse My Contract</strong> to get started.</p>
+        </div>
+      </div>
+    )
+  }
 
   const contractType = response?.preprocessing?.contract_type
   const topRisks = mergedClauses.flatMap((c) => (c.risks || []).map((r) => ({ ...r, clause_id: c.clause_id, clause_type: c.clause_type, clause_text: c.clause_text }))).filter((r) => inferSeverity(r) === 'high').slice(0, 3)
@@ -386,6 +790,9 @@ function SummaryTab({ summary, aiRiskLevel, aiReportText, mergedClauses, respons
           </button>
         ))}
       </div>
+
+      {/* ── Knowledge Insights Panel ── */}
+      <KnowledgeInsightsPanel mergedClauses={allMergedClauses || mergedClauses} response={response} stepStatus={stepStatus} />
 
       <div className="flex gap-2.5 p-3 rounded-xl bg-stone-50 border border-stone-200">
         <span className="text-base flex-shrink-0 mt-0.5">ℹ️</span>
@@ -827,7 +1234,7 @@ export default function ContractRiskRetestPage() {
                   {activeTab === 'summary' && (
                     <SummaryTab summary={summary} aiRiskLevel={aiRiskLevel} aiReportText={aiReportText}
                       mergedClauses={mergedClauses} response={response} stepStatus={stepStatus}
-                      hasRun={hasRun} onNavigate={setActiveTab} />
+                      hasRun={hasRun} onNavigate={setActiveTab} allMergedClauses={mergedClauses} />
                   )}
 
                   {activeTab === 'clauses' && (
