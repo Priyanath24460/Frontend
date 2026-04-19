@@ -9,6 +9,7 @@ const Search = () => {
   const [error, setError] = useState(null);
   const [selectedQuery, setSelectedQuery] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
 
   const exampleQueries = [
     "What evidence is needed to prove rape in Sri Lanka?",
@@ -31,6 +32,71 @@ const Search = () => {
   return (
     <div className="min-h-screen bg-linear-to-b from-stone-50 to-amber-50">
       <Header />
+
+      {/* ⚠️ Known Issue Notice Banner */}
+      {!noticeDismissed && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '72px',
+            left: 0,
+            right: 0,
+            zIndex: 999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            padding: '10px 20px',
+            background: 'linear-gradient(90deg, #fef3c7 0%, #fde68a 100%)',
+            borderBottom: '2px solid #f59e0b',
+            boxShadow: '0 2px 8px rgba(245,158,11,0.15)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '18px' }}>🔧</span>
+            <span style={{ fontWeight: '700', color: '#92400e', fontSize: '13px' }}>
+              Known Issue — Being Fixed:
+            </span>
+            <span style={{ color: '#78350f', fontSize: '13px' }}>
+              The <strong>first request may occasionally fail</strong> due to a cold-start issue with our backend.
+              Simply <strong>submit your question again</strong> and it will work on the second attempt.
+            </span>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: '#f59e0b',
+                color: '#fff',
+                fontSize: '11px',
+                fontWeight: '700',
+                borderRadius: '999px',
+                padding: '2px 10px',
+                letterSpacing: '0.05em',
+              }}
+            >
+              <span style={{ fontSize: '10px' }}>✅</span> Fix in progress
+            </span>
+          </div>
+          <button
+            onClick={() => setNoticeDismissed(true)}
+            title="Dismiss"
+            style={{
+              flexShrink: 0,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#92400e',
+              fontSize: '18px',
+              lineHeight: 1,
+              padding: '2px 6px',
+              borderRadius: '6px',
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <main className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Header */}
@@ -116,7 +182,32 @@ const Search = () => {
                   setSelectedQuery={setSelectedQuery}
                   setLastQuestion={setLastQuestion}
                 />
-                
+
+                {/* ⚠️ First-request notice — shown directly under the search button */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    marginTop: '12px',
+                    background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                    border: '1.5px solid #f59e0b',
+                    borderRadius: '10px',
+                    padding: '10px 14px',
+                  }}
+                >
+                  <span style={{ fontSize: '18px', lineHeight: 1, flexShrink: 0, marginTop: '1px' }}>🔧</span>
+                  <div>
+                    <p style={{ fontWeight: '700', color: '#92400e', fontSize: '12px', marginBottom: '3px' }}>
+                      Known Issue — Being Fixed
+                    </p>
+                    <p style={{ color: '#78350f', fontSize: '12px', lineHeight: '1.5', margin: 0 }}>
+                      The <strong>first request may fail</strong> due to a backend cold-start.
+                      Simply <strong>submit again</strong> — it works on the second try. ✅
+                    </p>
+                  </div>
+                </div>
+
                 {/* Example Queries Section */}
                 <div className="mt-6">
                   <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center">
@@ -184,14 +275,57 @@ const Search = () => {
                   <div className="p-6 lg:p-8">
                     {/* Error State */}
                     {error && (
-                      <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-                        <div className="flex items-start">
-                          <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                      <div className="mb-6 space-y-3">
+                        {/* Main error */}
+                        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                          <div className="flex items-start">
+                            <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                              <h3 className="text-red-800 font-semibold mb-1">Search Failed</h3>
+                              <p className="text-red-700 text-sm">{error}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Known issue + retry hint */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '12px',
+                            background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                            border: '1.5px solid #f59e0b',
+                            borderRadius: '12px',
+                            padding: '14px 16px',
+                          }}
+                        >
+                          <span style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0 }}>🔧</span>
                           <div>
-                            <h3 className="text-red-800 font-semibold mb-1">Search Failed</h3>
-                            <p className="text-red-700 text-sm">{error}</p>
+                            <p style={{ fontWeight: '700', color: '#92400e', fontSize: '13px', marginBottom: '4px' }}>
+                              Known Issue — We're fixing this!
+                            </p>
+                            <p style={{ color: '#78350f', fontSize: '13px', lineHeight: '1.5' }}>
+                              The <strong>first request sometimes fails</strong> due to a backend cold-start issue.
+                              Please <strong>submit your question again</strong> — it almost always succeeds on the second try.
+                            </p>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                marginTop: '8px',
+                                background: '#f59e0b',
+                                color: '#fff',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                borderRadius: '999px',
+                                padding: '3px 12px',
+                              }}
+                            >
+                              ✅ Fix in progress
+                            </span>
                           </div>
                         </div>
                       </div>
