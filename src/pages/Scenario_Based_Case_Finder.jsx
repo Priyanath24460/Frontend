@@ -58,8 +58,8 @@ const Search = () => {
               Known Issue — Being Fixed:
             </span>
             <span style={{ color: '#78350f', fontSize: '13px' }}>
-              The <strong>first request may occasionally fail</strong> due to a cold-start issue with our backend.
-              Simply <strong>submit your question again</strong> and it will work on the second attempt.
+              <strong>Sometimes</strong> the first request may fail due to a backend cold-start.
+              Simply <strong>submit your question again</strong> — it works on the second try. ✅
             </span>
             <span
               style={{
@@ -202,7 +202,7 @@ const Search = () => {
                       Known Issue — Being Fixed
                     </p>
                     <p style={{ color: '#78350f', fontSize: '12px', lineHeight: '1.5', margin: 0 }}>
-                      The <strong>first request may fail</strong> due to a backend cold-start.
+                      <strong>Sometimes</strong> the first request may fail due to a backend cold-start.
                       Simply <strong>submit again</strong> — it works on the second try. ✅
                     </p>
                   </div>
