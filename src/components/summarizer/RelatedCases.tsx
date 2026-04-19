@@ -227,10 +227,7 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
                       >
                         {isThisLoading ? '⏳ Loading...' : isThisReaderOpen ? '▲ Close Case' : '📖 Read Case'}
                       </button>
-                      <a
-                        href={`${API.ANALYSIS}/corpus-pdf-view?file_name=${encodeURIComponent(similarCase.file_name)}&title=${encodeURIComponent(similarCase.title || similarCase.file_name || "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
                         className="view-case-btn"
                         style={{
                           display: 'inline-flex',
@@ -245,10 +242,29 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
                           textDecoration: 'none',
                           boxShadow: '0 2px 6px rgba(13,148,136,0.3)',
                         }}
+                        onClick={async () => {
+                          try {
+                            // Show loading state (optional: could use a state variable)
+                            const win = window.open('', '_blank');
+                            win?.document.write('Loading PDF...');
+                            const res = await axios.get(`${API.DOCUMENTS}/past-case-pdf`, {
+                              params: { path: similarCase.file_name },
+                            });
+                            const url = res.data.url;
+                            if (url) {
+                              win!.location.href = url;
+                            } else {
+                              win?.close();
+                              alert('PDF link not found.');
+                            }
+                          } catch (err) {
+                            alert('Failed to fetch PDF link.');
+                          }
+                        }}
                       >
                         <DocumentArrowDownIcon className="w-4 h-4" />
                         Open PDF
-                      </a>
+                      </button>
                     </>
                   ) : (
                     // User-uploaded document: navigate to its analysis page
