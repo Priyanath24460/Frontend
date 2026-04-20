@@ -7,7 +7,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, loginAsGuestLawyer } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -38,6 +38,19 @@ const Login = () => {
       navigate('/');
     } catch (error) {
       setError(error.message || 'Failed to login with Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestLawyerLogin = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      await loginAsGuestLawyer();
+      navigate('/');
+    } catch (error) {
+      setError(error.message || 'Failed to login as guest lawyer');
     } finally {
       setLoading(false);
     }
@@ -271,6 +284,19 @@ const Login = () => {
                 />
               </svg>
               Sign in with Google
+            </button>
+
+            {/* Guest Lawyer Button */}
+            <button
+              type="button"
+              onClick={handleGuestLawyerLogin}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 bg-stone-800 text-white py-3.5 px-6 rounded-xl font-semibold text-sm hover:bg-stone-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border border-stone-700 mt-4"
+            >
+              <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Test as Lawyer (No Account)
             </button>
           </form>
 

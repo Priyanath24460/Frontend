@@ -7,7 +7,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
-  updateProfile
+  updateProfile,
+  signInAnonymously
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
@@ -69,6 +70,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Login as Guest Lawyer
+  const loginAsGuestLawyer = async () => {
+    try {
+      setError(null);
+      const userCredential = await signInAnonymously(auth);
+      await updateProfile(userCredential.user, {
+        displayName: 'Guest Lawyer'
+      });
+      return userCredential;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
   // Logout
   const logout = async () => {
     try {
@@ -106,6 +122,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     loginWithGoogle,
+    loginAsGuestLawyer,
     resetPassword,
     error,
     loading
