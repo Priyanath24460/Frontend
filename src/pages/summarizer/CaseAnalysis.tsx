@@ -73,7 +73,7 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
     setCurrentDocumentId,
     setCurrentDocumentName,
     setActiveTab,
-    resetState,
+    beginNewDocument,
   } = useCaseAnalysis();
 
   const handleUploadSuccess = async (doc: any) => {
@@ -83,14 +83,8 @@ const CaseAnalysis: React.FC<CaseAnalysisProps> = ({ lang }) => {
     const documentName = doc.file_name || doc.filename || doc.title || doc.name || `Document_${doc.document_id}`;
     console.log('Setting document name:', documentName);
     
-    // Reset state for new upload
-    resetState();
-    
     setAnalysisError(null);
-    
-    // Set both ID and name together to ensure they persist
-    setCurrentDocumentId(doc.document_id);
-    setCurrentDocumentName(documentName);
+    beginNewDocument({ ...doc, file_name: documentName });
 
     // Set structure analysis from upload response
     if (doc.structure_analysis) {

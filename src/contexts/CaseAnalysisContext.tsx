@@ -56,6 +56,15 @@ interface CaseAnalysisContextType {
   setCurrentDocumentName: (name: string | null) => void;
   setActiveTab: (tab: string) => void;
   resetState: () => void;
+  /** One atomic update after upload: clears analysis fields and sets document id/name (avoids race with resetState). */
+  beginNewDocument: (doc: {
+    document_id?: number | string;
+    id?: number | string;
+    file_name?: string;
+    filename?: string;
+    title?: string;
+    name?: string;
+  }) => void;
 }
 
 const initialState: CaseAnalysisState = {
@@ -117,6 +126,38 @@ export const CaseAnalysisProvider: React.FC<{ children: ReactNode }> = ({ childr
     sessionStorage.removeItem(STORAGE_KEY);
   };
 
+  const beginNewDocument = (doc: {
+    document_id?: number | string;
+    id?: number | string;
+    file_name?: string;
+    filename?: string;
+    title?: string;
+    name?: string;
+  }) => {
+    const rawId =
+      doc.document_id ??
+      doc.id ??
+      (doc as { documentId?: number | string }).documentId;
+    const parsed =
+      typeof rawId === "number" && Number.isFinite(rawId)
+        ? rawId
+        : parseInt(String(rawId ?? ""), 10);
+    const currentDocumentId = Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    const currentDocumentName =
+      doc.file_name ||
+      doc.filename ||
+      doc.title ||
+      doc.name ||
+      (currentDocumentId ? `Document_${currentDocumentId}` : null);
+    setState({
+      ...initialState,
+      currentDocumentId,
+      currentDocumentName,
+      shouldPersist: true,
+    });
+    sessionStorage.removeItem(STORAGE_KEY);
+  };
+
   return (
     <CaseAnalysisContext.Provider
       value={{
@@ -131,6 +172,7 @@ export const CaseAnalysisProvider: React.FC<{ children: ReactNode }> = ({ childr
         setCurrentDocumentName,
         setActiveTab,
         resetState,
+        beginNewDocument,
       }}
     >
       {children}

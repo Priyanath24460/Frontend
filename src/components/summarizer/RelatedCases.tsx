@@ -19,6 +19,9 @@ interface SimilarCase {
   court_weight: number;
   recency: number | null;
   source?: string;
+  /** When data/corpus_google_drive_map.json is deployed with the backend */
+  drive_view_url?: string | null;
+  drive_file_id?: string | null;
 }
 
 interface CorpusCaseData {
@@ -30,10 +33,14 @@ interface CorpusCaseData {
   source: string;
   text: string;
   text_length: number;
+  drive_view_url?: string | null;
+  drive_download_url?: string | null;
+  drive_only?: boolean;
+  notice?: string;
 }
 
 interface RelatedCasesProps {
-  documentId: number;
+  documentId: number | null;
   topK?: number;
   minSimilarity?: number;
 }
@@ -41,12 +48,15 @@ interface RelatedCasesProps {
 const RelatedCases: React.FC<RelatedCasesProps> = ({
   documentId,
   topK = 5,
-  minSimilarity = 0.5,
+  minSimilarity = 0.3,
 }) => {
   const [similarCases, setSimilarCases] = useState<SimilarCase[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sourceDocument, setSourceDocument] = useState<any>(null);
+  /** Backend local NLR/SLR index (combined_legal_cases.json); 0 means rebuild or sync PDFs locally. */
+  const [corpusIndexSize, setCorpusIndexSize] = useState<number | null>(null);
+  const [corpusJsonFound, setCorpusJsonFound] = useState<boolean | null>(null);
 
   // Corpus case reader state
   const [readerCase, setReaderCase] = useState<CorpusCaseData | null>(null);
@@ -71,8 +81,23 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
       const response = await axios.get(`${API.ANALYSIS}/similar-cases/${documentId}`, {
         params: { top_k: topK, min_similarity: minSimilarity },
       });
-      setSimilarCases(response.data.similar_cases || []);
-      setSourceDocument(response.data.source_document);
+      const d = response.data;
+      setSimilarCases(d.similar_cases || []);
+      setSourceDocument(d.source_document);
+      const idx =
+        typeof d.corpus_index_size === "number"
+          ? d.corpus_index_size
+          : typeof (d as { corpusIndexSize?: number }).corpusIndexSize === "number"
+            ? (d as { corpusIndexSize: number }).corpusIndexSize
+            : null;
+      const jf =
+        typeof d.corpus_json_found === "boolean"
+          ? d.corpus_json_found
+          : typeof (d as { corpusJsonFound?: boolean }).corpusJsonFound === "boolean"
+            ? (d as { corpusJsonFound: boolean }).corpusJsonFound
+            : null;
+      setCorpusIndexSize(idx);
+      setCorpusJsonFound(jf);
     } catch (err: any) {
       console.error("Error fetching similar cases:", err);
       setError(err.response?.data?.detail || "Failed to load similar cases");
@@ -148,15 +173,79 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
     </div>
   );
 
-  if (similarCases.length === 0) return (
-    <div className="related-cases-container">
-      <h3 className="related-cases-title">🔗 Related Cases</h3>
-      <div className="no-cases-message">
-        <InformationCircleIcon className="w-6 h-6 text-blue-500" />
-        <p>No similar cases found in the NLR/SLR corpus.</p>
+  if (similarCases.length === 0) {
+    const corpusEmpty =
+      corpusIndexSize === 0 || corpusJsonFound === false;
+    /** Older or proxied APIs may omit corpus fields — often means the UI is not calling your local backend. */
+    const corpusMetaUnknown =
+      corpusIndexSize == null && corpusJsonFound == null;
+    return (
+      <div className="related-cases-container">
+        <h3 className="related-cases-title">🔗 Related Cases</h3>
+        <div className="no-cases-message">
+          <InformationCircleIcon className="w-6 h-6 text-blue-500" />
+          {corpusEmpty ? (
+            <>
+              <p>
+                The NLR/SLR case index is missing or empty on this server. Related matching uses{" "}
+                <code>data/processed/combined_legal_cases.json</code> (built once from PDFs). Google Drive is
+                not queried at runtime for similarity.
+              </p>
+              <p style={{ marginTop: "0.75rem", fontSize: "0.9rem" }}>
+                <strong>Hosted workflow:</strong> (1) Build the text index in CI or locally and ship{" "}
+                <code>combined_legal_cases.json</code> with your backend image or volume. (2) Run{" "}
+                <code>python backend/scripts/list_gdrive_pdfs_recursive.py</code> once, then deploy{" "}
+                <code>data/corpus_google_drive_map.json</code> so &quot;Open PDF&quot; resolves Drive file IDs
+                by filename.
+              </p>
+              <p style={{ marginTop: "0.75rem", fontSize: "0.9rem" }}>
+                Optional local build: sync{" "}
+                <a
+                  href="https://drive.google.com/drive/folders/17rxYz3UwcK3ecNb_BKSE4qAKo7a0tRR4?usp=drive_link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Drive
+                </a>{" "}
+                to <code>data/raw_documents/</code> (<code>NLR_All_Volumes all</code>, <code>SLR_Downloads</code>
+                ), then:
+              </p>
+              <pre
+                style={{
+                  marginTop: "0.5rem",
+                  padding: "0.75rem",
+                  background: "#f4f4f5",
+                  borderRadius: 6,
+                  fontSize: "0.8rem",
+                  overflow: "auto",
+                }}
+              >
+                python backend/scripts/build_combined_corpus_from_raw.py
+              </pre>
+              <p style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "#57534e" }}>
+                Restart the backend after updating JSON files.
+              </p>
+            </>
+          ) : corpusMetaUnknown ? (
+            <div>
+              <p>
+                The API did not report corpus status (older server, proxy, or wrong base URL). Upload and
+                Related Cases both use <code>VITE_SUMMARIZER_API_URL</code> from{" "}
+                <code>.env.development</code>.
+              </p>
+              <p style={{ marginTop: "0.75rem", fontSize: "0.9rem" }}>
+                For local work, point it at the same host as uvicorn (for example{" "}
+                <code>http://127.0.0.1:8011</code>), then <strong>restart the Vite dev server</strong> so
+                the env file is re-read.
+              </p>
+            </div>
+          ) : (
+            <p>No similar cases found in the NLR/SLR corpus.</p>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="related-cases-container">
@@ -243,8 +332,12 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
                           boxShadow: '0 2px 6px rgba(13,148,136,0.3)',
                         }}
                         onClick={async () => {
+                          const direct = similarCase.drive_view_url?.trim();
+                          if (direct) {
+                            window.open(direct, '_blank', 'noopener,noreferrer');
+                            return;
+                          }
                           try {
-                            // Show loading state (optional: could use a state variable)
                             const win = window.open('', '_blank');
                             win?.document.write('Loading PDF...');
                             const res = await axios.get(`${API.DOCUMENTS}/past-case-pdf`, {
@@ -258,7 +351,7 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
                               alert('PDF link not found.');
                             }
                           } catch (err) {
-                            alert('Failed to fetch PDF link.');
+                            alert('Failed to fetch PDF link. Deploy data/corpus_google_drive_map.json on the server or run list_gdrive_pdfs_recursive.py.');
                           }
                         }}
                       >
@@ -292,7 +385,10 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
                           {readerCase.citation} · {readerCase.court} · {readerCase.year ?? '—'}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: '#a16207', marginTop: 2 }}>
-                          📚 Source: {readerCase.source} · {readerCase.text_length.toLocaleString()} characters
+                          📚 Source: {readerCase.source}
+                          {readerCase.text_length > 0
+                            ? ` · ${readerCase.text_length.toLocaleString()} characters`
+                            : ""}
                         </div>
                       </div>
                       <button
@@ -303,17 +399,47 @@ const RelatedCases: React.FC<RelatedCasesProps> = ({
                         <XMarkIcon className="w-5 h-5" />
                       </button>
                     </div>
-                    <pre style={{
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      fontSize: '0.82rem',
-                      lineHeight: 1.6,
-                      color: '#1c1917',
-                      fontFamily: 'Georgia, serif',
-                      margin: 0,
-                    }}>
-                      {readerCase.text}
-                    </pre>
+                    {readerCase.drive_only || !readerCase.text?.trim() ? (
+                      <div style={{ fontSize: "0.9rem", color: "#44403c", lineHeight: 1.6 }}>
+                        {readerCase.notice && <p style={{ marginBottom: 12 }}>{readerCase.notice}</p>}
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                          {readerCase.drive_view_url && (
+                            <a
+                              href={readerCase.drive_view_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="view-case-btn"
+                              style={{ background: "#0d9488", color: "#fff", padding: "8px 14px", borderRadius: 8, textDecoration: "none", fontWeight: 600 }}
+                            >
+                              Open in Google Drive
+                            </a>
+                          )}
+                          {readerCase.drive_download_url && (
+                            <a
+                              href={readerCase.drive_download_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="view-case-btn"
+                              style={{ background: "#0369a1", color: "#fff", padding: "8px 14px", borderRadius: 8, textDecoration: "none", fontWeight: 600 }}
+                            >
+                              Download PDF
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <pre style={{
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        fontSize: '0.82rem',
+                        lineHeight: 1.6,
+                        color: '#1c1917',
+                        fontFamily: 'Georgia, serif',
+                        margin: 0,
+                      }}>
+                        {readerCase.text}
+                      </pre>
+                    )}
                   </div>
                 )}
 
