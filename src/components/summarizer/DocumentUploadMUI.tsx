@@ -70,10 +70,13 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
           },
           timeout: 900000, // 15 minutes — first-time server may download AI models (~1.6GB)
           onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / (progressEvent.total || 1),
-            );
-            setUploadProgress(percentCompleted);
+            const total = progressEvent.total;
+            const loaded = progressEvent.loaded;
+            if (total && total > 0) {
+              setUploadProgress(Math.min(99, Math.round((loaded * 100) / total)));
+            } else if (loaded > 0) {
+              setUploadProgress((p) => Math.min(99, Math.max(p, 1)));
+            }
           },
         },
       );
@@ -89,14 +92,19 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
       }, 2000);
     } catch (err: any) {
       console.error("Upload error:", err);
+      setUploadProgress(0);
 
       if (err.code === "ECONNABORTED") {
         setError(
           "Request took too long. On first run the server downloads AI models (~1.6GB), which can take 5–15 minutes. " +
             "Try uploading again in a few minutes; the analysis will complete once models are ready.",
         );
+      } else if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
+        setError(
+          "Cannot reach the API. Check that the backend is running and VITE_SUMMARIZER_API_URL / port matches (e.g. http://127.0.0.1:8011), then try again.",
+        );
       } else {
-        setError(err.response?.data?.detail || "Upload failed");
+        setError(err.response?.data?.detail || err.message || "Upload failed");
       }
     } finally {
       setUploading(false);
@@ -203,11 +211,20 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
             */}
             {(() => {
               const isAnalyzing = uploadProgress >= 100;
+              const hasByteProgress =
+                uploadProgress > 0 && uploadProgress < 100;
+              const indeterminate =
+                !isAnalyzing &&
+                !hasByteProgress;
               return (
                 <>
                   <LinearProgress
-                    variant={isAnalyzing ? "indeterminate" : "determinate"}
-                    value={isAnalyzing ? undefined : uploadProgress}
+                    variant={
+                      isAnalyzing || indeterminate ? "indeterminate" : "determinate"
+                    }
+                    value={
+                      isAnalyzing || indeterminate ? undefined : uploadProgress
+                    }
                     sx={{
                       height: 10,
                       borderRadius: 5,
@@ -225,8 +242,10 @@ const DocumentUploadMUI: React.FC<DocumentUploadProps> = ({
                     sx={{ mt: 1, display: "block", textAlign: "center" }}
                   >
                     {isAnalyzing
-                      ? "Analyzing case with AI…"
-                      : `Uploading… ${uploadProgress}%`}
+                      ? "Analyzing case on server (embeddings, summaries)…"
+                      : hasByteProgress
+                        ? `Sending file… ${uploadProgress}%`
+                        : "Sending file and running full analysis—often 1–15 min on first run or large PDFs…"}
                   </Typography>
                 </>
               );
