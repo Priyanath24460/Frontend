@@ -2,6 +2,8 @@ import { ExclamationTriangleIcon, BookmarkIcon } from '@heroicons/react/24/outli
 import { useState } from 'react';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
+import { API } from '../config/api';
+import { SparklesIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 // Helper function to parse and render enhanced markdown-like content
 const parseEnhancedContent = (content) => {
@@ -102,8 +104,51 @@ const parseEnhancedContent = (content) => {
   );
 };
 
-export default function ResultDisplay({ result, userQuestion }) {
+export default function ResultDisplay({ result, userQuestion, setResult }) {
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(0);
+  const [isLoadingFull, setIsLoadingFull] = useState(false);
+
+  const fetchFullAnswer = async (caseId) => {
+    if (isLoadingFull) return;
+    
+    setIsLoadingFull(true);
+    try {
+      const response = await fetch(API.FULL_ANSWER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: userQuestion,
+          caseId: caseId
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch full answer');
+      
+      const data = await response.json();
+      
+      // Update the result object in parent state
+      const updatedAllCases = [...(result.allCases || [])];
+      const caseIndex = updatedAllCases.findIndex(c => c.caseInfo.caseId === caseId);
+      
+      if (caseIndex !== -1) {
+        updatedAllCases[caseIndex] = {
+          ...updatedAllCases[caseIndex],
+          summary: data.summary,
+          isFullAnswer: true
+        };
+        
+        setResult({
+          ...result,
+          allCases: updatedAllCases
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching full answer:', err);
+      alert('Failed to load full analysis. Please try again.');
+    } finally {
+      setIsLoadingFull(false);
+    }
+  };
   
   if (!result) return null;
 
@@ -593,7 +638,40 @@ Generated: ${date}
           
           <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-white rounded-2xl p-6 border-2 border-amber-200 shadow-lg">
             <div className="prose prose-base max-w-none text-gray-800 leading-relaxed text-sm">
-              {parseEnhancedContent(currentSummary)}
+              {currentCase.isFullAnswer ? (
+                parseEnhancedContent(currentSummary)
+              ) : (
+                <div className="flex flex-col items-center py-12 text-center">
+                  <div className="w-20 h-20 bg-linear-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center mb-8 shadow-inner">
+                    <SparklesIcon className="w-10 h-10 text-amber-600" />
+                  </div>
+                  
+                  <div className="max-w-md">
+                    <h4 className="text-2xl font-bold text-amber-900 mb-3">Ready for Detailed Analysis</h4>
+                    <p className="text-base text-gray-600 mb-8 leading-relaxed">
+                      This case has been identified as a top relevant match. Click below to generate a comprehensive legal reasoning and application for your specific question.
+                    </p>
+                    
+                    <button
+                      onClick={() => fetchFullAnswer(currentCaseInfo.caseId)}
+                      disabled={isLoadingFull}
+                      className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                    >
+                      {isLoadingFull ? (
+                        <>
+                          <ArrowPathIcon className="w-6 h-6 animate-spin" />
+                          Analyzing Case...
+                        </>
+                      ) : (
+                        <>
+                          <SparklesIcon className="w-6 h-6" />
+                          Generate Full Analysis
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

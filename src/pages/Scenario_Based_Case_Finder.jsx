@@ -196,8 +196,8 @@ const Search = () => {
                     padding: '10px 14px',
                   }}
                 >
-                  <span style={{ fontSize: '18px', lineHeight: 1, flexShrink: 0, marginTop: '1px' }}>🔧</span>
-                  <div>
+                  {/* <span style={{ fontSize: '18px', lineHeight: 1, flexShrink: 0, marginTop: '1px' }}>🔧</span> */}
+                  {/* <div>
                     <p style={{ fontWeight: '700', color: '#92400e', fontSize: '12px', marginBottom: '3px' }}>
                       Known Issue — Being Fixed
                     </p>
@@ -205,7 +205,7 @@ const Search = () => {
                       <strong>Sometimes</strong> the first request may fail due to a backend cold-start.
                       Simply <strong>submit again</strong> — it works on the second try. ✅
                     </p>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Example Queries Section */}
@@ -409,7 +409,7 @@ const Search = () => {
 
                 {/* Results Display */}
                 {result && !isLoading && (
-                  <ResultDisplay result={result} userQuestion={lastQuestion} />
+                  <ResultDisplay result={result} userQuestion={lastQuestion} setResult={setResult} />
                 )}
               </div>
             </div>
