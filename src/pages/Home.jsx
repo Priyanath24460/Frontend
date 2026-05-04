@@ -49,7 +49,7 @@ const Home = () => {
                 </h2>
                 <p className="text-sm sm:text-base lg:text-lg text-white/85 leading-relaxed font-medium">
                   Navigate the Sri Lankan legal system with unprecedented precision. Our cutting-edge AI platform delivers 
-                  comprehensive legal research, intelligent case analysis, and advanced document processing—specifically designed 
+                  comprehensive legal research, intelligent case analysis, and advanced document processing-specifically designed 
                   for legal professionals, students, and informed citizens.
                 </p>
               </div>
@@ -65,17 +65,6 @@ const Home = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     Start Research
-                  </span>
-                </Link>
-                <Link 
-                  to="/upload" 
-                  className="group relative bg-white/15 backdrop-blur-md border-2 border-white/40 text-white px-7 sm:px-12 py-3.5 sm:py-4 rounded-xl font-bold text-sm sm:text-base hover:bg-white/25 hover:border-white/60 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 min-h-[44px] flex items-center justify-center"
-                >
-                  <span className="relative flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5 group-hover:-translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    Upload
                   </span>
                 </Link>
               </div>

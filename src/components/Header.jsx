@@ -68,6 +68,24 @@ const Header = () => {
                   )}
                 </Link>
               </li>
+              <li>
+                <Link 
+                  to="/pricing" 
+                  className={`relative px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 flex items-center ${
+                    isActive('/pricing') 
+                      ? 'text-amber-400 bg-amber-400/10' 
+                      : 'text-stone-50 hover:text-amber-300 hover:bg-white/10'
+                  }`}
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Pricing
+                  {isActive('/pricing') && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full"></div>
+                  )}
+                </Link>
+              </li>
               {/* <li>
                 <Link 
                   to="/upload" 
@@ -236,6 +254,25 @@ const Header = () => {
                   )}
                 </Link>
               </li>
+
+              <li>
+                <Link 
+                  to="/contact" 
+                  className={`relative px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 flex items-center ${
+                    isActive('/contact') 
+                      ? 'text-amber-400 bg-amber-400/10' 
+                      : 'text-stone-50 hover:text-amber-300 hover:bg-white/10'
+                  }`}
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Contact
+                  {isActive('/contact') && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full"></div>
+                  )}
+                </Link>
+              </li>
               
               {/* Auth Section */}
               {currentUser ? (
@@ -353,6 +390,19 @@ const Header = () => {
                 Home
               </Link>
 
+              {/* Pricing Link */}
+              <Link 
+                to="/pricing" 
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-4 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                  isActive('/pricing') 
+                    ? 'text-amber-400 bg-amber-400/10' 
+                    : 'text-stone-50 hover:text-amber-300 hover:bg-white/10'
+                }`}
+              >
+                Pricing
+              </Link>
+
               {/* Features Submenu */}
               <div>
                 <button
@@ -447,6 +497,19 @@ const Header = () => {
                 }`}
               >
                 About
+              </Link>
+
+              {/* Contact Link */}
+              <Link 
+                to="/contact" 
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-4 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                  isActive('/contact') 
+                    ? 'text-amber-400 bg-amber-400/10' 
+                    : 'text-stone-50 hover:text-amber-300 hover:bg-white/10'
+                }`}
+              >
+                Contact
               </Link>
 
               {/* Auth Section */}

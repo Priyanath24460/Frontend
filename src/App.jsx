@@ -37,6 +37,9 @@ const CaseAnalysis = React.lazy(() => import("./pages/summarizer/CaseAnalysis"))
 const CaseDetailPage = React.lazy(() => import("./pages/summarizer/CaseDetailPage"));
 const RAGUploadPage = React.lazy(() => import("./pages/summarizer/RAGUploadPage"));
 const ContractRiskRetestPage = React.lazy(() => import("./pages/ContractRiskRetestPage"));
+const Pricing = React.lazy(() => import("./pages/Pricing"));
+const About = React.lazy(() => import("./pages/About"));
+const Contact = React.lazy(() => import("./pages/Contact"));
 
 const Fallback = () => (
   <div style={{ padding: 32, textAlign: "center", color: "#888", fontFamily: "sans-serif" }}>
@@ -58,6 +61,9 @@ export default function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
                   
                   {/* Protected Routes - Require Authentication */}
                   <Route 

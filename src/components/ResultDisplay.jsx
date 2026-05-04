@@ -161,11 +161,13 @@ export default function ResultDisplay({ result, userQuestion, setResult }) {
   const currentSections = currentCase.relevantSections || result.topSections || [];
 
   // Function to generate downloadable report
-  const downloadReport = () => {
+  const downloadReport = (onlyCurrent = false) => {
+    const casesToInclude = onlyCurrent ? [allCases[selectedCaseIndex]] : allCases;
+
     const generateReport = () => {
       const date = new Date().toLocaleString();
       let report = `═══════════════════════════════════════════════════════════════════════
-LEGAL CASE SEARCH REPORT
+${onlyCurrent ? 'LEGAL CASE ANALYSIS - SINGLE CASE' : 'LEGAL CASE SEARCH REPORT - ALL MATCHES'}
 Generated: ${date}
 ═══════════════════════════════════════════════════════════════════════
 
@@ -177,14 +179,14 @@ Generated: ${date}
         report += `${'═'.repeat(75)}\n\n`;
       }
 
-      // Add all cases
-      allCases.forEach((caseItem, index) => {
+      // Add cases
+      casesToInclude.forEach((caseItem, i) => {
         const caseInfo = caseItem.caseInfo;
         const summary = caseItem.summary;
-        const sections = caseItem.relevantSections || [];
+        const actualRank = onlyCurrent ? selectedCaseIndex + 1 : i + 1;
         
         report += `\n${'█'.repeat(75)}\n`;
-        report += `CASE #${index + 1} ${index === 0 ? '(BEST MATCH)' : index === 1 ? '(2ND BEST MATCH)' : '(3RD BEST MATCH)'}\n`;
+        report += `CASE #${actualRank} ${actualRank === 1 ? '(BEST MATCH)' : actualRank === 2 ? '(2ND BEST MATCH)' : '(3RD BEST MATCH)'}\n`;
         report += `${'█'.repeat(75)}\n\n`;
 
         // Case metadata
@@ -241,7 +243,11 @@ Generated: ${date}
     
     // Generate filename with timestamp
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    link.download = `LawKnow_Case_Report_${timestamp}.txt`;
+    const filename = onlyCurrent 
+      ? `LawKnow_Case_${allCases[selectedCaseIndex]?.caseInfo?.caseId || 'Analysis'}_${timestamp}.txt`
+      : `LawKnow_Full_Report_${timestamp}.txt`;
+    
+    link.download = filename;
     
     document.body.appendChild(link);
     link.click();
@@ -250,7 +256,8 @@ Generated: ${date}
   };
 
   // Function to download as PDF
-  const downloadPDF = () => {
+  const downloadPDF = (onlyCurrent = false) => {
+    const casesToInclude = onlyCurrent ? [allCases[selectedCaseIndex]] : allCases;
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -307,7 +314,8 @@ Generated: ${date}
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
     doc.setFont(undefined, 'bold');
-    doc.text('LEGAL CASE SEARCH REPORT', pageWidth / 2, 20, { align: 'center' });
+    const mainTitle = onlyCurrent ? 'LEGAL CASE ANALYSIS' : 'LEGAL CASE SEARCH REPORT';
+    doc.text(mainTitle, pageWidth / 2, 20, { align: 'center' });
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
     doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 30, { align: 'center' });
@@ -324,10 +332,11 @@ Generated: ${date}
       yPosition += 5;
     }
 
-    // Add all cases
-    allCases.forEach((caseItem, index) => {
+    // Add cases
+    casesToInclude.forEach((caseItem, i) => {
       const caseInfo = caseItem.caseInfo;
       const summary = caseItem.summary;
+      const actualRank = onlyCurrent ? selectedCaseIndex + 1 : i + 1;
 
       // Case header with colored background
       if (yPosition > pageHeight - 30) {
@@ -341,12 +350,13 @@ Generated: ${date}
         [217, 119, 6]    // Dark amber for #3
       ];
       
-      doc.setFillColor(...rankColors[index]);
+      const colorIndex = (actualRank - 1) % 3;
+      doc.setFillColor(...rankColors[colorIndex]);
       doc.rect(margin, yPosition - 5, maxWidth, 10, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(12);
       doc.setFont(undefined, 'bold');
-      const rankText = `CASE #${index + 1} ${index === 0 ? '(BEST MATCH)' : index === 1 ? '(2ND BEST MATCH)' : '(3RD BEST MATCH)'}`;
+      const rankText = `CASE #${actualRank} ${actualRank === 1 ? '(BEST MATCH)' : actualRank === 2 ? '(2ND BEST MATCH)' : '(3RD BEST MATCH)'}`;
       doc.text(rankText, pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 15;
 
@@ -417,7 +427,10 @@ Generated: ${date}
 
     // Save PDF
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    doc.save(`LawKnow_Case_Report_${timestamp}.pdf`);
+    const filename = onlyCurrent 
+      ? `LawKnow_Case_${allCases[selectedCaseIndex]?.caseInfo?.caseId || 'Analysis'}_${timestamp}.pdf`
+      : `LawKnow_Full_Report_${timestamp}.pdf`;
+    doc.save(filename);
   };
 
   return (
@@ -438,22 +451,22 @@ Generated: ${date}
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={downloadReport}
+              onClick={() => downloadReport(false)}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Download TXT
+              Full Report (TXT)
             </button>
             <button
-              onClick={downloadPDF}
+              onClick={() => downloadPDF(false)}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-stone-700 to-stone-800 hover:from-stone-800 hover:to-stone-900 text-white font-semibold text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              Download PDF
+              Full Report (PDF)
             </button>
           </div>
         </div>
@@ -542,42 +555,61 @@ Generated: ${date}
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-amber-950">
-                  {hasMultipleCases ? `Case #${selectedCaseIndex + 1} Details` : 'Case Information'}
-                </h3>
-                <p className="text-xs text-amber-700 mt-1">Complete case details and metadata</p>
-              </div>
+            <div>
+              <h3 className="text-xl font-bold text-amber-950">
+                {hasMultipleCases ? `Case #${selectedCaseIndex + 1} Details` : 'Case Information'}
+              </h3>
+              <p className="text-xs text-amber-700 mt-1">Complete case details and metadata</p>
             </div>
-            {hasMultipleCases && (
-              <div className="flex items-center gap-2">
-                {selectedCaseIndex === 0 && (
-                  <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    Best Match
-                  </span>
-                )}
-                {selectedCaseIndex === 1 && (
-                  <span className="bg-gradient-to-r from-orange-400 to-red-400 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-                    </svg>
-                    2nd Best Match
-                  </span>
-                )}
-                {selectedCaseIndex === 2 && (
-                  <span className="bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                    </svg>
-                    3rd Best Match
-                  </span>
-                )}
-              </div>
-            )}
           </div>
+        </div>
+          
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => downloadReport(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-amber-500 text-amber-700 hover:bg-amber-50 font-bold text-xs rounded-xl shadow-md transition-all duration-200"
+            >
+              <ArrowDownTrayIcon className="w-4 h-4" />
+              Download This Case (TXT)
+            </button>
+            <button
+              onClick={() => downloadPDF(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-stone-800 text-stone-800 hover:bg-stone-50 font-bold text-xs rounded-xl shadow-md transition-all duration-200"
+            >
+              <ArrowDownTrayIcon className="w-4 h-4" />
+              Download This Case (PDF)
+            </button>
+          </div>
+          {hasMultipleCases && (
+            <div className="flex items-center gap-2">
+              {selectedCaseIndex === 0 && (
+                <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  Best Match
+                </span>
+              )}
+              {selectedCaseIndex === 1 && (
+                <span className="bg-gradient-to-r from-orange-400 to-red-400 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+                  </svg>
+                  2nd Best Match
+                </span>
+              )}
+              {selectedCaseIndex === 2 && (
+                <span className="bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
+                  3rd Best Match
+                </span>
+              )}
+            </div>
+          )}
+        </div>
           <div className="grid md:grid-cols-2 gap-6 mt-6">
             <div className="bg-white p-5 rounded-xl shadow-lg border-l-4 border-amber-500 hover:shadow-xl transition-all duration-200">
               <div className="flex items-center gap-2 mb-2">
