@@ -19,7 +19,7 @@ const FR_SCREENER_PORT = 8016;
 export const FR_SCREENER_BASE = import.meta.env.VITE_FR_API_URL || `${BACKEND_HOST}:${FR_SCREENER_PORT}`;
 
 // Pass Case Finder Backend (Scenario-Based Case Finder - DigitalOcean domain)
-export const PAST_CASE_API_URL = "http://localhost:5000";
+export const PAST_CASE_API_URL = "https://www.pastcasebackend.me";
 //"https://www.pastcasebackend.me";
 // Fallback: https://identify-functional-capital-behavioral.trycloudflare.com
 // Local dev: http://localhost:5000
